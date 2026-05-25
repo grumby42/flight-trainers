@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Whiskey Compass Errors — Trainer</title>
+<style>
+  /* ---------- Type & palette: analog avionics, dark panel ---------- */
+  @import url('https://fonts.googleapis.com/css2?family=Oswald:wght@300;400;500;600&family=Share+Tech+Mono&display=swap');
+
+  :root{
+    --panel:#14171c;
+    --panel-2:#1b1f26;
+    --panel-edge:#2a2f38;
+    --ink:#d7dce3;
+    --ink-dim:#8a93a0;
+    --amber:#ffb347;
+    --amber-bright:#ffcf7a;
+    --green:#5fd99b;
+    --red:#ff6b5e;
+    --cyan:#62d6e8;
+    --shadow:rgba(0,0,0,.55);
+    --grid:#222730;
+  }
+
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;padding:0;background:
+      radial-gradient(120% 90% at 50% -10%, #20252e 0%, #0d0f13 60%, #08090c 100%);
+    color:var(--ink);font-family:'Oswald',sans-serif;font-weight:300;
+    min-height:100%;}
+  body{padding:14px 12px 40px;max-width:560px;margin:0 auto;}
+
+  h1{font-size:1.25rem;font-weight:500;letter-spacing:.08em;text-transform:uppercase;
+     margin:.2rem 0 .1rem;color:var(--amber);}
+  .sub{font-size:.72rem;letter-spacing:.18em;text-transform:uppercase;color:var(--ink-dim);
+       margin-bottom:14px;font-family:'Share Tech Mono',monospace;}
+
+  /* ---------- Mode switch ---------- */
+  .modes{display:flex;gap:8px;margin-bottom:16px;}
+  .modes button{flex:1;background:var(--panel);border:1px solid var(--panel-edge);
+     color:var(--ink-dim);font-family:'Oswald';font-weight:400;letter-spacing:.1em;
+     text-transform:uppercase;font-size:.74rem;padding:10px 6px;border-radius:7px;
+     transition:.18s;cursor:pointer;}
+  .modes button.active{color:#0d0f13;background:linear-gradient(180deg,var(--amber-bright),var(--amber));
+     border-color:var(--amber);box-shadow:0 0 14px rgba(255,179,71,.25);font-weight:600;}
+
+  /* ---------- The compass stage ---------- */
+  .stage{position:relative;width:100%;aspect-ratio:1/1;max-width:420px;margin:0 auto 6px;}
+  canvas#card{width:100%;height:100%;display:block;
+     filter:drop-shadow(0 10px 24px var(--shadow));}
+
+  /* lubber line + glass overlay drawn in CSS for crispness */
+  .glass{position:absolute;inset:0;border-radius:50%;pointer-events:none;
+     background:radial-gradient(120% 120% at 30% 20%, rgba(255,255,255,.07), transparent 45%);}
+
+  .readout-row{display:flex;gap:8px;justify-content:center;margin:2px 0 14px;}
+  .chip{background:var(--panel);border:1px solid var(--panel-edge);border-radius:6px;
+     padding:7px 12px;text-align:center;min-width:96px;}
+  .chip .lbl{font-size:.6rem;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-dim);
+     font-family:'Share Tech Mono';}
+  .chip .val{font-family:'Share Tech Mono';font-size:1.35rem;color:var(--amber);line-height:1.1;}
+  .chip.smart .val{color:var(--cyan);}
+  .chip .val small{font-size:.7rem;color:var(--ink-dim);}
+
+  /* ---------- Lesson banner ---------- */
+  #banner{min-height:46px;background:var(--panel-2);border:1px solid var(--panel-edge);
+     border-left:3px solid var(--amber);border-radius:6px;padding:9px 12px;margin-bottom:16px;
+     font-size:.82rem;font-weight:300;line-height:1.35;letter-spacing:.01em;transition:.2s;}
+  #banner b{color:var(--amber-bright);font-weight:600;letter-spacing:.04em;}
+  #banner.err-acc{border-left-color:var(--red);} 
+  #banner.err-turn{border-left-color:var(--cyan);}
+  #banner.err-none{border-left-color:var(--green);}
+
+  /* ---------- Controls ---------- */
+  .panel{background:var(--panel);border:1px solid var(--panel-edge);border-radius:9px;
+     padding:14px 14px 6px;margin-bottom:14px;}
+  .panel h2{font-size:.7rem;letter-spacing:.18em;text-transform:uppercase;color:var(--ink-dim);
+     margin:0 0 10px;font-family:'Share Tech Mono';font-weight:400;}
+
+  .ctl{margin-bottom:13px;}
+  .ctl label{display:flex;justify-content:space-between;font-size:.78rem;letter-spacing:.04em;
+     margin-bottom:5px;}
+  .ctl label .v{font-family:'Share Tech Mono';color:var(--amber);}
+  input[type=range]{-webkit-appearance:none;width:100%;height:4px;border-radius:3px;
+     background:linear-gradient(90deg,var(--amber) 0%,var(--panel-edge) 0%);outline:none;}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;
+     border-radius:50%;background:var(--amber-bright);border:2px solid #0d0f13;
+     box-shadow:0 1px 5px rgba(0,0,0,.6);cursor:pointer;}
+  input[type=range]::-moz-range-thumb{width:18px;height:18px;border-radius:50%;
+     background:var(--amber-bright);border:2px solid #0d0f13;cursor:pointer;}
+
+  .seg{display:flex;gap:6px;margin-bottom:13px;}
+  .seg button{flex:1;background:var(--panel-2);border:1px solid var(--panel-edge);color:var(--ink-dim);
+     padding:8px 4px;border-radius:6px;font-family:'Oswald';font-size:.72rem;letter-spacing:.06em;
+     text-transform:uppercase;cursor:pointer;transition:.15s;}
+  .seg button.on{background:var(--amber);color:#0d0f13;border-color:var(--amber);font-weight:600;}
+
+  .nudge{display:flex;gap:6px;flex-wrap:wrap;}
+  .nudge button{flex:1;min-width:0;background:var(--panel-2);border:1px solid var(--panel-edge);
+     color:var(--ink);padding:9px 4px;border-radius:6px;font-family:'Oswald';font-size:.7rem;
+     letter-spacing:.04em;cursor:pointer;transition:.15s;}
+  .nudge button:active{background:var(--amber);color:#0d0f13;}
+
+  .live-status{font-family:'Share Tech Mono';font-size:.72rem;color:var(--ink-dim);
+     line-height:1.5;margin-top:4px;}
+  .live-status .ok{color:var(--green);}
+  .live-status .no{color:var(--red);}
+
+  .bigbtn{width:100%;background:linear-gradient(180deg,var(--green),#3fae78);color:#08130c;
+     border:none;border-radius:8px;padding:13px;font-family:'Oswald';font-weight:600;
+     letter-spacing:.1em;text-transform:uppercase;font-size:.85rem;cursor:pointer;
+     box-shadow:0 4px 14px rgba(63,174,120,.3);}
+  .bigbtn:disabled{opacity:.4;}
+
+  .amp-toggle{display:flex;align-items:center;justify-content:space-between;
+     padding:9px 0;border-top:1px solid var(--panel-edge);margin-top:4px;}
+  .switch{position:relative;width:46px;height:24px;flex:0 0 auto;}
+  .switch input{display:none;}
+  .switch .track{position:absolute;inset:0;background:var(--panel-2);border:1px solid var(--panel-edge);
+     border-radius:14px;transition:.18s;}
+  .switch .knob{position:absolute;top:2px;left:2px;width:18px;height:18px;border-radius:50%;
+     background:var(--ink-dim);transition:.18s;}
+  .switch input:checked + .track{background:rgba(255,179,71,.25);border-color:var(--amber);}
+  .switch input:checked + .track + .knob{transform:translateX(22px);background:var(--amber-bright);}
+
+  .footnote{font-size:.68rem;color:var(--ink-dim);line-height:1.45;margin-top:6px;
+     font-family:'Share Tech Mono';}
+  .amp-flag{display:inline-block;background:var(--red);color:#1a0604;font-family:'Share Tech Mono';
+     font-size:.62rem;letter-spacing:.1em;padding:2px 7px;border-radius:4px;font-weight:bold;
+     vertical-align:middle;margin-left:6px;}
+  details{margin-top:4px;}
+  details summary{font-size:.74rem;letter-spacing:.1em;text-transform:uppercase;color:var(--amber);
+     cursor:pointer;font-family:'Share Tech Mono';padding:6px 0;}
+  details p, details li{font-size:.8rem;line-height:1.5;font-weight:300;color:var(--ink);}
+  .hidden{display:none !important;}
+</style>
+</head>
+<body>
+
+  <h1>Whiskey Compass Errors</h1>
+  <div class="sub">Float-card physics · ANDS · UNOS · live or sim</div>
+
+  <div class="modes">
+    <button id="mSim" class="active">Simulator</button>
+    <button id="mLive">Live Sensor</button>
+  </div>
+
+  <div class="stage">
+    <canvas id="card" width="600" height="600"></canvas>
+    <div class="glass"></div>
+  </div>
+
+  <div class="readout-row">
+    <div class="chip">
+      <div class="lbl">Compass reads</div>
+      <div class="val" id="rdShown">000<small>°</small></div>
+    </div>
+    <div class="chip smart">
+      <div class="lbl">Actual heading</div>
+      <div class="val" id="rdTrue">000<small>°</small></div>
+    </div>
+    <div class="chip">
+      <div class="lbl">Error</div>
+      <div class="val" id="rdErr">0<small>°</small></div>
+    </div>
+  </div>
+
+  <div id="banner" class="err-none">Level flight, no acceleration — the card sits steady. Pick a heading and accelerate or bank to see the error appear.</div>
+
+  <!-- ============ SIMULATOR CONTROLS ============ -->
+  <div id="simPanel">
+    <div class="panel">
+      <h2>Heading</h2>
+      <div class="ctl">
+        <label>Magnetic heading <span class="v" id="vHdg">000°</span></label>
+        <input type="range" id="sHdg" min="0" max="359" value="0">
+      </div>
+      <div class="nudge">
+        <button data-hdg="0">N</button>
+        <button data-hdg="45">NE</button>
+        <button data-hdg="90">E</button>
+        <button data-hdg="135">SE</button>
+        <button data-hdg="180">S</button>
+        <button data-hdg="225">SW</button>
+        <button data-hdg="270">W</button>
+        <button data-hdg="315">NW</button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2>Motion input</h2>
+      <div class="ctl">
+        <label>Longitudinal accel (fore/aft) <span class="v" id="vAcc">0.0 g</span></label>
+        <input type="range" id="sAcc" min="-50" max="50" value="0">
+      </div>
+      <div class="ctl">
+        <label>Bank angle <span class="v" id="vBank">0°</span></label>
+        <input type="range" id="sBank" min="-45" max="45" value="0">
+      </div>
+      <div class="footnote">Accelerating = + (speeding up) · banking right = +. Watch how the same input produces a big error near N/S and almost none near E/W.</div>
+    </div>
+
+    <div class="panel">
+      <h2>Location field model</h2>
+      <div class="ctl">
+        <label>Magnetic latitude proxy → dip angle <span class="v" id="vDip">68°</span></label>
+        <input type="range" id="sDip" min="0" max="85" value="68">
+      </div>
+      <div class="footnote">KEYE ≈ 68° dip (WMM2025). Drag toward 0° (equator) to watch errors vanish; toward 85° (near pole) to watch them blow up. This is the whole reason ANDS/UNOS exist.</div>
+    </div>
+  </div>
+
+  <!-- ============ LIVE CONTROLS ============ -->
+  <div id="livePanel" class="hidden">
+    <div class="panel">
+      <h2>Sensors</h2>
+      <button class="bigbtn" id="btnLive">Enable phone sensors</button>
+      <div class="live-status" id="liveStat">Tap to grant motion &amp; orientation access (required by the browser).</div>
+    </div>
+
+    <div class="panel">
+      <h2>Mounting</h2>
+      <div class="seg" id="mountSeg">
+        <button data-mount="flat" class="on">Flat / handheld</button>
+        <button data-mount="vert">Vertical (car cradle)</button>
+      </div>
+      <div class="footnote">Flat reads the field cleanly for variation &amp; dip. Vertical mimics the panel-mounted attitude — the model uses real fore/aft accel from your driving or walking.</div>
+    </div>
+
+    <div class="panel">
+      <h2>Sensitivity</h2>
+      <div class="amp-toggle">
+        <span>Amplify real motion <span id="ampFlag" class="amp-flag hidden">AMPLIFIED ×<span id="ampN">6</span></span></span>
+        <label class="switch">
+          <input type="checkbox" id="ampChk">
+          <span class="track"></span><span class="knob"></span>
+        </label>
+      </div>
+      <div class="ctl" id="ampSliderWrap" style="opacity:.4;">
+        <label>Gain <span class="v" id="vAmp">×6</span></label>
+        <input type="range" id="sAmp" min="2" max="20" value="6" disabled>
+      </div>
+      <div class="footnote">A car or dog-walk gives only mild g-loads — true-scale errors will be small but <em>real</em>. Turn this on to scale that real motion up to a visible swing. The card always shows the AMPLIFIED flag so a student knows it's exaggerated, not faked.</div>
+    </div>
+  </div>
+
+  <details>
+    <summary>Teaching notes — why the card lies</summary>
+    <p><b>The cause:</b> the float card is magnetized and the Earth's field dips steeply into the ground at our latitude (~68°). The card's center of gravity hangs slightly below its pivot. Any fore/aft acceleration or bank tips that offset CG, and because the card is also being pulled <em>downward</em> by the dipping field, it swings off heading.</p>
+    <p><b>ANDS (acceleration/deceleration):</b> on an <b>E or W</b> heading, <b>A</b>ccelerate → card shows <b>N</b>orth, <b>D</b>ecelerate → <b>S</b>outh. Worst on E/W, zero on N/S.</p>
+    <p><b>UNOS (turning):</b> rolling out of a turn, the card <b>U</b>ndershoots <b>N</b>orth and <b>O</b>vershoots <b>S</b>outh. Worst near N/S headings, minimal near E/W.</p>
+    <p><b>Variation</b> = true vs magnetic north (≈4–5° W near KEYE). <b>Deviation</b> = the aircraft's own metal/electrics; corrected on the compass card placard. Neither depends on motion — only dip does.</p>
+    <p>Pull exact field values for any airport from NOAA's WMM calculator (ngdc.noaa.gov/geomag) and set the dip slider to match.</p>
+  </details>
+
+<script>
+/* ====================================================================
+   FLOAT-CARD PHYSICS MODEL
+   The displayed heading = actual heading + a dip-driven error term.
+   Error is produced by inertial tilt of a CG-offset, dip-pulled card.
+   This is a teaching model: faithful in *shape* (where/why errors peak),
+   tuned in magnitude so the classroom behavior matches real compasses.
+==================================================================== */
+const D2R = Math.PI/180, R2D = 180/Math.PI;
+
+const state = {
+  mode:'sim',
+  hdg:0,            // actual magnetic heading, deg
+  accel:0,          // longitudinal accel, g  (sim: -0.5..0.5)
+  bank:0,           // bank angle, deg
+  dip:68,           // dip / inclination, deg
+  mount:'flat',
+  amp:false, ampN:6,
+  // live
+  liveActive:false,
+  liveHdg:0, liveAccel:0, liveBank:0,
+  smoothErr:0,      // visual damping of the card (it lags, like a real float)
+  shown:0
+};
+
+/* Core error model -------------------------------------------------- */
+function computeError(hdg, accel, bank, dipDeg){
+  const dip = dipDeg*D2R;
+  // The card's susceptibility to inertial tilt scales with tan(dip):
+  // near the equator (dip 0) -> 0 error; near the pole -> enormous.
+  const dipFactor = Math.tan(dip);            // ~2.48 at 68°, 0 at 0°
+
+  // ----- Acceleration error (ANDS) -----
+  // Inertial force acts fore/aft. Its turning effect on the card is
+  // proportional to how much the heading lies E/W (sin of heading from N).
+  // Accelerate on E/W -> swings toward N (positive). On N/S -> ~0.
+  const accGain = 28; // deg per g at this dip, classroom-tuned
+  const accErr = accel * dipFactor * Math.sin(hdg*D2R) * accGain;
+
+  // ----- Turning error (UNOS) -----
+  // Bank tips the card; effect is strongest when heading is N/S
+  // (cos of heading) and proportional to bank.
+  const turnGain = 0.55; // deg of card error per deg bank at this dip
+  // Northerly turning error leads the card to lag (undershoot N),
+  // southerly to lead (overshoot S): captured by -cos(hdg).
+  const turnErr = -bank * dipFactor * Math.cos(hdg*D2R) * turnGain * 0.35;
+
+  return accErr + turnErr;
+}
+
+/* Identify the dominant error for the lesson banner ----------------- */
+function classify(hdg, accel, bank){
+  const nearNS = Math.abs(Math.cos(hdg*D2R)) > 0.7;
+  const nearEW = Math.abs(Math.sin(hdg*D2R)) > 0.7;
+  if(Math.abs(bank) > 4 && nearNS) return 'turn';
+  if(Math.abs(accel) > 0.04 && nearEW) return 'acc';
+  if(Math.abs(bank) < 4 && Math.abs(accel) < 0.04) return 'none';
+  return 'mix';
+}
+
+const dirName = d => ['N','NE','E','SE','S','SW','W','NW'][Math.round(((d%360)/45))%8];
+
+function banner(hdg, accel, bank){
+  const b = document.getElementById('banner');
+  const k = classify(hdg, accel, bank);
+  const dir = dirName(hdg);
+  b.className = 'err-'+(k==='acc'?'acc':k==='turn'?'turn':k==='none'?'none':'none');
+  if(k==='none'){
+    b.innerHTML = `Steady on <b>${dir}</b>. No acceleration, wings level — the card reads true. Now accelerate (for ANDS) or bank near N/S (for UNOS).`;
+  } else if(k==='acc'){
+    const dec = accel < 0;
+    b.innerHTML = `<b>Acceleration error (ANDS).</b> ${dec?'Decelerating':'Accelerating'} on a ${dir} heading — the card swings toward <b>${dec?'South':'North'}</b>. Strongest on E/W, this is the "ANDS" you brief.`;
+  } else if(k==='turn'){
+    b.innerHTML = `<b>Turning error (UNOS).</b> Banking through a ${dir} heading — the card <b>${Math.cos(hdg*D2R)>0?'lags/undershoots North':'leads/overshoots South'}</b>. Worst near N/S, the "UNOS" rule.`;
+  } else {
+    b.innerHTML = `Mixed input on <b>${dir}</b>. Try isolating one: pure acceleration on E or W, or pure bank near N or S.`;
+  }
+}
+
+/* ====================================================================
+   RENDER — the floating compass card
+==================================================================== */
+const cv = document.getElementById('card');
+const ctx = cv.getContext('2d');
+const CX = 300, CY = 300, R = 250;
+
+function draw(){
+  // pick inputs by mode
+  let hdg, accel, bank, dip = state.dip;
+  if(state.mode==='live' && state.liveActive){
+    hdg = state.liveHdg;
+    let g = state.amp ? state.ampN : 1;
+    accel = state.liveAccel * g;
+    bank  = state.liveBank * (state.amp ? Math.min(state.ampN,4) : 1);
+  } else {
+    hdg = state.hdg; accel = state.accel; bank = state.bank;
+  }
+
+  const err = computeError(hdg, accel, bank, dip);
+  // float damping: card eases toward target, like fluid-damped real card
+  const target = hdg + err;
+  let diff = target - state.smoothErr;
+  // wrap shortest path
+  while(diff>180) diff-=360; while(diff<-180) diff+=360;
+  state.smoothErr += diff * 0.12;
+  const shown = ((state.smoothErr%360)+360)%360;
+  state.shown = shown;
+
+  // ---- readouts ----
+  document.getElementById('rdShown').innerHTML = String(Math.round(shown)).padStart(3,'0')+'<small>°</small>';
+  document.getElementById('rdTrue').innerHTML  = String(Math.round(((hdg%360)+360)%360)).padStart(3,'0')+'<small>°</small>';
+  let e = Math.round(shown - (((hdg%360)+360)%360));
+  while(e>180)e-=360; while(e<-180)e+=360;
+  document.getElementById('rdErr').innerHTML = (e>0?'+':'')+e+'<small>°</small>';
+  banner(hdg, accel, bank);
+
+  // ---- canvas ----
+  ctx.clearRect(0,0,600,600);
+
+  // bezel
+  ctx.save();
+  ctx.translate(CX,CY);
+  let bz = ctx.createRadialGradient(0,-60,40,0,0,R+30);
+  bz.addColorStop(0,'#2b313b'); bz.addColorStop(1,'#0c0e12');
+  ctx.fillStyle = bz; ctx.beginPath(); ctx.arc(0,0,R+24,0,7); ctx.fill();
+  ctx.strokeStyle='#3a414c'; ctx.lineWidth=3; ctx.stroke();
+
+  // fluid window
+  ctx.fillStyle='#0a0c10'; ctx.beginPath(); ctx.arc(0,0,R+4,0,7); ctx.fill();
+  ctx.restore();
+
+  // ---- the rotating card ----
+  // The card rotates OPPOSITE the heading shown (north-seeking). The
+  // number under the lubber line is `shown`.
+  ctx.save();
+  ctx.translate(CX,CY);
+  // subtle bank tilt of the card face for realism
+  let visTilt = (state.mode==='live'? state.liveBank : state.bank);
+  ctx.rotate(visTilt*D2R*0.15);
+  ctx.rotate(-shown*D2R);
+
+  // card disk
+  let cg = ctx.createRadialGradient(0,0,20,0,0,R);
+  cg.addColorStop(0,'#1c2128'); cg.addColorStop(.8,'#141921'); cg.addColorStop(1,'#0e1218');
+  ctx.fillStyle=cg; ctx.beginPath(); ctx.arc(0,0,R-2,0,7); ctx.fill();
+
+  // tick marks every 5°, numbers every 30
+  for(let a=0;a<360;a+=5){
+    const rad=a*D2R, major=(a%30===0);
+    const r1=major?R-30:R-18, r2=R-6;
+    ctx.strokeStyle = major?'#e7ecf2':'#5b6470';
+    ctx.lineWidth = major?2.4:1.2;
+    ctx.beginPath();
+    ctx.moveTo(Math.sin(rad)*r1, -Math.cos(rad)*r1);
+    ctx.lineTo(Math.sin(rad)*r2, -Math.cos(rad)*r2);
+    ctx.stroke();
+  }
+  // numbers (compass shows tens: 3,6,33 etc) + cardinal letters
+  ctx.fillStyle='#e7ecf2'; ctx.textAlign='center'; ctx.textBaseline='middle';
+  for(let a=0;a<360;a+=30){
+    const rad=a*D2R, rr=R-52;
+    const x=Math.sin(rad)*rr, y=-Math.cos(rad)*rr;
+    ctx.save(); ctx.translate(x,y); ctx.rotate(rad);
+    let lbl;
+    if(a===0)lbl='N'; else if(a===90)lbl='E'; else if(a===180)lbl='S'; else if(a===270)lbl='W';
+    else lbl=String(a/10);
+    const card = (a%90===0);
+    ctx.fillStyle = card? (a===0?'#ff6b5e':'#ffcf7a') : '#cfd6df';
+    ctx.font = `${card?'600 38':'400 30'}px Oswald`;
+    ctx.fillText(lbl,0,0);
+    ctx.restore();
+  }
+  ctx.restore();
+
+  // ---- fixed lubber line + glass glare ----
+  ctx.save(); ctx.translate(CX,CY);
+  ctx.strokeStyle='#ffb347'; ctx.lineWidth=3;
+  ctx.beginPath(); ctx.moveTo(0,-R+2); ctx.lineTo(0,-R+38); ctx.stroke();
+  // center post
+  ctx.fillStyle='#ffb347'; ctx.beginPath(); ctx.arc(0,0,5,0,7); ctx.fill();
+  // amp flag overlay
+  ctx.restore();
+
+  if(state.mode==='live' && state.liveActive && state.amp){
+    ctx.fillStyle='rgba(255,107,94,.92)';
+    ctx.fillRect(CX-78,CY+R-30,156,26);
+    ctx.fillStyle='#1a0604'; ctx.font='600 16px "Share Tech Mono"';
+    ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText('AMPLIFIED ×'+state.ampN, CX, CY+R-17);
+  }
+
+  requestAnimationFrame(draw);
+}
+requestAnimationFrame(draw);
+
+/* ====================================================================
+   SIM CONTROLS
+==================================================================== */
+const $=id=>document.getElementById(id);
+function fillRange(el){
+  const min=+el.min,max=+el.max,v=+el.value;
+  const pct=(v-min)/(max-min)*100;
+  el.style.background=`linear-gradient(90deg,var(--amber) ${pct}%,var(--panel-edge) ${pct}%)`;
+}
+['sHdg','sAcc','sBank','sDip','sAmp'].forEach(id=>fillRange($(id)));
+
+$('sHdg').oninput=e=>{state.hdg=+e.target.value;$('vHdg').textContent=String(state.hdg).padStart(3,'0')+'°';fillRange(e.target);};
+$('sAcc').oninput=e=>{state.accel=+e.target.value/100;$('vAcc').textContent=(state.accel>=0?'+':'')+state.accel.toFixed(2)+' g';fillRange(e.target);};
+$('sBank').oninput=e=>{state.bank=+e.target.value;$('vBank').textContent=(state.bank>0?'R':state.bank<0?'L':'')+Math.abs(state.bank)+'°';fillRange(e.target);};
+$('sDip').oninput=e=>{state.dip=+e.target.value;$('vDip').textContent=state.dip+'°';fillRange(e.target);};
+
+document.querySelectorAll('.nudge button').forEach(b=>{
+  b.onclick=()=>{state.hdg=+b.dataset.hdg;$('sHdg').value=state.hdg;
+    $('vHdg').textContent=String(state.hdg).padStart(3,'0')+'°';fillRange($('sHdg'));};
+});
+
+/* ====================================================================
+   MODE SWITCH
+==================================================================== */
+function setMode(m){
+  state.mode=m;
+  $('mSim').classList.toggle('active',m==='sim');
+  $('mLive').classList.toggle('active',m==='live');
+  $('simPanel').classList.toggle('hidden',m!=='sim');
+  $('livePanel').classList.toggle('hidden',m!=='live');
+}
+$('mSim').onclick=()=>setMode('sim');
+$('mLive').onclick=()=>setMode('live');
+
+/* ====================================================================
+   LIVE SENSORS
+==================================================================== */
+const stat=$('liveStat');
+document.querySelectorAll('#mountSeg button').forEach(b=>{
+  b.onclick=()=>{document.querySelectorAll('#mountSeg button').forEach(x=>x.classList.remove('on'));
+    b.classList.add('on');state.mount=b.dataset.mount;};
+});
+$('ampChk').onchange=e=>{
+  state.amp=e.target.checked;
+  $('ampFlag').classList.toggle('hidden',!state.amp);
+  $('sAmp').disabled=!state.amp;
+  $('ampSliderWrap').style.opacity=state.amp?'1':'.4';
+};
+$('sAmp').oninput=e=>{state.ampN=+e.target.value;$('vAmp').textContent='×'+state.ampN;
+  $('ampN').textContent=state.ampN;fillRange(e.target);};
+
+async function enableSensors(){
+  let granted=true;
+  // iOS-style permission gate (harmless on Android; resolves immediately)
+  try{
+    if(typeof DeviceOrientationEvent!=='undefined' && DeviceOrientationEvent.requestPermission){
+      const p=await DeviceOrientationEvent.requestPermission(); granted=(p==='granted');
+    }
+    if(typeof DeviceMotionEvent!=='undefined' && DeviceMotionEvent.requestPermission){
+      await DeviceMotionEvent.requestPermission();
+    }
+  }catch(err){ /* non-iOS */ }
+
+  if(!granted){ stat.innerHTML='<span class="no">Permission denied.</span> Enable motion access in browser settings, then retry.'; return; }
+
+  let gotOrient=false, gotMotion=false;
+
+  window.addEventListener('deviceorientationabsolute', onOrient, true);
+  window.addEventListener('deviceorientation', onOrient, true);
+  window.addEventListener('devicemotion', onMotion, true);
+
+  function onOrient(ev){
+    if(ev.alpha==null) return;
+    gotOrient=true;
+    // alpha = compass heading (0 = north) when absolute; webkitCompassHeading on iOS
+    let h = (ev.webkitCompassHeading!=null) ? ev.webkitCompassHeading : (360-ev.alpha);
+    state.liveHdg = ((h%360)+360)%360;
+    // use beta/gamma as a bank proxy in vertical mount
+    if(state.mount==='vert' && ev.gamma!=null){ state.liveBank = Math.max(-45,Math.min(45,ev.gamma)); }
+    refreshStat(gotOrient,gotMotion);
+  }
+  function onMotion(ev){
+    const a = ev.accelerationIncludingGravity || ev.acceleration;
+    if(!a) return;
+    gotMotion=true;
+    // Fore/aft accel: y-axis when phone upright, z when flat-ish.
+    // Convert m/s^2 to g, strip gravity baseline roughly.
+    let foreAft = state.mount==='vert' ? (a.y||0) : (a.z||0);
+    // crude high-pass so steady gravity doesn't read as constant accel
+    state.liveAccel = (state.liveAccel*0.7) + ((-foreAft/9.81)*0.3);
+    if(state.mount==='flat' && a.x!=null){ state.liveBank = Math.max(-45,Math.min(45,(a.x/9.81)*30)); }
+    refreshStat(gotOrient,gotMotion);
+  }
+  function refreshStat(o,m){
+    state.liveActive=true;
+    stat.innerHTML = `Heading sensor <span class="${o?'ok':'no'}">${o?'OK':'…'}</span> · Motion sensor <span class="${m?'ok':'no'}">${m?'OK':'…'}</span><br>Reading raw orientation + accelerometer. Move the phone to drive the card.`;
+  }
+
+  stat.innerHTML='Listening for sensors… move the phone slightly.';
+  setTimeout(()=>{ if(!gotOrient && !gotMotion){
+    stat.innerHTML='<span class="no">No sensor events.</span> This usually means the page isn\'t served over HTTPS, or the browser blocks sensors. Open via https:// (or localhost) in Chrome.';
+  }},1500);
+}
+$('btnLive').onclick=enableSensors;
+
+setMode('sim');
+</script>
+</body>
+</html>

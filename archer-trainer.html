@@ -1,0 +1,1311 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Archer Control-Surface Trainer</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Oswald:wght@300;400;500;600&family=Share+Tech+Mono&display=swap');
+  :root{
+    --ink:#dfe5ec; --ink-dim:#8a93a0;
+    --amber:#ffb347; --green:#5fd99b; --red:#ff6b5e; --cyan:#62d6e8; --magenta:#e96fd0;
+    --panel:#12151a; --edge:#2a2f38;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;margin:0;padding:0;user-select:none;}
+  html,body{height:100%;overflow:hidden;background:#05070a;color:var(--ink);
+    font-family:'Oswald',sans-serif;font-weight:300;}
+  #app{position:fixed;inset:0;display:flex;flex-direction:column;}
+
+  /* ---------- top bar ---------- */
+  #bar{display:flex;align-items:center;gap:8px;padding:6px 10px;background:#0a0d12;
+    border-bottom:1px solid var(--edge);z-index:30;flex:0 0 auto;}
+  #bar .ttl{font-size:.82rem;letter-spacing:.08em;text-transform:uppercase;color:var(--amber);font-weight:500;}
+  #bar .spacer{flex:1;}
+  #bar button{background:var(--panel);border:1px solid var(--edge);color:var(--ink-dim);
+    font-family:'Oswald';font-size:.66rem;letter-spacing:.06em;text-transform:uppercase;
+    padding:6px 9px;border-radius:6px;cursor:pointer;}
+  #bar button.on{color:#06120a;background:var(--amber);border-color:var(--amber);font-weight:600;}
+
+  /* ---------- scene ---------- */
+  #scene{flex:1;position:relative;min-height:0;}
+  #three{position:absolute;inset:0;width:100%;height:100%;display:block;}
+
+  /* surface labels overlay */
+  #labels{position:absolute;inset:0;pointer-events:none;}
+  .slab{position:absolute;font-family:'Share Tech Mono';font-size:.6rem;letter-spacing:.06em;
+    color:var(--cyan);background:rgba(8,12,18,.7);border:1px solid rgba(98,214,232,.4);
+    padding:1px 5px;border-radius:4px;transform:translate(-50%,-50%);white-space:nowrap;transition:opacity .2s;}
+  .slab.hot{box-shadow:0 0 10px currentColor;font-weight:600;filter:brightness(1.25);}
+
+  /* command banner (scenario) */
+  #cmd{position:absolute;top:8px;left:50%;transform:translateX(-50%);z-index:20;
+    background:rgba(10,13,18,.92);border:1px solid var(--edge);border-left:3px solid var(--amber);
+    border-radius:7px;padding:8px 14px;max-width:90%;text-align:center;display:none;}
+  #cmd .task{font-size:.86rem;line-height:1.3;}
+  #cmd .task b{color:var(--amber);}
+  #cmd .prog{font-family:'Share Tech Mono';font-size:.64rem;color:var(--ink-dim);margin-top:3px;}
+  #cmd .prog .hold{color:var(--green);}
+
+  /* attitude recenter + sandbox hint */
+  #hint{position:absolute;bottom:6px;left:50%;transform:translateX(-50%);z-index:15;
+    font-family:'Share Tech Mono';font-size:.6rem;color:var(--ink-dim);text-align:center;
+    background:rgba(8,12,18,.6);padding:3px 9px;border-radius:5px;}
+
+  /* ---------- G1000 PFD ---------- */
+  #pfd{flex:0 0 auto;background:#000;border-top:1px solid var(--edge);}
+  #pfdCanvas{display:block;width:100%;max-height:150px;object-fit:contain;}
+
+  /* ---------- controls ---------- */
+  #ctrls{flex:0 0 auto;position:relative;height:150px;background:#070a0e;border-top:1px solid var(--edge);}
+  .ped{position:absolute;bottom:14px;width:54px;height:120px;background:var(--panel);
+    border:1px solid var(--edge);border-radius:10px;z-index:25;touch-action:none;
+    box-shadow:0 4px 14px rgba(0,0,0,.5);}
+  .ped#pedL{left:10px;} .ped#pedR{right:10px;}
+  .ped .track{position:absolute;left:50%;top:8px;bottom:8px;width:5px;transform:translateX(-50%);
+    background:#05070a;border-radius:3px;}
+  .ped .knob{position:absolute;left:50%;width:40px;height:30px;transform:translate(-50%,-50%);
+    background:linear-gradient(180deg,#3a414c,#1c2128);border:1px solid #4a525e;border-radius:7px;
+    box-shadow:0 2px 6px rgba(0,0,0,.6);}
+  .ped .lbl{position:absolute;bottom:-16px;left:50%;transform:translateX(-50%);
+    font-family:'Share Tech Mono';font-size:.56rem;color:var(--ink-dim);letter-spacing:.1em;}
+
+  /* flap switch between pedals */
+  #flaps{position:absolute;bottom:14px;left:50%;transform:translateX(-50%);z-index:25;
+    width:78px;background:var(--panel);border:1px solid var(--edge);border-radius:9px;
+    padding:6px 5px;box-shadow:0 4px 14px rgba(0,0,0,.5);}
+  #flaps .fl-ttl{font-family:'Share Tech Mono';font-size:.54rem;color:var(--ink-dim);
+    text-align:center;letter-spacing:.1em;margin-bottom:4px;}
+  #flaps .fl-opt{display:block;width:100%;font-family:'Oswald';font-size:.62rem;letter-spacing:.04em;
+    text-transform:uppercase;padding:5px 2px;margin-bottom:3px;border-radius:5px;border:1px solid var(--edge);
+    background:#0a0d12;color:var(--ink-dim);cursor:pointer;text-align:center;}
+  #flaps .fl-opt.on{background:var(--amber);color:#06120a;border-color:var(--amber);font-weight:600;}
+
+  /* on-screen yoke — a control WHEEL that rotates with roll & scales with pitch */
+  #stick{position:absolute;bottom:30px;right:74px;z-index:25;
+    width:84px;height:84px;background:radial-gradient(circle at 50% 40%,#161b22,#080b0f);
+    border:1px solid var(--edge);border-radius:14px;touch-action:none;
+    display:flex;align-items:center;justify-content:center;
+    box-shadow:0 4px 14px rgba(0,0,0,.5);overflow:hidden;}
+  #yokeWheel{position:relative;width:62px;height:62px;
+    transform-origin:50% 50%;transition:none;}
+  .yk-ring{position:absolute;inset:0;border-radius:50%;
+    border:6px solid #58616e;
+    background:radial-gradient(circle at 38% 32%,#3a414c,#1c2128);
+    box-shadow:inset 0 1px 3px rgba(255,255,255,.15),0 2px 6px rgba(0,0,0,.6);}
+  /* the horizontal grip bar of a control wheel */
+  .yk-grip{position:absolute;left:6%;right:6%;top:50%;height:9px;transform:translateY(-50%);
+    background:linear-gradient(180deg,#5a626e,#2a2f38);border-radius:5px;
+    box-shadow:0 1px 2px rgba(0,0,0,.5);}
+  .yk-hub{position:absolute;left:50%;top:50%;width:16px;height:16px;transform:translate(-50%,-50%);
+    border-radius:50%;background:radial-gradient(circle at 40% 35%,#6a727e,#222831);
+    border:1px solid #4a525e;}
+  /* column stub poking down toward the panel */
+  .yk-col{position:absolute;left:50%;top:100%;width:10px;height:14px;transform:translateX(-50%);
+    background:linear-gradient(180deg,#3a414c,#1c2128);border-radius:0 0 4px 4px;}
+  #stick .stk-lbl{position:absolute;bottom:-15px;left:50%;transform:translateX(-50%);
+    font-family:'Share Tech Mono';font-size:.54rem;color:var(--ink-dim);letter-spacing:.12em;}
+  @media (orientation:landscape){ #stick{right:84px;bottom:30px;} }
+
+  /* landscape: keep pedals in the controls bar corners */
+  @media (orientation:landscape){
+    #ctrls{height:120px;}
+    .ped{height:96px;bottom:12px;}
+    .ped#pedL{left:8px;} .ped#pedR{right:8px;}
+  }
+  .hidden{display:none !important;}
+
+  /* CFI instructor commentary */
+  #cfiTip{position:absolute;left:50%;bottom:30px;transform:translateX(-50%);z-index:16;
+    max-width:min(560px,92vw);background:rgba(10,14,20,.92);border:1px solid var(--edge);
+    border-left:3px solid var(--cyan);border-radius:9px;padding:9px 13px 9px 11px;
+    display:flex;gap:9px;align-items:flex-start;opacity:0;transition:opacity .35s;pointer-events:none;}
+  #cfiTip.show{opacity:1;}
+  #cfiTip .cfi-badge{flex:0 0 auto;font-family:'Share Tech Mono';font-size:.58rem;font-weight:bold;
+    letter-spacing:.1em;color:#06120a;background:var(--cyan);border-radius:4px;padding:2px 5px;margin-top:1px;}
+  #cfiText{font-size:.82rem;line-height:1.4;color:var(--ink);}
+  #cfiText b{color:var(--cyan);} #cfiText i{color:var(--amber-bright);font-style:normal;}
+
+  /* conceptual-model disclaimer */
+  #bInfo{font-weight:600;}
+  #infoBox{position:absolute;top:60px;left:50%;transform:translateX(-50%);z-index:50;
+    width:min(420px,92vw);background:rgba(14,17,22,.98);border:1px solid var(--edge);
+    border-left:3px solid var(--amber);border-radius:10px;padding:15px 16px;
+    box-shadow:0 10px 30px rgba(0,0,0,.7);}
+  #infoBox .ib-h{font-size:.78rem;letter-spacing:.14em;text-transform:uppercase;color:var(--amber);
+    font-family:'Share Tech Mono';margin-bottom:9px;}
+  #infoBox p{font-size:.82rem;line-height:1.45;margin-bottom:9px;color:var(--ink);}
+  #infoBox b{color:var(--amber-bright);} #infoBox i{color:var(--cyan);font-style:normal;}
+  #infoBox button{background:var(--amber);color:#06120a;border:none;border-radius:6px;
+    padding:8px 16px;font-family:'Oswald';font-weight:600;letter-spacing:.06em;text-transform:uppercase;
+    font-size:.74rem;cursor:pointer;}
+
+  /* aero overlay panel (drops from the top bar) */
+  #aeroPanel{position:absolute;top:62px;right:8px;z-index:40;width:230px;
+    background:rgba(14,17,22,.97);border:1px solid var(--edge);border-radius:10px;
+    padding:12px 12px 10px;box-shadow:0 8px 24px rgba(0,0,0,.6);}
+  #aeroPanel .ap-ttl{font-family:'Share Tech Mono';font-size:.62rem;letter-spacing:.14em;
+    text-transform:uppercase;color:var(--ink-dim);margin-bottom:10px;}
+  .ap-row{display:flex;align-items:center;gap:9px;font-size:.82rem;padding:6px 0;cursor:pointer;}
+  .ap-row input{display:none;}
+  .ap-row .sw{width:34px;height:18px;border-radius:11px;background:var(--panel-2,#1b1f26);
+    border:1px solid var(--edge);position:relative;flex:0 0 auto;transition:.16s;}
+  .ap-row .sw::after{content:'';position:absolute;top:1px;left:1px;width:14px;height:14px;
+    border-radius:50%;background:var(--ink-dim);transition:.16s;}
+  .ap-row input:checked + .sw{background:rgba(255,179,71,.3);border-color:var(--amber);}
+  .ap-row input:checked + .sw::after{transform:translateX(16px);background:var(--amber-bright);}
+  .ap-note{font-family:'Share Tech Mono';font-size:.58rem;line-height:1.4;color:var(--ink-dim);
+    margin-top:8px;padding-top:8px;border-top:1px solid var(--edge);}
+  #lttBox{padding:4px 0 2px;}
+  .ltt-row{font-size:.72rem;line-height:1.4;padding:6px 8px;margin-bottom:5px;border-radius:6px;
+    background:rgba(20,24,30,.6);border:1px solid var(--edge);}
+  .ltt-row b{color:var(--amber-bright);} .ltt-row i{color:var(--cyan);font-style:normal;}
+  .ltt-n{display:inline-block;width:16px;height:16px;line-height:16px;text-align:center;border-radius:50%;
+    background:var(--amber);color:#06120a;font-family:'Share Tech Mono';font-size:.6rem;font-weight:bold;margin-right:6px;}
+  .ltt-dom{font-family:'Share Tech Mono';font-size:.64rem;color:var(--green);margin-top:6px;padding:6px 8px;
+    border-top:1px solid var(--edge);}
+  #windCtl{padding:6px 0 2px;}
+  #windCtl .ap-sub{font-family:'Share Tech Mono';font-size:.58rem;color:var(--amber);
+    letter-spacing:.06em;margin-bottom:6px;}
+  #windCtl input[type=range]{width:100%;margin-bottom:7px;}
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="bar">
+    <span class="ttl">Archer ✈ Surfaces</span>
+    <span class="spacer"></span>
+    <button id="bSand" class="on">Sandbox</button>
+    <button id="bScen">Scenario</button>
+    <button id="bCenter">Center</button>
+    <button id="bLabels" class="on">Labels</button>
+    <button id="bAero">Aero</button>
+    <button id="bCFI" class="on" title="Instructor commentary">CFI</button>
+    <button id="bInfo" title="About this model">ⓘ</button>
+  </div>
+
+  <div id="infoBox" class="hidden">
+    <div class="ib-h">Conceptual teaching model</div>
+    <p>This is a <b>concept demonstrator, not a flight simulator</b>. It illustrates <i>relationships and cause-and-effect</i> — which surfaces do what, why the wing stalls at an angle, how lift builds — using a simplified model with <b>tuned, non-literal magnitudes</b>.</p>
+    <p>Do <b>not</b> read exact speeds, angles, or rates as real-aircraft numbers. For performance figures use the POH; for procedures use the ACS and your AFM. Use this to <i>explain the concept</i>, then confirm specifics in the real references.</p>
+    <button id="ibClose">Got it</button>
+  </div>
+
+  <div id="aeroPanel" class="hidden">
+    <div class="ap-ttl">Airflow overlays</div>
+    <label class="ap-row"><input type="checkbox" id="aVortex"><span class="sw"></span>Wingtip vortices</label>
+    <label class="ap-row"><input type="checkbox" id="aSlip"><span class="sw"></span>Slipstream &amp; P-factor</label>
+    <label class="ap-row"><input type="checkbox" id="aLTT"><span class="sw"></span>Left-turning tendencies (all 4)</label>
+    <div id="lttBox" class="hidden">
+      <div class="ltt-row"><span class="ltt-n">1</span><b>Torque</b> — engine spins the prop right, so the airframe rolls <i>left</i> (Newton’s 3rd). Strongest at <b>low speed + high power</b> (takeoff).</div>
+      <div class="ltt-row"><span class="ltt-n">2</span><b>P-factor</b> — at high AoA the descending (right) blade takes a bigger bite → more thrust on the right → yaw <i>left</i>. Strongest at <b>high AoA + high power</b> (climb).</div>
+      <div class="ltt-row"><span class="ltt-n">3</span><b>Spiraling slipstream</b> — the corkscrew off the prop strikes the <i>left</i> side of the vertical tail → yaw <i>left</i>. Strongest at <b>low speed + high power</b>.</div>
+      <div class="ltt-row"><span class="ltt-n">4</span><b>Gyroscopic precession</b> — the spinning prop is a gyro; a pitch input shows up 90° later in rotation. Raising the tail (taildragger) yaws <i>left</i>. Most relevant during <b>pitch changes</b>.</div>
+      <div class="ltt-dom" id="lttDom"></div>
+    </div>
+    <label class="ap-row"><input type="checkbox" id="aStream"><span class="sw"></span>Streamlines (over/under)</label>
+    <label class="ap-row"><input type="checkbox" id="aPress"><span class="sw"></span>Pressure / lift shading</label>
+    <label class="ap-row"><input type="checkbox" id="aWind"><span class="sw"></span>Wind layer</label>
+    <div id="windCtl" class="hidden">
+      <div class="ap-sub">Wind <span id="windRead">270° / 12 kt</span></div>
+      <input type="range" id="wDir" min="0" max="350" step="10" value="270">
+      <input type="range" id="wKt" min="0" max="35" step="1" value="12">
+    </div>
+    <div class="ap-note" id="aeroNote">Conceptual visualisation, not a CFD solution. Effects scale with angle of attack, speed, and power. Wind skews the trailing flow to show drift.</div>
+  </div>
+
+  <div id="scene">
+    <canvas id="three"></canvas>
+    <div id="labels"></div>
+    <div id="cfiTip"><span class="cfi-badge">CFI</span><span id="cfiText"></span></div>
+    <div id="cmd"><div class="task" id="cmdTask">—</div><div class="prog" id="cmdProg"></div></div>
+    <div id="hint">Tilt phone (tap Center first) or drag the YOKE pad · sliders = rudder · drag scene to orbit, pinch to zoom</div>
+  </div>
+
+  <div id="pfd"><canvas id="pfdCanvas" width="800" height="170"></canvas></div>
+
+  <div id="ctrls">
+    <div class="ped" id="pedL"><div class="track"></div><div class="knob"></div><div class="lbl">L RUDDER</div></div>
+    <div id="flaps">
+      <div class="fl-ttl">FLAPS</div>
+      <button class="fl-opt on" data-fl="0">Up 0°</button>
+      <button class="fl-opt" data-fl="1">T/O 10°</button>
+      <button class="fl-opt" data-fl="2">Full 40°</button>
+    </div>
+    <div id="stick" title="Drag = pitch/roll">
+      <div id="yokeWheel">
+        <div class="yk-ring"></div>
+        <div class="yk-grip"></div>
+        <div class="yk-hub"></div>
+        <div class="yk-col"></div>
+      </div>
+      <div class="stk-lbl">YOKE</div>
+    </div>
+    <div class="ped" id="pedR"><div class="track"></div><div class="knob"></div><div class="lbl">R RUDDER</div></div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+/* =====================================================================
+   STATE  — one shared model drives the 3D aircraft AND the G1000.
+===================================================================== */
+const S={
+  mode:'sandbox',
+  showLabels:true,
+  // control inputs (-1..1)
+  aileron:0, elevator:0, rudder:0, flapStep:0,
+  // tilt neutral offsets
+  pitchZero:0, rollZero:0, haveTilt:false,
+  // aircraft attitude (deg) & flight
+  roll:0, pitch:0, yaw:0,
+  ias:95, alt:3000, vsi:0, hdg:90, slip:0,
+  aoa:2, cl:0.5, stalled:false, adverse:0, loadFactor:1, vsAccel:52, showLTT:false, showCFI:true,
+  // smoothed surface deflections for rendering (deg)
+  defAilL:0, defAilR:0, defElev:0, defRud:0, defFlap:0,
+  // scenario
+  scen:null, scenIdx:0, holdT:0,
+  // camera orbit (az=0 → directly behind, looking forward at +X nose)
+  camAz:0, camEl:0.32, camDist:17, up:4.5,
+  // on-screen yoke + tilt blend
+  stickAil:0, stickElev:0, usingStick:false, tiltAil:0, tiltElev:0,
+  // aero overlays
+  aero:{vortex:false, slip:false, stream:false, press:false, wind:false},
+  wind:{dirDeg:270, kt:12}
+};
+const D2R=Math.PI/180, R2D=180/Math.PI;
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const lerp=(a,b,t)=>a+(b-a)*t;
+const $=id=>document.getElementById(id);
+
+/* =====================================================================
+   THREE.JS SCENE — low-poly Archer, hinged surfaces
+===================================================================== */
+let renderer,scene,cam,plane,parts={},sky,ground;
+function initThree(){
+  const cv=document.getElementById('three');
+  renderer=new THREE.WebGLRenderer({canvas:cv,antialias:true});
+  renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+  scene=new THREE.Scene();
+  scene.background=new THREE.Color(0x8fc7f0);
+  scene.fog=new THREE.Fog(0x8fc7f0,60,260);
+
+  cam=new THREE.PerspectiveCamera(55,1,0.1,1000);
+
+  // light
+  const sun=new THREE.DirectionalLight(0xfff4e0,1.05);sun.position.set(40,80,30);scene.add(sun);
+  scene.add(new THREE.AmbientLight(0x90a0b8,0.65));
+  const rim=new THREE.DirectionalLight(0x88bbff,0.4);rim.position.set(-30,20,-40);scene.add(rim);
+
+  // ground plane far below (gives motion + horizon reference)
+  const gGeo=new THREE.PlaneGeometry(2000,2000,40,40);
+  const gMat=new THREE.MeshLambertMaterial({color:0x4a7a3a});
+  ground=new THREE.Mesh(gGeo,gMat);ground.rotation.x=-Math.PI/2;ground.position.y=-40;
+  scene.add(ground);
+  // checker-ish strips for motion cue
+  for(let i=-10;i<=10;i++){
+    const stripe=new THREE.Mesh(new THREE.PlaneGeometry(2000,8),
+      new THREE.MeshLambertMaterial({color:0x3f6b32}));
+    stripe.rotation.x=-Math.PI/2;stripe.position.set(0,-39.9,i*60);scene.add(stripe);
+  }
+
+  plane=new THREE.Group();
+  buildArcher(plane);
+  buildAero(plane);
+  scene.add(plane);
+
+  resize();
+  window.addEventListener('resize',resize);
+}
+
+function mat(c){return new THREE.MeshLambertMaterial({color:c});}
+function panelMat(c){return new THREE.MeshLambertMaterial({color:c,side:THREE.DoubleSide});}
+
+function buildArcher(g){
+  const white=0xeef2f6, dark=0x2a2f38, glass=0x6f93b0;
+  // distinct accent colours per control-surface type (teaching aid)
+  const C_AIL=0x3a7bd5, C_ELEV=0x49b85a, C_RUD=0xff8c2a, C_FLAP=0xc24ad0;
+
+  // ---- fuselage: curved body of revolution (LatheGeometry) ----
+  // Profile now includes the cowl taper at the nose so the front is one
+  // continuous shape that necks down to the spinner (per PA-28 reference).
+  const fus=new THREE.Group();
+  const prof=[];
+  const shape=[
+    [0.05,-5.4],[0.30,-5.0],[0.55,-4.2],[0.78,-3.0],[0.95,-1.5],
+    [1.05,-0.2],[1.08,1.0],[1.02,2.4],[0.92,3.6],     // cabin/mid
+    [0.82,4.3],[0.66,4.9],[0.50,5.3],[0.40,5.55]      // cowl taper to nose
+  ];
+  shape.forEach(p=>prof.push(new THREE.Vector2(p[0],p[1])));
+  const latheGeo=new THREE.LatheGeometry(prof,22);
+  const body=new THREE.Mesh(latheGeo,mat(white));
+  body.rotation.z=-Math.PI/2;
+  fus.add(body);
+
+  // dark cowl band around the front of the body (engine cowling, flush)
+  const cowlBand=new THREE.Mesh(new THREE.CylinderGeometry(0.52,0.42,0.8,18),mat(dark));
+  cowlBand.rotation.z=Math.PI/2; cowlBand.position.x=5.15; fus.add(cowlBand);
+  // spinner: small blunt cone faired onto the nose tip, apex forward
+  const spin=new THREE.Mesh(new THREE.ConeGeometry(0.34,0.5,16),mat(0x23282f));
+  spin.rotation.z=-Math.PI/2; spin.position.x=5.8; fus.add(spin);
+  // rounded spinner tip
+  const tip=new THREE.Mesh(new THREE.SphereGeometry(0.1,10,8),mat(0x23282f));
+  tip.position.x=6.04; fus.add(tip);
+  // 2-blade prop just ahead of the spinner base
+  const propG=new THREE.Group(); propG.position.x=5.62;
+  const blade=new THREE.Mesh(new THREE.BoxGeometry(0.08,4.6,0.34),mat(0x0c0f13));
+  propG.add(blade);
+  fus.add(propG); parts.prop=propG;
+
+  // (canopy/windscreen intentionally omitted — not control-surface functional)
+
+  g.add(fus);
+
+  // ---- low wing (PA-28) — each half so surfaces hinge ----
+  const wingY=-0.3, span=14, chord=2.4;
+
+  function wingHalf(side){
+    const grp=new THREE.Group();
+    const main=new THREE.Mesh(new THREE.BoxGeometry(chord,0.18,span/2-1.4),mat(white));
+    main.position.set(-0.2,wingY,side*(span/4+0.4)); grp.add(main);
+    // wingtip — plain white now (no airframe accent)
+    const tip=new THREE.Mesh(new THREE.BoxGeometry(chord*0.8,0.16,1.0),mat(white));
+    tip.position.set(-0.3,wingY,side*(span/2-0.3)); grp.add(tip);
+
+    // aileron — BLUE, OUTBOARD trailing edge (z ≈ 4.2–6.4)
+    const ailHinge=new THREE.Group();
+    ailHinge.position.set(-1.0,wingY,side*5.3);
+    const ail=new THREE.Mesh(new THREE.BoxGeometry(0.7,0.12,2.2),mat(C_AIL));
+    ail.position.set(-0.35,0,0);
+    ailHinge.add(ail); grp.add(ailHinge);
+
+    // flap — MAGENTA, INBOARD trailing edge (z ≈ 1.6–3.8), clear gap from aileron
+    const flapHinge=new THREE.Group();
+    flapHinge.position.set(-1.0,wingY,side*2.7);
+    const flap=new THREE.Mesh(new THREE.BoxGeometry(0.8,0.12,2.2),mat(C_FLAP));
+    flap.position.set(-0.4,0,0);
+    flapHinge.add(flap); grp.add(flapHinge);
+
+    return {grp,ailHinge,flapHinge};
+  }
+  const wl=wingHalf(-1), wr=wingHalf(1);
+  g.add(wl.grp); g.add(wr.grp);
+  parts.ailL=wl.ailHinge; parts.ailR=wr.ailHinge;
+  parts.flapL=wl.flapHinge; parts.flapR=wr.flapHinge;
+
+  // ---- horizontal stabilizer + elevator (GREEN) ----
+  const hstab=new THREE.Mesh(new THREE.BoxGeometry(1.6,0.14,6.5),mat(white));
+  hstab.position.set(-4.2,0.2,0); g.add(hstab);
+  const elevHinge=new THREE.Group(); elevHinge.position.set(-4.9,0.2,0);
+  const elev=new THREE.Mesh(new THREE.BoxGeometry(0.8,0.1,6.3),mat(C_ELEV));
+  elev.position.set(-0.4,0,0); elevHinge.add(elev); g.add(elevHinge);
+  parts.elev=elevHinge;
+
+  // ---- vertical stabilizer + rudder (ORANGE), swept back ----
+  // Build the fin as an extruded side-profile so the leading edge rakes aft.
+  const finShape=new THREE.Shape();
+  // profile in (x = fore/aft, y = up); root at bottom, swept tip toward the rear
+  finShape.moveTo(0.9, 0.0);     // root leading edge (forward, near cabin)
+  finShape.lineTo(-0.9, 0.0);    // root trailing edge (aft)
+  finShape.lineTo(-1.1, 2.5);    // tip trailing edge — swept aft & up
+  finShape.lineTo(-0.35, 2.5);   // tip leading edge
+  finShape.closePath();
+  const finGeo=new THREE.ExtrudeGeometry(finShape,{depth:0.16,bevelEnabled:false});
+  const vstab=new THREE.Mesh(finGeo,mat(white));
+  // shape is already in X(fore/aft)–Y(up); extrude thickness is along +Z.
+  // Center that thickness on the body centerline (no Y rotation — keep it vertical).
+  vstab.position.set(-4.0,0.1,-0.08); g.add(vstab);
+
+  // rudder hinged at the fin trailing edge, following the sweep
+  const rudShape=new THREE.Shape();
+  rudShape.moveTo(0, 0.0);
+  rudShape.lineTo(-0.85, 0.0);
+  rudShape.lineTo(-1.05, 2.35);
+  rudShape.lineTo(-0.18, 2.35);
+  rudShape.closePath();
+  const rudGeo=new THREE.ExtrudeGeometry(rudShape,{depth:0.12,bevelEnabled:false});
+  const rudHinge=new THREE.Group(); rudHinge.position.set(-4.9,0.15,0);
+  const rud=new THREE.Mesh(rudGeo,mat(C_RUD));
+  rud.position.z=-0.06;             // center thickness; no Y rotation (stays vertical)
+  rudHinge.add(rud); g.add(rudHinge);
+  parts.rud=rudHinge;
+
+  // landing gear (fixed)
+  function leg(x,z){const l=new THREE.Mesh(new THREE.CylinderGeometry(0.08,0.08,1.4,6),mat(dark));
+    l.position.set(x,-1.0,z); g.add(l);
+    const w=new THREE.Mesh(new THREE.CylinderGeometry(0.45,0.45,0.3,12),mat(0x15181d));
+    w.rotation.x=Math.PI/2; w.position.set(x,-1.7,z); g.add(w);}
+  leg(1.2,1.6); leg(1.2,-1.6); leg(4.0,0);
+}
+
+/* =====================================================================
+   AERO OVERLAYS — conceptual flow visualisation, attached to the plane.
+   All scale with angle of attack (pitch), speed, and power.
+===================================================================== */
+let aeroGroup, aero={}, flowTex;
+// a reusable scrolling texture that makes tubes look like moving flow
+function makeFlowTexture(base){
+  const c=document.createElement('canvas');c.width=64;c.height=8;
+  const x=c.getContext('2d');
+  // bright dashes on translucent base → scroll = motion
+  x.fillStyle='rgba(255,255,255,0.0)';x.fillRect(0,0,64,8);
+  for(let i=0;i<64;i+=16){const g=x.createLinearGradient(i,0,i+16,0);
+    g.addColorStop(0,'rgba(255,255,255,0)');g.addColorStop(0.5,'rgba(255,255,255,0.95)');
+    g.addColorStop(1,'rgba(255,255,255,0)');x.fillStyle=g;x.fillRect(i,0,16,8);}
+  const t=new THREE.CanvasTexture(c);
+  t.wrapS=t.wrapT=THREE.RepeatWrapping;t.repeat.set(6,1);
+  return t;
+}
+function flowTube(curvePts, radius, color, segs){
+  const curve=new THREE.CatmullRomCurve3(curvePts);
+  const geo=new THREE.TubeGeometry(curve, segs||60, radius, 8, false);
+  const tex=makeFlowTexture();
+  const m=new THREE.MeshBasicMaterial({color,transparent:true,opacity:0.8,
+    map:tex, side:THREE.DoubleSide, depthWrite:false});
+  const mesh=new THREE.Mesh(geo,m); mesh.userData.tex=tex; return mesh;
+}
+
+function buildAero(g){
+  aeroGroup=new THREE.Group(); g.add(aeroGroup);
+  const wingY=-0.3, span=14;
+
+  // ---- wingtip vortices: thick trailing spiral tubes off each tip ----
+  function vortex(side){
+    const N=70, turns=3.4, len=12, rad=0.6, pts=[];
+    for(let i=0;i<=N;i++){const t=i/N;
+      const x=-1.0 - t*len;
+      const ang=t*turns*Math.PI*2*(side>0?1:-1);
+      const r=rad*(0.3+0.8*t);
+      pts.push(new THREE.Vector3(x, wingY+Math.sin(ang)*r, side*(span/2-0.3)+Math.cos(ang)*r*side));
+    }
+    return flowTube(pts, 0.11, 0x7fd8ff, 80);
+  }
+  aero.vortexL=vortex(-1); aero.vortexR=vortex(1);
+  aeroGroup.add(aero.vortexL); aeroGroup.add(aero.vortexR);
+
+  // ---- slipstream: thick helical tube from prop wrapping the fuselage/tail ----
+  (function(){
+    const N=90, turns=2.8, len=11, rad=1.35, pts=[];
+    for(let i=0;i<=N;i++){const t=i/N;
+      const x=5.3 - t*len, ang=t*turns*Math.PI*2;
+      // stays a roughly constant-diameter tube (only mild contraction), wrapping the body
+      const r=rad*(1-0.12*t);
+      pts.push(new THREE.Vector3(x, 0.1+Math.sin(ang)*r, Math.cos(ang)*r));
+    }
+    aero.slip=flowTube(pts, 0.14, 0xffd27f, 100); aeroGroup.add(aero.slip);
+  })();
+
+  // ---- streamlines: thick tubes over & under the wing (rebuilt for flaps) ----
+  aero.streamStations=[-4.6,-2.5,2.5,4.6];
+  function wingStreamPts(zPos, flapDef){
+    // flapDef in deg → extra camber + sharper downward turn at the trailing edge
+    const fk=flapDef/40;                    // 0..1
+    const up=[], lo=[];
+    for(let i=0;i<=26;i++){const t=i/26, x=2.4 - t*4.8;
+      const camber=Math.exp(-Math.pow((x-0.2)/1.1,2));
+      // upper bows higher with flaps; trailing edge bends down more (downwash)
+      const teTurn = t*t*(0.26 + fk*0.5);
+      up.push(new THREE.Vector3(x, wingY+0.24 + camber*(0.55+fk*0.4) - teTurn, zPos));
+      lo.push(new THREE.Vector3(x, wingY-0.20 - camber*0.05 - t*(0.05+fk*0.18), zPos));
+    }
+    return {up,lo};
+  }
+  (function(){
+    const grp=new THREE.Group();
+    aero.streamStations.forEach(zPos=>{
+      const {up,lo}=wingStreamPts(zPos,0);
+      grp.add(flowTube(up, 0.07, 0x9fe0ff, 40));
+      grp.add(flowTube(lo, 0.06, 0x9fb4ff, 40));
+    });
+    aero.stream=grp; aeroGroup.add(grp);
+  })();
+
+  // ---- ELEVATOR flow: tubes over the horizontal stab, deflecting with elevator ----
+  aero.elevStations=[-1.8,1.8];
+  function elevStreamPts(zPos, elevDef){
+    // elevDef deg (+ = trailing edge up → flow turns up → nose up). Show flow bending.
+    const turn=elevDef/22;
+    const pts=[];
+    for(let i=0;i<=18;i++){const t=i/18, x=-3.4 - t*2.6;
+      pts.push(new THREE.Vector3(x, 0.2 + 0.15*Math.exp(-Math.pow((x+4.5)/0.7,2)) + t*turn*0.5, zPos));
+    }
+    return pts;
+  }
+  (function(){
+    const grp=new THREE.Group();
+    aero.elevStations.forEach(z=>grp.add(flowTube(elevStreamPts(z,0),0.05,0x86e6a0,28)));
+    aero.elevFlow=grp; aeroGroup.add(grp);
+  })();
+
+  // ---- RUDDER flow: tubes past the vertical fin, deflecting left/right ----
+  function rudStreamPts(yPos, rudDef){
+    const turn=rudDef/25;
+    const pts=[];
+    for(let i=0;i<=18;i++){const t=i/18, x=-3.6 - t*2.6;
+      pts.push(new THREE.Vector3(x, yPos, 0 + t*turn*0.6));
+    }
+    return pts;
+  }
+  (function(){
+    const grp=new THREE.Group();
+    [0.7,1.5,2.3].forEach(y=>grp.add(flowTube(rudStreamPts(y,0),0.045,0xffc27a,28)));
+    aero.rudFlow=grp; aeroGroup.add(grp);
+  })();
+
+  // expose generators so updateAero can rebuild geometry when surfaces move
+  aero.gen={wing:wingStreamPts, elev:elevStreamPts, rud:rudStreamPts};
+
+  // ---- pressure shading panels ----
+  (function(){
+    const grp=new THREE.Group();
+    const top=new THREE.Mesh(new THREE.PlaneGeometry(2.4,span-2),
+      new THREE.MeshBasicMaterial({color:0x2a64ff,transparent:true,opacity:0,side:THREE.DoubleSide,depthWrite:false}));
+    top.rotation.x=-Math.PI/2; top.position.set(-0.2,wingY+0.5,0);
+    const bot=new THREE.Mesh(new THREE.PlaneGeometry(2.4,span-2),
+      new THREE.MeshBasicMaterial({color:0xff4a3a,transparent:true,opacity:0,side:THREE.DoubleSide,depthWrite:false}));
+    bot.rotation.x=-Math.PI/2; bot.position.set(-0.2,wingY-0.5,0);
+    grp.add(top); grp.add(bot);
+    aero.press=grp; aero.pressTop=top.material; aero.pressBot=bot.material;
+    aeroGroup.add(grp);
+  })();
+
+  // ---- WIND layer: long straight flow tubes streaming through the scene ----
+  (function(){
+    const grp=new THREE.Group();
+    for(let k=0;k<5;k++){
+      const y=wingY + (k-2)*0.9, pts=[
+        new THREE.Vector3(16, y, (k-2)*2.2),
+        new THREE.Vector3(-16, y, (k-2)*2.2)];
+      grp.add(flowTube(pts, 0.05, 0xbfe9c0, 20));
+    }
+    // a wind-direction arrow (cone) placed upstream
+    const arrow=new THREE.Mesh(new THREE.ConeGeometry(0.5,1.2,12),
+      new THREE.MeshBasicMaterial({color:0xbfe9c0,transparent:true,opacity:0.85}));
+    arrow.rotation.z=Math.PI/2; arrow.position.set(13,wingY+2.4,0);
+    grp.add(arrow); aero.windArrow=arrow;
+    aero.wind=grp; aeroGroup.add(grp);
+  })();
+
+  // all hidden initially
+  aero.vortexL.visible=aero.vortexR.visible=false;
+  aero.slip.visible=aero.stream.visible=aero.press.visible=aero.wind.visible=false;
+  aero.elevFlow.visible=aero.rudFlow.visible=false;
+}
+
+function eachFlowTube(obj, fn){
+  obj.traverse(o=>{if(o.isMesh && o.userData.tex) fn(o);});
+}
+
+function rebuildTube(mesh, pts, radius){
+  const curve=new THREE.CatmullRomCurve3(pts);
+  const ng=new THREE.TubeGeometry(curve, mesh.geometry.parameters.tubularSegments||40, radius, 8, false);
+  mesh.geometry.dispose(); mesh.geometry=ng;
+}
+
+let _lastFlap=-1,_lastElev=999,_lastRud=999;
+function updateAero(dt){
+  if(!aeroGroup) return;
+  const aoa = clamp(S.pitch/12 + (95-S.ias)/60, 0, 1.6);
+  const lift = clamp(0.25 + aoa*0.6 + S.defFlap*0.012, 0.1, 1.4);
+  const flowSpeed = clamp(S.ias/95, 0.4, 1.8);
+  const scroll = (dt||0.016) * flowSpeed * 2.2;
+  const animate=(obj,on)=>{obj.visible=on; if(on) eachFlowTube(obj,o=>{o.userData.tex.offset.x-=scroll;});};
+
+  // rebuild wing streamlines when flap setting changes (camber responds to flaps)
+  if(S.aero.stream && Math.abs(S.defFlap-_lastFlap)>0.5){
+    _lastFlap=S.defFlap;
+    aero.streamStations.forEach((z,si)=>{
+      const {up,lo}=aero.gen.wing(z,S.defFlap);
+      rebuildTube(aero.stream.children[si*2], up, 0.07);
+      rebuildTube(aero.stream.children[si*2+1], lo, 0.06);
+    });
+  }
+  // rebuild elevator flow when elevator moves
+  if(S.aero.stream && Math.abs(S.defElev-_lastElev)>0.5){
+    _lastElev=S.defElev;
+    aero.elevStations.forEach((z,si)=>rebuildTube(aero.elevFlow.children[si], aero.gen.elev(z,S.defElev),0.05));
+  }
+  // rebuild rudder flow when rudder moves
+  if(S.aero.stream && Math.abs(S.defRud-_lastRud)>0.5){
+    _lastRud=S.defRud;
+    [0.7,1.5,2.3].forEach((y,si)=>rebuildTube(aero.rudFlow.children[si], aero.gen.rud(y,S.defRud),0.045));
+  }
+
+  // vortices
+  const vOn=S.aero.vortex;
+  [aero.vortexL,aero.vortexR].forEach(v=>{animate(v,vOn);
+    if(vOn){v.material.opacity=clamp(0.4+lift*0.5,0.3,0.98);
+      v.scale.set(1,0.6+lift*0.6,0.6+lift*0.6);}});
+
+  // slipstream + P-factor offset
+  animate(aero.slip,S.aero.slip);
+  if(S.aero.slip){const pwr=clamp((S.ias-70)/60,0.25,1);
+    eachFlowTube(aero.slip,o=>o.material.opacity=0.5+pwr*0.45);
+    aero.slip.position.z=aoa*0.3;} else aero.slip.position.z=0;
+
+  // streamlines — wing + tail surfaces. Upper wing flow separates when stalled.
+  animate(aero.stream,S.aero.stream);
+  animate(aero.elevFlow,S.aero.stream);
+  animate(aero.rudFlow,S.aero.stream);
+  if(S.aero.stream){
+    aero.stream.children.forEach((tube,i)=>{
+      const isUpper=(i%2===0);
+      if(isUpper && S.stalled){
+        // detached, turbulent: jitter upward and flicker
+        tube.position.y = 0.3 + Math.sin(performance.now()*0.02+i)*0.15;
+        tube.material.color.setHex(0xff6b5e);
+        tube.material.opacity=0.5+Math.random()*0.35;
+      } else if(isUpper){
+        tube.position.y=0; tube.material.color.setHex(0x9fe0ff); tube.material.opacity=0.8;
+      }
+    });
+  }
+
+  // pressure
+  aero.press.visible=S.aero.press;
+  if(S.aero.press){aero.pressTop.opacity=clamp(lift*0.30,0.05,0.45);
+    aero.pressBot.opacity=clamp(lift*0.20,0.04,0.30);}
+
+  // left-turning tendencies: live "which dominates now" readout
+  if(S.showLTT){const dom=$('lttDom');
+    if(dom){const highPower=S.ias<90, highAoA=S.pitch>6||S.ias<75;
+      dom.textContent = (highAoA&&highPower)?'Now: high AoA + power → P-factor & slipstream dominate (climb-out).'
+        : highPower?'Now: high power, low speed → torque & slipstream dominate (takeoff roll).'
+        : 'Now: cruise — all four are small; little rudder needed.';}}
+
+  // WIND layer + its influence on the other visuals
+  animate(aero.wind,S.aero.wind);
+  // wind vector (in body-ish frame): crosswind pushes flow sideways, head/tailwind scales speed
+  const wdir=S.wind.dirDeg*D2R, wspd=S.wind.kt/15; // normalized
+  if(S.aero.wind){
+    // tint arrow & point it from the wind's bearing
+    aero.windArrow.rotation.set(0,0,Math.PI/2);
+    aero.windArrow.rotation.y=wdir;
+    eachFlowTube(aero.wind,o=>o.material.opacity=0.4+Math.min(0.5,wspd*0.4));
+  }
+  // when wind is on, skew the vortices/slipstream/streamlines laterally to show drift
+  const lateralSkew = (S.aero.wind? Math.sin(wdir)*wspd*0.6 : 0);
+  aeroGroup.children.forEach(()=>{});
+  [aero.vortexL,aero.vortexR,aero.slip,aero.stream].forEach(o=>{
+    o.rotation.y = lateralSkew * 0.25; // gentle yaw of the trailing flow with crosswind
+  });
+}
+
+function resize(){
+  const s=document.getElementById('scene');
+  const w=s.clientWidth,h=s.clientHeight;
+  renderer.setSize(w,h,false); cam.aspect=w/h; cam.updateProjectionMatrix();
+}
+
+/* =====================================================================
+   FLIGHT MODEL — simplified, but correct cause→effect
+===================================================================== */
+function step(dt){
+  // combine inputs: on-screen yoke takes priority when in use, else tilt
+  const useStick = S.usingStick && (Math.abs(S.stickAil)>0.01||Math.abs(S.stickElev)>0.01);
+  S.aileron  = useStick ? S.stickAil  : S.tiltAil;
+  S.elevator = useStick ? S.stickElev : S.tiltElev;
+  const activeInput = useStick || S.tiltArmed&&(Math.abs(S.tiltAil)>0.04||Math.abs(S.tiltElev)>0.04);
+
+  // --- inputs → target surface deflections (deg) ---
+  const tgtAil=S.aileron*20;       // ±20°
+  const tgtElev=-S.elevator*22;    // pull = +pitch, surface up
+  const tgtRud=S.rudder*25;        // ±25°
+  const tgtFlap=[0,10,40][S.flapStep];
+
+  // smooth surfaces (actuator rate)
+  S.defAilL=lerp(S.defAilL,tgtAil,1-Math.pow(0.001,dt));
+  S.defAilR=lerp(S.defAilR,-tgtAil,1-Math.pow(0.001,dt));
+  S.defElev=lerp(S.defElev,tgtElev,1-Math.pow(0.001,dt));
+  S.defRud=lerp(S.defRud,tgtRud,1-Math.pow(0.01,dt));
+  S.defFlap=lerp(S.defFlap,tgtFlap,1-Math.pow(0.2,dt));
+
+  // --- angle of attack, load factor & stall ------------------------
+  const V=S.ias*0.5144; // kt→m/s
+  const fpa = (V>3) ? Math.atan2(S.vsi*0.00508, V) * R2D : 0;
+  // Load factor in a turn: n = 1/cos(bank). A banked wing must fly at higher AoA
+  // for the same flight path → it reaches critical AoA at a HIGHER speed.
+  S.loadFactor = 1/Math.max(0.2, Math.cos(S.roll*D2R));   // g's
+  // accelerated-stall: extra AoA demand proportional to (n−1)
+  S.aoa = S.pitch - fpa + 2.0 + (S.loadFactor-1)*7;
+  const critAoA = 16 - S.defFlap*0.06;
+  S.stalled = S.aoa > critAoA;
+  // stall speed rises with √n: Vs(turn) = Vs1g · √n  (shown in HUD)
+  S.vsAccel = 52 * Math.sqrt(S.loadFactor);   // ~52 kt 1-g stall, illustrative
+  const aoaN = S.aoa/critAoA;
+  S.cl = S.stalled ? clamp(1.4 - (S.aoa-critAoA)*0.10, 0.3, 1.5)
+                   : clamp(0.15 + aoaN*1.25, 0.1, 1.5);
+
+  // --- attitude response ---
+  // roll rate proportional to aileron (degraded when stalled — mushy controls)
+  const rollAuth = S.stalled ? 0.4 : 1.0;
+  S.roll=clamp(S.roll + S.aileron*45*rollAuth*dt, -75,75);
+  // pitch from elevator; when stalled the nose tends to drop (pitch authority fades)
+  const pitchCmd = S.stalled ? (S.elevator*5 - 8) : (S.elevator*14 - S.defFlap*0.05);
+  S.pitch=clamp(S.pitch + pitchCmd*dt, -18,22);
+  // bank produces turn (yaw rate ∝ tan bank / V)
+  const g=9.81;
+  const turnRate = V>5 ? (g*Math.tan(S.roll*D2R))/V * R2D : 0; // deg/s
+  // --- ADVERSE YAW: rolling produces yaw OPPOSITE the roll (down-aileron drag) ---
+  // proportional to roll RATE (aileron deflection), strongest at low speed/high AoA.
+  const adverseYaw = -S.aileron * 6 * (1 + (95-S.ias)/120);   // deg/s, opposite roll
+  S.adverse = adverseYaw;
+  const totalYawRate = turnRate + S.rudder*8 + adverseYaw;
+  S.hdg=(S.hdg + totalYawRate*dt +360)%360;
+  S.yaw=(S.yaw + totalYawRate*dt);
+  // slip/skid ball: now includes adverse yaw — uncoordinated until rudder cancels it
+  const coordRud = (turnRate/8);
+  S.slip = clamp((S.rudder - coordRud) - adverseYaw/10, -1, 1);
+
+  // --- energy: simplified speed/alt ---
+  const drag = 0.02 + S.defFlap*0.0012 + Math.abs(S.roll)*0.0004 + (S.stalled?0.04:0);
+  S.ias += (-(S.pitch*0.25) - (S.ias-95)*0.04 - drag*30 + 0)*dt;
+  S.ias = clamp(S.ias, 40, 160);
+  // Climb performance fades as speed decays — you can't sustain climb when slow.
+  // This is what lets a high nose at low speed flatten the flight path and raise AoA.
+  const climbCap = clamp((S.ias-55)/40, 0, 1);   // ~0 below 55 kt, full by ~95
+  S.vsi = S.stalled ? (S.pitch*30 - 900)
+                    : ((S.pitch*90)*climbCap - S.defFlap*4);
+  S.alt = clamp(S.alt + S.vsi/60*dt, 0, 14000);
+
+  // auto-level damping only when truly hands-off (training friendliness)
+  if(Math.abs(S.aileron)<0.05) S.roll=lerp(S.roll,0,1-Math.pow(0.6,dt));
+  if(Math.abs(S.elevator)<0.05) S.pitch=lerp(S.pitch,0,1-Math.pow(0.7,dt));
+
+  applyToMesh(dt);
+  if(S.mode==='scenario') scenarioTick(dt);
+  cfiTick(dt);
+}
+
+/* ===== CFI instructor commentary: event-driven, contextual, cooldown-gated ===== */
+const cfi={t:0, cool:0, last:'', shownUntil:0, prev:{}, remIdx:0, remTimer:0};
+const CFI_REMINDERS=[
+  'Remember — the wing stalls at an <i>angle</i>, not a speed. You can stall at any airspeed, any attitude.',
+  'Remember — step on the ball to stay coordinated; the rudder is not optional in a turn.',
+  'Remember — pitch sets airspeed, power sets altitude, in the region of normal ops. Trim off the pressure.',
+  'Remember — load up the wing in a steep turn and stall speed climbs with it. √(load factor).',
+  'Remember — left-turning tendencies all push the nose left under power; that’s what your right foot is for.'
+];
+function cfiSay(msg, holdSec, key){
+  if(!S.showCFI) return;
+  if(cfi.cool>0) return;
+  if(key && cfi.last===key && cfi.t<cfi.shownUntil+6) return; // don't repeat same note too soon
+  const el=$('cfiText'); if(!el) return;
+  el.innerHTML=msg; $('cfiTip').classList.add('show');
+  cfi.shownUntil=cfi.t+ (holdSec||5); cfi.cool=2.2; cfi.last=key||msg;
+}
+function cfiTick(dt){
+  cfi.t+=dt; if(cfi.cool>0) cfi.cool-=dt;
+  const tip=$('cfiTip'); if(!tip) return;
+  if(!S.showCFI){ tip.classList.remove('show'); return; }
+  if(cfi.t>cfi.shownUntil) tip.classList.remove('show');
+  const p=cfi.prev;
+  // --- event-triggered "watch what happens" notes ---
+  if(S.stalled && !p.stalled)
+    cfiSay('Watch what happens — you exceeded the <b>critical angle of attack</b>. Note it stalled from the <i>angle</i>, not a magic speed. Lower the nose to recover.',6,'stall');
+  else if(S.loadFactor>1.6 && (p.loadFactor||1)<=1.6)
+    cfiSay('Watch the <b>G-load</b> and <b>Vs</b> climb as you bank. At 60° you’re pulling 2 G and the stall speed is up ~40%. This is the <i>accelerated stall</i> — how the base-to-final overshoot kills people.',6,'accel');
+  else if(Math.abs(S.adverse)>2.5 && Math.abs(p.adverse||0)<=2.5)
+    cfiSay('Watch the nose swing <i>away</i> from your turn — that’s <b>adverse yaw</b> from the down-aileron’s drag. Add rudder <i>with</i> the aileron to keep the ball centered.',6,'adverse');
+  else if(S.defFlap>5 && (p.defFlap||0)<=5)
+    cfiSay('Flaps coming down — notice the <b>nose pitch change</b> and the extra lift <i>and</i> drag. Re-trim, and expect a lower deck angle on approach.',5,'flap');
+  else if(S.pitch>10 && (p.pitch||0)<=10)
+    cfiSay('Nose coming up — <b>angle of attack is increasing</b>. Hold this and watch the AoA gauge march toward the red as speed bleeds off.',5,'pitchup');
+  else if(Math.abs(S.roll)>30 && Math.abs(p.roll||0)<=30)
+    cfiSay('Steep bank — you’re past 30°. <b>Back-pressure</b> is holding the nose up, which is loading the wing. Keep an eye on that G-meter.',5,'steepbank');
+  else {
+    // --- occasional standing reminders when things are calm ---
+    const calm = !S.stalled && Math.abs(S.roll)<15 && S.pitch<8 && S.pitch>-4;
+    if(calm){cfi.remTimer+=dt;
+      if(cfi.remTimer>22 && cfi.cool<=0){cfi.remTimer=0;
+        cfiSay(CFI_REMINDERS[cfi.remIdx%CFI_REMINDERS.length],6,'rem'+cfi.remIdx); cfi.remIdx++;}
+    } else cfi.remTimer=Math.max(0,cfi.remTimer-dt);
+  }
+  // snapshot
+  cfi.prev={stalled:S.stalled,loadFactor:S.loadFactor,adverse:S.adverse,defFlap:S.defFlap,pitch:S.pitch,roll:S.roll};
+}
+
+function applyToMesh(dt){
+  // attitude
+  // Body frame: nose +X, wings ±Z. So ROLL (bank) is about X (longitudinal),
+  // PITCH (nose up/down) is about Z, YAW about Y. Euler order 'YZX' applies
+  // yaw → pitch → roll intrinsically, keeping roll about the longitudinal axis.
+  plane.rotation.order='YZX';
+  plane.rotation.set(
+     S.roll*D2R,              // X: roll / bank about longitudinal axis
+    -S.yaw*D2R*0.15,          // Y: gentle visual yaw drift
+     S.pitch*D2R              // Z: pitch (nose up positive)
+  );
+
+  // surfaces (hinge rotations)
+  parts.ailL.rotation.z = -S.defAilL*D2R;
+  parts.ailR.rotation.z = -S.defAilR*D2R;
+  parts.elev.rotation.z = -S.defElev*D2R;
+  parts.rud.rotation.y  =  S.defRud*D2R;
+  // flaps hinge DOWN (positive z-rotation drops trailing edge below wing)
+  parts.flapL.rotation.z = S.defFlap*D2R;
+  parts.flapR.rotation.z = S.defFlap*D2R;
+  parts.prop.rotation.x += 0.9; // spin
+
+  // chase camera: BEHIND (-X, nose points +X) & above, orbitable
+  const az=S.camAz, el=S.camEl, dist=S.camDist;
+  const cx=-Math.cos(el)*Math.cos(az)*dist;
+  const cz= Math.cos(el)*Math.sin(az)*dist;
+  const cyp= S.up + Math.sin(el)*dist;
+  cam.position.set(cx, cyp, cz);
+  cam.up.set(0,1,0);
+  cam.lookAt(0,0.5,0);
+
+  // ground scrolls to fake forward motion
+  ground.position.x = (performance.now()*0.001*S.ias*0.02)%60 - 30;
+
+  updateAero(dt);
+  updateLabels();
+}
+
+/* =====================================================================
+   SURFACE LABELS — projected to screen
+===================================================================== */
+const labelDefs=[
+  {key:'ailL', pos:[-1.4,-0.3,-5.4], txt:'AILERON', col:'#5b9bf0', hotIf:()=>Math.abs(S.defAilL)>3},
+  {key:'ailR', pos:[-1.4,-0.3,5.4],  txt:'AILERON', col:'#5b9bf0', hotIf:()=>Math.abs(S.defAilR)>3},
+  {key:'elev', pos:[-5.3,0.2,2.6],   txt:'ELEVATOR',col:'#6cd47c', hotIf:()=>Math.abs(S.defElev)>3},
+  {key:'rud',  pos:[-5.4,2.6,0],     txt:'RUDDER',  col:'#ffa24d', hotIf:()=>Math.abs(S.defRud)>3},
+  {key:'flapL',pos:[-1.5,-0.3,-2.7], txt:'FLAP',    col:'#d96fe0', hotIf:()=>S.defFlap>3},
+  {key:'flapR',pos:[-1.5,-0.3,2.7],  txt:'FLAP',    col:'#d96fe0', hotIf:()=>S.defFlap>3},
+];
+let labelEls={};
+function buildLabels(){
+  const box=document.getElementById('labels');
+  labelDefs.forEach(d=>{const el=document.createElement('div');el.className='slab';el.textContent=d.txt;
+    el.style.color=d.col; el.style.borderColor=d.col;
+    box.appendChild(el);labelEls[d.key+d.pos.join()]=el;});
+}
+const _v=new THREE.Vector3();
+function updateLabels(){
+  const w=renderer.domElement.clientWidth,h=renderer.domElement.clientHeight;
+  labelDefs.forEach(d=>{
+    const el=labelEls[d.key+d.pos.join()];
+    if(!S.showLabels){el.style.opacity=0;return;}
+    _v.set(...d.pos); plane.localToWorld(_v); _v.project(cam);
+    const x=(_v.x*0.5+0.5)*w, y=(-_v.y*0.5+0.5)*h;
+    const vis=_v.z<1;
+    el.style.opacity=vis?1:0;
+    el.style.left=x+'px'; el.style.top=y+'px';
+    el.classList.toggle('hot',d.hotIf());
+  });
+}
+
+/* =====================================================================
+   G1000 PFD
+===================================================================== */
+const pfd=document.getElementById('pfdCanvas'),px=pfd.getContext('2d');
+function drawPFD(){
+  const W=800,H=170; px.clearRect(0,0,W,H);
+  px.fillStyle='#000'; px.fillRect(0,0,W,H);
+
+  // ----- attitude indicator (center) -----
+  const ax=W/2, ay=H/2, aw=210, ah=H-20;
+  px.save();
+  px.beginPath();px.rect(ax-aw/2,10,aw,ah);px.clip();
+  px.translate(ax,ay);
+  px.rotate(-S.roll*D2R);
+  const pitchPx=S.pitch*3.0;
+  // sky & ground
+  px.fillStyle='#3a7bd5';px.fillRect(-300,-300+pitchPx,600,300);
+  px.fillStyle='#9c6b2f';px.fillRect(-300,pitchPx,600,300);
+  px.strokeStyle='#fff';px.lineWidth=2;px.beginPath();px.moveTo(-aw,pitchPx);px.lineTo(aw,pitchPx);px.stroke();
+  // pitch ladder
+  px.strokeStyle='rgba(255,255,255,.8)';px.fillStyle='#fff';px.font='10px "Share Tech Mono"';
+  px.textAlign='center';px.lineWidth=1.5;
+  for(let p=-20;p<=20;p+=10){if(!p)continue;const y=pitchPx - p*3.0;
+    px.beginPath();px.moveTo(-26,y);px.lineTo(26,y);px.stroke();
+    px.fillText(Math.abs(p),-38,y+3);px.fillText(Math.abs(p),38,y+3);}
+  px.restore();
+  // roll arc + pointer
+  px.save();px.translate(ax,ay);
+  px.strokeStyle='#fff';px.lineWidth=1.5;
+  for(let a=-60;a<=60;a+=10){const r=a*D2R;const r1=ah/2-2,r2=ah/2-(a%30===0?12:7);
+    px.beginPath();px.moveTo(Math.sin(r)*r1,-Math.cos(r)*r1);px.lineTo(Math.sin(r)*r2,-Math.cos(r)*r2);px.stroke();}
+  // roll pointer (triangle) fixed to top, rotates with bank
+  px.rotate(-S.roll*D2R);
+  px.fillStyle='#fff';px.beginPath();px.moveTo(0,-(ah/2-2));px.lineTo(-6,-(ah/2-12));px.lineTo(6,-(ah/2-12));px.closePath();px.fill();
+  px.restore();
+  // fixed aircraft reference + slip-skid
+  px.save();px.translate(ax,ay);
+  px.strokeStyle='#ffcf00';px.lineWidth=3;
+  px.beginPath();px.moveTo(-50,0);px.lineTo(-18,0);px.moveTo(18,0);px.lineTo(50,0);
+  px.moveTo(0,0);px.lineTo(0,8);px.stroke();
+  px.fillStyle='#ffcf00';px.fillRect(-3,-3,6,6);
+  // slip-skid trapezoid under roll pointer
+  px.fillStyle='#fff';const sx=clamp(S.slip*30,-30,30);
+  px.fillRect(-12+sx,-(ah/2-14),24,5);
+  px.restore();
+  px.strokeStyle='#444';px.strokeRect(ax-aw/2,10,aw,ah);
+
+  // ----- airspeed tape (left) -----
+  drawTape(px, ax-aw/2-72, 10, 64, ah, S.ias, 10, '#fff', true, 'IAS');
+  // ----- altitude tape (right) -----
+  drawTape(px, ax+aw/2+8, 10, 70, ah, S.alt/1, 200, '#fff', false, 'ALT');
+  // ----- VSI (far right) -----
+  drawVSI(px, ax+aw/2+82, 10, 30, ah);
+
+  // ----- HSI strip along bottom -----
+  drawHSI(px, ax, H-14, S.hdg);
+
+  // mode tag
+  px.fillStyle='#0f0';px.font='11px "Share Tech Mono"';px.textAlign='left';
+  px.fillText('G1000 PFD', 8, 16);
+
+  // ----- AoA indicator (left of airspeed tape): a vertical chevron gauge -----
+  const oax=14, oay=24, ow=22, oh=H-44;
+  px.fillStyle='rgba(20,24,30,.9)';px.fillRect(oax,oay,ow,oh);
+  px.strokeStyle='#556';px.strokeRect(oax,oay,ow,oh);
+  // colour bands: green (normal) → yellow → red (near/at stall)
+  const bands=[['#1f7a3a',0,0.55],['#b8a52e',0.55,0.82],['#c4463c',0.82,1]];
+  bands.forEach(([c,a,b])=>{px.fillStyle=c;px.fillRect(oax+1,oay+1+(1-b)*(oh-2),ow-2,(b-a)*(oh-2));});
+  // pointer at current AoA fraction of critical
+  const critA=16-S.defFlap*0.06, frac=clamp(S.aoa/critA,-0.1,1.1);
+  const py=oay+1+(1-frac)*(oh-2);
+  px.fillStyle='#fff';px.beginPath();px.moveTo(oax+ow,py);px.lineTo(oax+ow-7,py-5);px.lineTo(oax+ow-7,py+5);px.closePath();px.fill();
+  px.fillStyle='#9aa';px.font='8px "Share Tech Mono"';px.textAlign='center';px.fillText('AOA',oax+ow/2,oay-3);
+
+  // ----- STALL annunciator -----
+  if(S.stalled){
+    px.fillStyle='#c4463c';px.fillRect(ax-44,12,88,20);
+    px.fillStyle='#fff';px.font='600 15px "Share Tech Mono"';px.textAlign='center';
+    px.fillText('STALL', ax, 27);
+  }
+  // ----- load factor (G) + accelerated stall speed -----
+  const n=S.loadFactor||1;
+  px.textAlign='right';px.font='11px "Share Tech Mono"';
+  px.fillStyle = n>2.5?'#ff6b5e':n>1.5?'#ffcf7a':'#9aa';
+  px.fillText(n.toFixed(1)+' G', W-8, 16);
+  px.fillStyle='#9aa';px.font='9px "Share Tech Mono"';
+  px.fillText('Vs '+Math.round(S.vsAccel||52)+'kt', W-8, 28);
+}
+function drawTape(c,x,y,w,h,val,step,col,left,lbl){
+  c.save();c.beginPath();c.rect(x,y,w,h);c.clip();
+  c.fillStyle='rgba(20,24,30,.85)';c.fillRect(x,y,w,h);
+  c.strokeStyle='#556';c.lineWidth=1;c.fillStyle=col;c.font='13px "Share Tech Mono"';
+  c.textAlign=left?'right':'left';
+  const cy=y+h/2, ppu=h/(step*5); // pixels per unit shown
+  const base=Math.round(val/step)*step;
+  for(let i=-3;i<=3;i++){const v=base+i*step;const yy=cy-(v-val)*ppu;
+    if(yy<y||yy>y+h)continue;
+    c.beginPath();c.moveTo(left?x+w:x,yy);c.lineTo(left?x+w-7:x+7,yy);c.stroke();
+    c.fillText(Math.round(v), left?x+w-10:x+10, yy+4);}
+  c.restore();
+  // current value box
+  c.fillStyle='#000';c.strokeStyle=col;c.lineWidth=1.5;
+  const bw=w-6,bh=22,bx=x+3,by=cy-bh/2;
+  c.fillRect(bx,by,bw,bh);c.strokeRect(bx,by,bw,bh);
+  c.fillStyle=col;c.font='600 15px "Share Tech Mono"';c.textAlign='center';
+  c.fillText(Math.round(val),x+w/2,cy+5);
+  c.fillStyle='#9aa';c.font='9px "Share Tech Mono"';c.fillText(lbl,x+w/2,y+10);
+}
+function drawVSI(c,x,y,w,h){
+  c.fillStyle='rgba(20,24,30,.85)';c.fillRect(x,y,w,h);
+  c.strokeStyle='#556';c.lineWidth=1;c.strokeRect(x,y,w,h);
+  const cy=y+h/2, max=2000, ppf=(h/2-6)/max;
+  c.strokeStyle='#778';for(let v=-2000;v<=2000;v+=1000){const yy=cy-v*ppf;
+    c.beginPath();c.moveTo(x,yy);c.lineTo(x+5,yy);c.stroke();}
+  const vy=cy-clamp(S.vsi,-max,max)*ppf;
+  c.strokeStyle='#0f0';c.lineWidth=2;c.beginPath();c.moveTo(x,cy);c.lineTo(x+w,vy);c.stroke();
+  c.fillStyle='#9aa';c.font='8px "Share Tech Mono"';c.textAlign='center';c.fillText('VSI',x+w/2,y+9);
+}
+function drawHSI(c,cx,cy,hdg){
+  const w=300,ppd=3; // pixels per degree
+  c.save();c.beginPath();c.rect(cx-w/2,cy-10,w,20);c.clip();
+  c.fillStyle='rgba(20,24,30,.9)';c.fillRect(cx-w/2,cy-10,w,20);
+  c.fillStyle='#fff';c.font='12px "Share Tech Mono"';c.textAlign='center';c.strokeStyle='#fff';c.lineWidth=1;
+  // draw ticks across the visible degree window, offset continuously by hdg
+  const halfDeg=(w/2)/ppd;
+  const startDeg=Math.floor(hdg-halfDeg), endDeg=Math.ceil(hdg+halfDeg);
+  for(let d=startDeg;d<=endDeg;d++){
+    const h=((d%360)+360)%360;
+    if(h%5!==0)continue;
+    const xx=cx+(d-hdg)*ppd;            // continuous position — no snapping
+    const maj=(h%10===0);
+    c.beginPath();c.moveTo(xx,cy-10);c.lineTo(xx,cy-(maj?2:5));c.stroke();
+    if(h%30===0){const lbl=h===0?'N':h===90?'E':h===180?'S':h===270?'W':String(h/10);
+      c.fillText(lbl,xx,cy+8);}
+  }
+  c.restore();
+  // center magenta bug + readout box
+  c.fillStyle='#ff00ff';c.beginPath();c.moveTo(cx,cy-10);c.lineTo(cx-5,cy-16);c.lineTo(cx+5,cy-16);c.closePath();c.fill();
+  c.fillStyle='#000';c.strokeStyle='#0f0';c.fillRect(cx-20,cy-30,40,15);c.strokeRect(cx-20,cy-30,40,15);
+  c.fillStyle='#0f0';c.font='600 12px "Share Tech Mono"';c.textAlign='center';
+  c.fillText(String(Math.round(hdg)).padStart(3,'0'),cx,cy-19);
+}
+
+/* =====================================================================
+   SCENARIOS
+===================================================================== */
+const SCENARIOS=[
+  {task:'Roll into a <b>left bank of 20°</b> using ailerons. Hold it.',
+   check:()=>S.roll<-15&&S.roll>-28, hold:2.5,
+   tip:'Left aileron up, right aileron down — watch the surfaces.'},
+  {task:'Return to <b>wings level</b> (bank within 5°).',
+   check:()=>Math.abs(S.roll)<5, hold:2},
+  {task:'<b>Pitch up</b> to a climb (pitch 8–15° nose-up).',
+   check:()=>S.pitch>8&&S.pitch<16, hold:2.5,
+   tip:'Tilt the phone back. Elevator deflects up; airspeed will bleed off.'},
+  {task:'Apply <b>right rudder</b> and watch the slip/skid ball move out of center.',
+   check:()=>S.rudder>0.4, hold:2,
+   tip:'Push the right slider forward — left springs back equally.'},
+  {task:'Set <b>takeoff flaps</b> (10°).',
+   check:()=>S.flapStep===1, hold:1.2,
+   tip:'Center flap switch position.'},
+  {task:'Set <b>full flaps</b> (40°) and note the nose pitch and speed drop.',
+   check:()=>S.flapStep===2, hold:1.5},
+  {task:'Establish a <b>coordinated right turn</b>: bank 15–25° right, ball centered.',
+   check:()=>S.roll>13&&S.roll<27&&Math.abs(S.slip)<0.18, hold:3,
+   tip:'Bank with aileron, add a touch of right rudder to center the ball.'},
+  {task:'<b>Watch adverse yaw:</b> roll into a left bank and note the nose initially yaws <b>right</b> (away from the turn) before rudder is added.',
+   check:()=>S.aileron<-0.3, hold:2,
+   tip:'Turn on the Aero → Streamlines/Wind overlays to see the wake. The down-going right aileron drags that wing back.'},
+  {task:'<b>Approach the stall:</b> pitch up and slow down until the AOA gauge enters the red and STALL appears.',
+   check:()=>S.stalled, hold:1.5,
+   tip:'Hold nose-up; airspeed bleeds, angle of attack climbs past critical. Watch the upper streamlines separate.'},
+  {task:'<b>Recover:</b> lower the nose to break the stall (AOA out of the red, STALL clears).',
+   check:()=>!S.stalled && S.pitch<6, hold:2,
+   tip:'Reduce angle of attack first — push forward. Speed and control authority return.'},
+  {task:'<b>Accelerated stall:</b> roll into a steep bank (45°+). Note the G-load climbs and the stall speed (Vs) rises — the wing can stall at a much higher airspeed.',
+   check:()=>S.loadFactor>1.35, hold:2.5,
+   tip:'Watch the “G” and “Vs” readouts top-right. Vs rises with √(load factor) — why steep turns near the ground are deadly.'},
+];
+let scenEls;
+function startScenario(){S.scenIdx=0;S.holdT=0;showScenario();document.getElementById('cmd').style.display='block';}
+function showScenario(){
+  const s=SCENARIOS[S.scenIdx];
+  document.getElementById('cmdTask').innerHTML=`Step ${S.scenIdx+1}/${SCENARIOS.length}: ${s.task}`+
+    (s.tip?`<div style="font-size:.66rem;color:var(--ink-dim);margin-top:3px">${s.tip}</div>`:'');
+  document.getElementById('cmdProg').innerHTML='Hold to confirm…';
+}
+function scenarioTick(dt){
+  const s=SCENARIOS[S.scenIdx];if(!s)return;
+  if(s.check()){S.holdT+=dt;
+    const pct=Math.min(1,S.holdT/s.hold);
+    document.getElementById('cmdProg').innerHTML=`<span class="hold">Holding ${(pct*100).toFixed(0)}%</span>`;
+    if(S.holdT>=s.hold){
+      S.scenIdx++;S.holdT=0;
+      if(S.scenIdx>=SCENARIOS.length){
+        document.getElementById('cmdTask').innerHTML='<b>Exercise complete ✓</b> — all maneuvers met criteria.';
+        document.getElementById('cmdProg').innerHTML='Switch to Sandbox or replay Scenario.';
+      } else showScenario();
+    }
+  } else {S.holdT=Math.max(0,S.holdT-dt*2);
+    document.getElementById('cmdProg').innerHTML='Hold to confirm…';}
+}
+
+/* =====================================================================
+   INPUT — tilt (pitch/roll), rudder sliders, flaps
+===================================================================== */
+function initTilt(){
+  S.tiltArmed=false; // tilt does nothing until the user taps Center once
+  function onTilt(ev){
+    if(ev.beta==null)return;S.haveTilt=true;
+    if(!S.tiltArmed) return; // gated — no lurch on load
+    const land=window.matchMedia('(orientation:landscape)').matches;
+    let pitchRaw= land ? ev.gamma : ev.beta-45; // portrait: hold phone ~45°
+    let rollRaw = land ? ev.beta-45 : ev.gamma;
+    S.tiltElev = clamp(-(pitchRaw - S.pitchZero)/30, -1, 1);
+    S.tiltAil  = clamp((rollRaw - S.rollZero)/30, -1, 1);
+    S.usingStick=false; // tilt resumes control once you move the phone
+  }
+  window.addEventListener('deviceorientation',onTilt,true);
+  document.getElementById('bCenter').addEventListener('click',async()=>{
+    // Tilt requires a secure context (https/localhost). content:// and file:// can't access sensors.
+    const secure = window.isSecureContext;
+    let permOk=true;
+    try{if(typeof DeviceOrientationEvent!=='undefined'&&DeviceOrientationEvent.requestPermission){
+      const p=await DeviceOrientationEvent.requestPermission();permOk=(p==='granted');}}catch(e){}
+    const grab=(ev)=>{if(ev.beta==null)return;
+      const land=window.matchMedia('(orientation:landscape)').matches;
+      S.pitchZero= land?ev.gamma:(ev.beta-45);
+      S.rollZero = land?(ev.beta-45):ev.gamma;
+      S.tiltArmed=true;
+      window.removeEventListener('deviceorientation',grab,true);
+      document.getElementById('hint').textContent='Attitude centered ✓ — tilt to fly';};
+    window.addEventListener('deviceorientation',grab,true);
+    setTimeout(()=>{if(!S.haveTilt){
+      const why = !secure
+        ? 'Tilt needs HTTPS — this page is opened locally (content://). Use the YOKE pad, or host on https. '
+        : !permOk ? 'Motion permission denied — use the YOKE pad. '
+        : 'No tilt sensor detected — use the YOKE pad. ';
+      document.getElementById('hint').textContent=why;
+    }},700);
+  });
+}
+
+/* rudder pedals: drag a knob; pushing one forward pushes the other back; release → neutralize */
+function initPedals(){
+  const pedL=document.getElementById('pedL'),pedR=document.getElementById('pedR');
+  const knobL=pedL.querySelector('.knob'),knobR=pedR.querySelector('.knob');
+  let active=null;
+  function setRudder(r){ // r: -1(full left) .. +1(full right)
+    S.rudder=clamp(r,-1,1);
+    // left pedal forward when LEFT rudder (r<0): knob moves UP; right knob moves DOWN equally
+    placeKnob(knobL, -S.rudder); // left pedal: forward(up) on left rudder
+    placeKnob(knobR,  S.rudder);
+  }
+  function placeKnob(knob,fwd){ // fwd: +1 fully forward(up), -1 back(down)
+    const ped=knob.parentElement;const H=ped.clientHeight;
+    const top=H/2 - fwd*(H/2-22);
+    knob.style.top=top+'px';
+  }
+  function pointer(ped,e,sign){ // sign: which pedal; left pedal forward = left rudder
+    const r=ped.getBoundingClientRect();
+    const y=(e.touches?e.touches[0].clientY:e.clientY)-r.top;
+    const frac=clamp((r.height/2 - y)/(r.height/2-22),-1,1); // +1 forward
+    // pressing LEFT pedal forward → left rudder (negative). Right pedal forward → right rudder (positive)
+    setRudder(sign* frac);
+  }
+  function bind(ped,sign){
+    const down=e=>{active={ped,sign};pointer(ped,e,sign);e.preventDefault();};
+    ped.addEventListener('touchstart',down,{passive:false});
+    ped.addEventListener('mousedown',down);
+  }
+  bind(pedL,-1); bind(pedR,1);
+  function move(e){if(!active)return;pointer(active.ped,e,active.sign);e.preventDefault&&e.preventDefault();}
+  function up(){if(!active)return;active=null;}
+  window.addEventListener('touchmove',move,{passive:false});
+  window.addEventListener('mousemove',move);
+  window.addEventListener('touchend',up);window.addEventListener('mouseup',up);
+  // spring to neutral
+  setInterval(()=>{if(!active&&Math.abs(S.rudder)>0.01){setRudder(S.rudder*0.8);}
+    else if(!active){setRudder(0);}},40);
+  setRudder(0);
+}
+
+function initStick(){
+  const stick=document.getElementById('stick');
+  const wheel=document.getElementById('yokeWheel');
+  let active=false;
+  function render(){
+    // roll: rotate the wheel like a real control yoke (left = roll left)
+    const rot = S.stickAil*65;                 // deg
+    // pitch: pull (nose-up, stickElev>0) → wheel toward pilot (bigger);
+    //        push (nose-down) → wheel away (smaller)
+    const scale = 1 + S.stickElev*0.26;
+    wheel.style.transform = `rotate(${rot}deg) scale(${scale})`;
+  }
+  function set(e){
+    const r=stick.getBoundingClientRect();
+    const cx=r.left+r.width/2, cy=r.top+r.height/2;
+    const px=(e.touches?e.touches[0].clientX:e.clientX), py=(e.touches?e.touches[0].clientY:e.clientY);
+    let dx=clamp((px-cx)/(r.width/2-12),-1,1), dy=clamp((py-cy)/(r.height/2-12),-1,1);
+    S.stickAil=dx; S.stickElev=-dy;            // drag up = pull = nose up
+    S.usingStick=true; render();
+  }
+  const down=e=>{active=true;set(e);e.preventDefault();};
+  stick.addEventListener('touchstart',down,{passive:false});
+  stick.addEventListener('mousedown',down);
+  function move(e){if(active){set(e);e.preventDefault&&e.preventDefault();}}
+  function up(){if(!active)return;active=false;}
+  window.addEventListener('touchmove',move,{passive:false});
+  window.addEventListener('mousemove',move);
+  window.addEventListener('touchend',up);window.addEventListener('mouseup',up);
+  // spring back to neutral when released
+  setInterval(()=>{if(!active&&S.usingStick){
+    S.stickAil*=0.82; S.stickElev*=0.82;
+    if(Math.abs(S.stickAil)<0.02&&Math.abs(S.stickElev)<0.02){S.stickAil=0;S.stickElev=0;}
+    render();
+  }},40);
+  render();
+}
+
+function initFlaps(){
+  document.querySelectorAll('#flaps .fl-opt').forEach(b=>{
+    b.onclick=()=>{document.querySelectorAll('#flaps .fl-opt').forEach(x=>x.classList.remove('on'));
+      b.classList.add('on');S.flapStep=+b.dataset.fl;};
+  });
+}
+
+/* mode + label toggles */
+function initBar(){
+  const sand=document.getElementById('bSand'),scen=document.getElementById('bScen'),lbl=document.getElementById('bLabels');
+  sand.onclick=()=>{S.mode='sandbox';sand.classList.add('on');scen.classList.remove('on');
+    document.getElementById('cmd').style.display='none';};
+  scen.onclick=()=>{S.mode='scenario';scen.classList.add('on');sand.classList.remove('on');startScenario();};
+  lbl.onclick=()=>{S.showLabels=!S.showLabels;lbl.classList.toggle('on',S.showLabels);};
+
+  // conceptual-model disclaimer
+  const info=document.getElementById('bInfo'), box=document.getElementById('infoBox');
+  info.onclick=()=>box.classList.toggle('hidden');
+  document.getElementById('ibClose').onclick=()=>box.classList.add('hidden');
+  // CFI instructor commentary toggle
+  document.getElementById('bCFI').onclick=function(){S.showCFI=!S.showCFI;
+    this.classList.toggle('on',S.showCFI);
+    if(!S.showCFI)document.getElementById('cfiTip').classList.remove('show');};
+
+  // aero overlay panel
+  const aBtn=document.getElementById('bAero'), aPanel=document.getElementById('aeroPanel');
+  aBtn.onclick=()=>{const open=aPanel.classList.toggle('hidden')===false;
+    aBtn.classList.toggle('on',open);};
+  const map={aVortex:'vortex',aSlip:'slip',aStream:'stream',aPress:'press',aWind:'wind'};
+  Object.keys(map).forEach(id=>{
+    document.getElementById(id).onchange=e=>{S.aero[map[id]]=e.target.checked;
+      if(id==='aWind') document.getElementById('windCtl').classList.toggle('hidden',!e.target.checked);
+      const any=Object.values(S.aero).some(Boolean);
+      aBtn.classList.toggle('on', any || aPanel.classList.contains('hidden')===false);};
+  });
+  // left-turning tendencies explainer toggle
+  document.getElementById('aLTT').onchange=e=>{
+    document.getElementById('lttBox').classList.toggle('hidden',!e.target.checked);
+    S.showLTT=e.target.checked;};
+  // wind direction/speed
+  const wDir=document.getElementById('wDir'), wKt=document.getElementById('wKt'),
+        wRead=document.getElementById('windRead');
+  function wUpd(){S.wind.dirDeg=+wDir.value;S.wind.kt=+wKt.value;
+    wRead.textContent=`${String(S.wind.dirDeg).padStart(3,'0')}° / ${S.wind.kt} kt`;}
+  wDir.oninput=wUpd; wKt.oninput=wUpd; wUpd();
+}
+
+function initCamControls(){
+  const el=document.getElementById('scene');
+  let drag=false,lx=0,ly=0,pinchD=0;
+  function dist(t){const dx=t[0].clientX-t[1].clientX,dy=t[0].clientY-t[1].clientY;return Math.hypot(dx,dy);}
+  el.addEventListener('touchstart',e=>{
+    if(e.touches.length===1){drag=true;lx=e.touches[0].clientX;ly=e.touches[0].clientY;}
+    else if(e.touches.length===2){drag=false;pinchD=dist(e.touches);}
+  },{passive:true});
+  el.addEventListener('touchmove',e=>{
+    if(e.touches.length===2){const d=dist(e.touches);
+      S.camDist=clamp(S.camDist*(pinchD/d),8,45);pinchD=d;}
+    else if(drag&&e.touches.length===1){const x=e.touches[0].clientX,y=e.touches[0].clientY;
+      S.camAz=clamp(S.camAz+(x-lx)*0.008,-Math.PI*0.85,Math.PI*0.85);
+      S.camEl=clamp(S.camEl-(y-ly)*0.006,-0.25,1.1);lx=x;ly=y;}
+  },{passive:true});
+  el.addEventListener('touchend',()=>{drag=false;});
+  el.addEventListener('mousedown',e=>{drag=true;lx=e.clientX;ly=e.clientY;});
+  window.addEventListener('mousemove',e=>{if(!drag)return;
+    S.camAz=clamp(S.camAz+(e.clientX-lx)*0.008,-Math.PI*0.85,Math.PI*0.85);
+    S.camEl=clamp(S.camEl-(e.clientY-ly)*0.006,-0.25,1.1);lx=e.clientX;ly=e.clientY;});
+  window.addEventListener('mouseup',()=>{drag=false;});
+  el.addEventListener('wheel',e=>{S.camDist=clamp(S.camDist+e.deltaY*0.02,8,45);e.preventDefault();},{passive:false});
+}
+
+/* =====================================================================
+   BOOT
+===================================================================== */
+initThree();
+buildLabels();
+initTilt();
+initStick();
+initPedals();
+initFlaps();
+initBar();
+initCamControls();
+
+let last=performance.now();
+function loop(){const now=performance.now();const dt=Math.min(0.05,(now-last)/1000);last=now;
+  step(dt);
+  renderer.render(scene,cam);
+  drawPFD();
+  // keep pfd canvas height synced to a sensible band
+  requestAnimationFrame(loop);}
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>

@@ -1,0 +1,872 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Twin — Vmc &amp; Critical Engine Trainer</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Oswald:wght@300;400;500;600&family=Share+Tech+Mono&display=swap');
+  :root{
+    --ink:#dfe5ec; --ink-dim:#8a93a0; --amber:#ffb347; --amber-bright:#ffcf7a;
+    --green:#5fd99b; --red:#ff6b5e; --cyan:#62d6e8; --panel:#12151a; --edge:#2a2f38;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;margin:0;padding:0;user-select:none;}
+  html,body{height:100%;overflow:hidden;background:#05070a;color:var(--ink);
+    font-family:'Oswald',sans-serif;font-weight:300;}
+  #app{position:fixed;inset:0;display:flex;flex-direction:column;}
+  #bar{display:flex;align-items:center;gap:7px;padding:6px 10px;background:#0a0d12;
+    border-bottom:1px solid var(--edge);z-index:30;flex:0 0 auto;flex-wrap:wrap;}
+  #bar .ttl{font-size:.8rem;letter-spacing:.07em;text-transform:uppercase;color:var(--amber);font-weight:500;}
+  #bar .spacer{flex:1;}
+  #bar button{background:var(--panel);border:1px solid var(--edge);color:var(--ink-dim);
+    font-family:'Oswald';font-size:.66rem;letter-spacing:.05em;text-transform:uppercase;
+    padding:6px 8px;border-radius:6px;cursor:pointer;}
+  #bar button.on{color:#06120a;background:var(--amber);border-color:var(--amber);font-weight:600;}
+  #bar button.danger.on{background:var(--red);border-color:var(--red);color:#1a0604;}
+
+  #scene{flex:1;position:relative;min-height:0;}
+  #three{position:absolute;inset:0;width:100%;height:100%;display:block;}
+  #labels{position:absolute;inset:0;pointer-events:none;}
+  .slab{position:absolute;font-family:'Share Tech Mono';font-size:.6rem;letter-spacing:.05em;
+    background:rgba(8,12,18,.72);border:1px solid;padding:1px 5px;border-radius:4px;
+    transform:translate(-50%,-50%);white-space:nowrap;transition:opacity .2s;}
+
+  /* teaching banner */
+  #cmd{position:absolute;top:8px;left:50%;transform:translateX(-50%);z-index:20;
+    background:rgba(10,13,18,.94);border:1px solid var(--edge);border-left:3px solid var(--amber);
+    border-radius:7px;padding:8px 13px;max-width:92%;text-align:center;}
+  #cmd .task{font-size:.84rem;line-height:1.32;} #cmd .task b{color:var(--amber-bright);}
+  #cmd .prog{font-family:'Share Tech Mono';font-size:.62rem;color:var(--ink-dim);margin-top:3px;}
+  #cmd .prog .hold{color:var(--green);} #cmd .prog .warn{color:var(--red);}
+
+  /* Vmc / state HUD */
+  #hud{position:absolute;top:8px;left:8px;z-index:18;font-family:'Share Tech Mono';
+    font-size:.64rem;line-height:1.5;background:rgba(8,12,18,.7);padding:7px 9px;border-radius:6px;
+    border:1px solid var(--edge);}
+  #hud .k{color:var(--ink-dim);} #hud .v{color:var(--amber);} 
+  #hud .ok{color:var(--green);} #hud .bad{color:var(--red);}
+
+  #hint{position:absolute;bottom:6px;left:50%;transform:translateX(-50%);z-index:15;
+    font-family:'Share Tech Mono';font-size:.58rem;color:var(--ink-dim);text-align:center;
+    background:rgba(8,12,18,.6);padding:3px 9px;border-radius:5px;max-width:94%;}
+
+  /* PFD */
+  #pfd{flex:0 0 auto;background:#000;border-top:1px solid var(--edge);}
+  #pfdCanvas{display:block;width:100%;max-height:150px;}
+
+  /* controls */
+  #ctrls{flex:0 0 auto;position:relative;height:160px;background:#070a0e;border-top:1px solid var(--edge);}
+  .ped{position:absolute;bottom:14px;width:50px;height:118px;background:var(--panel);
+    border:1px solid var(--edge);border-radius:10px;z-index:25;touch-action:none;}
+  .ped#pedL{left:8px;} .ped#pedR{right:8px;}
+  .ped .track{position:absolute;left:50%;top:8px;bottom:8px;width:5px;transform:translateX(-50%);background:#05070a;border-radius:3px;}
+  .ped .knob{position:absolute;left:50%;width:38px;height:28px;transform:translate(-50%,-50%);
+    background:linear-gradient(180deg,#3a414c,#1c2128);border:1px solid #4a525e;border-radius:7px;}
+  .ped .lbl{position:absolute;bottom:-15px;left:50%;transform:translateX(-50%);
+    font-family:'Share Tech Mono';font-size:.54rem;color:var(--ink-dim);letter-spacing:.08em;}
+
+  /* twin throttles (two vertical sliders, center) */
+  #throttles{position:absolute;bottom:14px;left:50%;transform:translateX(-50%);z-index:25;
+    display:flex;gap:10px;align-items:flex-end;}
+  .thr{width:46px;background:var(--panel);border:1px solid var(--edge);border-radius:9px;
+    padding:6px 5px 4px;text-align:center;}
+  .thr .lever{position:relative;height:88px;width:100%;}
+  .thr .slot{position:absolute;left:50%;top:4px;bottom:4px;width:4px;transform:translateX(-50%);background:#05070a;border-radius:2px;}
+  .thr .grip{position:absolute;left:50%;width:32px;height:22px;transform:translate(-50%,-50%);
+    border-radius:6px;background:linear-gradient(180deg,#5a626e,#2a2f38);border:1px solid #6a727e;cursor:grab;touch-action:none;}
+  .thr.dead .grip{background:linear-gradient(180deg,#7a3a36,#3a1a18);border-color:#9a4a44;}
+  .thr .lbl{font-family:'Share Tech Mono';font-size:.56rem;letter-spacing:.06em;color:var(--ink-dim);margin-top:3px;}
+  .thr .pct{font-family:'Share Tech Mono';font-size:.6rem;color:var(--amber);}
+  .thr.dead .pct{color:var(--red);}
+
+  /* yoke wheel right */
+  #stick{position:absolute;bottom:18px;right:66px;z-index:25;width:74px;height:74px;
+    background:radial-gradient(circle at 50% 40%,#161b22,#080b0f);border:1px solid var(--edge);
+    border-radius:13px;touch-action:none;display:flex;align-items:center;justify-content:center;}
+  #yokeWheel{position:relative;width:54px;height:54px;}
+  .yk-ring{position:absolute;inset:0;border-radius:50%;border:5px solid #58616e;
+    background:radial-gradient(circle at 38% 32%,#3a414c,#1c2128);}
+  .yk-grip{position:absolute;left:6%;right:6%;top:50%;height:8px;transform:translateY(-50%);
+    background:linear-gradient(180deg,#5a626e,#2a2f38);border-radius:4px;}
+  .yk-hub{position:absolute;left:50%;top:50%;width:14px;height:14px;transform:translate(-50%,-50%);
+    border-radius:50%;background:#6a727e;border:1px solid #4a525e;}
+  #stick .stk-lbl{position:absolute;bottom:-14px;left:50%;transform:translateX(-50%);
+    font-family:'Share Tech Mono';font-size:.52rem;color:var(--ink-dim);letter-spacing:.1em;}
+  .hidden{display:none !important;}
+
+  /* MEI instructor commentary */
+  #cfiTip{position:absolute;left:50%;bottom:8px;transform:translateX(-50%);z-index:16;
+    max-width:min(560px,92vw);background:rgba(10,14,20,.93);border:1px solid var(--edge);
+    border-left:3px solid var(--cyan);border-radius:9px;padding:9px 13px 9px 11px;
+    display:flex;gap:9px;align-items:flex-start;opacity:0;transition:opacity .35s;pointer-events:none;}
+  #cfiTip.show{opacity:1;}
+  #cfiTip .cfi-badge{flex:0 0 auto;font-family:'Share Tech Mono';font-size:.58rem;font-weight:bold;
+    letter-spacing:.1em;color:#06120a;background:var(--cyan);border-radius:4px;padding:2px 5px;margin-top:1px;}
+  #cfiText{font-size:.82rem;line-height:1.4;color:var(--ink);}
+  #cfiText b{color:var(--cyan);} #cfiText i{color:var(--amber-bright);font-style:normal;}
+
+  /* conceptual-model disclaimer */
+  #bInfo{font-weight:600;}
+  #infoBox{position:absolute;top:60px;left:50%;transform:translateX(-50%);z-index:50;
+    width:min(420px,92vw);background:rgba(14,17,22,.98);border:1px solid var(--edge);
+    border-left:3px solid var(--amber);border-radius:10px;padding:15px 16px;
+    box-shadow:0 10px 30px rgba(0,0,0,.7);}
+  #infoBox .ib-h{font-size:.78rem;letter-spacing:.14em;text-transform:uppercase;color:var(--amber);
+    font-family:'Share Tech Mono';margin-bottom:9px;}
+  #infoBox p{font-size:.82rem;line-height:1.45;margin-bottom:9px;color:var(--ink);}
+  #infoBox b{color:var(--amber-bright);} #infoBox i{color:var(--cyan);font-style:normal;}
+  #infoBox button{background:var(--amber);color:#06120a;border:none;border-radius:6px;
+    padding:8px 16px;font-family:'Oswald';font-weight:600;letter-spacing:.06em;text-transform:uppercase;
+    font-size:.74rem;cursor:pointer;}
+
+  /* maneuvers panel */
+  #manPanel{position:absolute;top:0;left:0;right:0;bottom:0;z-index:45;background:rgba(8,11,16,.97);
+    padding:14px;overflow-y:auto;}
+  .mp-pick{display:flex;flex-direction:column;gap:8px;max-width:520px;margin:0 auto;}
+  .mp-pick .mp-card{background:var(--panel);border:1px solid var(--edge);border-radius:9px;padding:12px 14px;cursor:pointer;}
+  .mp-pick .mp-card:hover{border-color:var(--amber);}
+  .mp-pick .mp-card h3{font-size:.92rem;font-weight:500;color:var(--amber-bright);margin-bottom:3px;}
+  .mp-pick .mp-card p{font-size:.74rem;color:var(--ink-dim);line-height:1.35;}
+  .mp-body{max-width:560px;margin:0 auto;}
+  .mp-step{font-size:.95rem;line-height:1.4;background:var(--panel);border:1px solid var(--edge);
+    border-left:3px solid var(--amber);border-radius:8px;padding:13px 15px;margin-bottom:12px;}
+  .mp-step b{color:var(--amber-bright);}
+  .mp-step .sn{font-family:'Share Tech Mono';font-size:.62rem;color:var(--ink-dim);letter-spacing:.1em;display:block;margin-bottom:5px;}
+  .mp-callouts{display:flex;flex-direction:column;gap:7px;margin-bottom:14px;}
+  .co{display:flex;gap:8px;align-items:flex-start;font-size:.8rem;line-height:1.35;padding:8px 10px;border-radius:7px;}
+  .co.say{background:rgba(98,214,232,.1);border:1px solid rgba(98,214,232,.4);}
+  .co.ensure{background:rgba(95,217,155,.1);border:1px solid rgba(95,217,155,.35);}
+  .co.avoid{background:rgba(255,107,94,.1);border:1px solid rgba(255,107,94,.4);}
+  .co .ic{font-family:'Share Tech Mono';font-size:.66rem;font-weight:bold;flex:0 0 auto;padding-top:1px;}
+  .co.say .ic{color:var(--cyan);} .co.ensure .ic{color:var(--green);} .co.avoid .ic{color:var(--red);}
+  .mp-nav{display:flex;align-items:center;justify-content:space-between;}
+  .mp-nav button{background:var(--panel);border:1px solid var(--edge);color:var(--ink-dim);
+    font-family:'Oswald';font-size:.74rem;letter-spacing:.05em;padding:8px 12px;border-radius:6px;cursor:pointer;}
+  .mp-prog{font-family:'Share Tech Mono';font-size:.66rem;color:var(--ink-dim);}
+  .mp-prog .hold{color:var(--green);} .mp-prog .warn{color:var(--red);}
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="bar">
+    <span class="ttl">Twin ✈ Vmc</span>
+    <span class="spacer"></span>
+    <button id="bSand" class="on">Sandbox</button>
+    <button id="bMan">Maneuvers</button>
+    <button id="bFailL" class="danger">Fail L</button>
+    <button id="bFailR" class="danger">Fail R</button>
+    <button id="bFeaL">Feather L</button>
+    <button id="bFeaR">Feather R</button>
+    <button id="bGear" class="on">Gear Dn</button>
+    <button id="bFlap">Flaps</button>
+    <button id="bRestart">Restart</button>
+    <button id="bFlow">Flow</button>
+    <button id="bCenter">Center</button>
+    <button id="bCFI" class="on" title="Instructor commentary">MEI</button>
+    <button id="bInfo" title="About this model">ⓘ</button>
+  </div>
+
+  <div id="infoBox" class="hidden">
+    <div class="ib-h">Conceptual teaching model</div>
+    <p>This is a <b>concept demonstrator, not a flight simulator</b>. It illustrates the <i>relationships</i> behind Vmc, the critical engine, asymmetric thrust, and the single-engine drag picture — with <b>tuned, non-literal magnitudes</b>.</p>
+    <p>Do <b>not</b> read exact V-speeds, climb rates, or Vmc values as real-aircraft numbers. For figures use the AFM; for procedures and tolerances use the ACS. Use this to <i>explain and brief the concept</i>, then confirm specifics in the real references.</p>
+    <button id="ibClose">Got it</button>
+  </div>
+
+  <div id="manPanel" class="hidden">
+    <div class="mp-pick" id="mpPick"></div>
+    <div class="mp-body hidden" id="mpBody">
+      <div class="mp-step" id="mpStep">—</div>
+      <div class="mp-callouts" id="mpCallouts"></div>
+      <div class="mp-nav"><button id="mpExit">‹ Maneuvers</button><span class="mp-prog" id="mpProg"></span></div>
+    </div>
+  </div>
+
+  <div id="scene">
+    <canvas id="three"></canvas>
+    <div id="labels"></div>
+    <div id="hud"></div>
+    <div id="cmd"><div class="task" id="cmdTask">—</div><div class="prog" id="cmdProg"></div></div>
+    <div id="cfiTip"><span class="cfi-badge">MEI</span><span id="cfiText"></span></div>
+    <div id="hint">Two throttles · sliders=rudder · yoke=pitch/roll · Fail an engine, hold heading, watch Vmc · drag to orbit</div>
+  </div>
+
+  <div id="pfd"><canvas id="pfdCanvas" width="800" height="170"></canvas></div>
+
+  <div id="ctrls">
+    <div class="ped" id="pedL"><div class="track"></div><div class="knob"></div><div class="lbl">L RUD</div></div>
+    <div id="throttles">
+      <div class="thr" id="thrL"><div class="lever"><div class="slot"></div><div class="grip"></div></div><div class="pct" id="thrLpct">100</div><div class="lbl">L ENG</div></div>
+      <div class="thr" id="thrR"><div class="lever"><div class="slot"></div><div class="grip"></div></div><div class="pct" id="thrRpct">100</div><div class="lbl">R ENG</div></div>
+    </div>
+    <div id="stick"><div id="yokeWheel"><div class="yk-ring"></div><div class="yk-grip"></div><div class="yk-hub"></div></div><div class="stk-lbl">YOKE</div></div>
+    <div class="ped" id="pedR"><div class="track"></div><div class="knob"></div><div class="lbl">R RUD</div></div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+const D2R=Math.PI/180,R2D=180/Math.PI;
+const $=id=>document.getElementById(id);
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const lerp=(a,b,t)=>a+(b-a)*t;
+
+const S={
+  mode:'sandbox',
+  pL:1, pR:1, failL:false, failR:false,
+  featherL:false, featherR:false,    // prop feathered (kills windmill drag)
+  gear:true, flaps:0,                // gear down by default, flaps 0..1
+  rudder:0, aileron:0, elevator:0,
+  stickAil:0, stickElev:0, usingStick:false, tiltAil:0, tiltElev:0, tiltArmed:false, haveTilt:false,
+  pitchZero:0, rollZero:0,
+  ias:100, alt:4000, hdg:90, roll:0, pitch:0, yaw:0, vsi:0,
+  beta:0,
+  vmc:false, lostControl:false,
+  sepClimb:0,                        // single-engine climb rate proxy (fpm)
+  camAz:0, camEl:0.3, camDist:20, up:4.5,
+  showFlow:false, showCFI:true,
+  // maneuver walkthrough
+  maneuver:null, manStep:0, manHold:0
+};
+// V-speeds (kt). Tunable; ordered Vmc < Vsse < Vyse for a typical light twin.
+const VMC=68, VSSE=82, VYSE=88, VXSE=84;
+
+/* ===================== THREE SCENE ===================== */
+let renderer,scene,cam,plane,parts={},ground;
+function initThree(){
+  renderer=new THREE.WebGLRenderer({canvas:$('three'),antialias:true});
+  renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+  scene=new THREE.Scene(); scene.background=new THREE.Color(0x8fc7f0);
+  scene.fog=new THREE.Fog(0x8fc7f0,70,300);
+  cam=new THREE.PerspectiveCamera(55,1,0.1,1000);
+  const sun=new THREE.DirectionalLight(0xfff4e0,1.05);sun.position.set(40,80,30);scene.add(sun);
+  scene.add(new THREE.AmbientLight(0x90a0b8,0.66));
+  const gMat=new THREE.MeshLambertMaterial({color:0x4a7a3a});
+  ground=new THREE.Mesh(new THREE.PlaneGeometry(3000,3000),gMat);
+  ground.rotation.x=-Math.PI/2; ground.position.y=-45; scene.add(ground);
+  for(let i=-12;i<=12;i++){const st=new THREE.Mesh(new THREE.PlaneGeometry(3000,8),
+    new THREE.MeshLambertMaterial({color:0x3f6b32}));st.rotation.x=-Math.PI/2;
+    st.position.set(0,-44.9,i*70);scene.add(st);}
+  plane=new THREE.Group(); buildTwin(plane); buildFlow(plane); scene.add(plane);
+  resize(); window.addEventListener('resize',resize);
+}
+function mat(c){return new THREE.MeshLambertMaterial({color:c});}
+
+function buildTwin(g){
+  const white=0xeef2f6, dark=0x2a2f38;
+  const C_AIL=0x3a7bd5, C_ELEV=0x49b85a, C_RUD=0xff8c2a, C_FLAP=0xc24ad0;
+
+  // fuselage (lathe)
+  const prof=[];
+  [[0.05,-5.2],[0.3,-4.6],[0.55,-3.6],[0.8,-2.0],[0.98,-0.4],[1.05,1.0],
+   [1.0,2.4],[0.85,3.4],[0.62,4.1],[0.4,4.5]].forEach(p=>prof.push(new THREE.Vector2(p[0],p[1])));
+  const body=new THREE.Mesh(new THREE.LatheGeometry(prof,22),mat(white));
+  body.rotation.z=-Math.PI/2; g.add(body);
+
+  // wing (single span, low wing); each half carries aileron + flap
+  const wingY=-0.3, span=15, chord=2.3;
+  function wingHalf(side){
+    const grp=new THREE.Group();
+    const main=new THREE.Mesh(new THREE.BoxGeometry(chord,0.18,span/2-1.2),mat(white));
+    main.position.set(-0.2,wingY,side*(span/4+0.3)); grp.add(main);
+    const tip=new THREE.Mesh(new THREE.BoxGeometry(chord*0.8,0.16,1.0),mat(white));
+    tip.position.set(-0.3,wingY,side*(span/2-0.3)); grp.add(tip);
+    // aileron outboard
+    const ailH=new THREE.Group(); ailH.position.set(-1.0,wingY,side*5.6);
+    const ail=new THREE.Mesh(new THREE.BoxGeometry(0.65,0.12,2.0),mat(C_AIL));
+    ail.position.set(-0.33,0,0); ailH.add(ail); grp.add(ailH);
+    // flap inboard
+    const flH=new THREE.Group(); flH.position.set(-1.0,wingY,side*2.8);
+    const fl=new THREE.Mesh(new THREE.BoxGeometry(0.75,0.12,2.2),mat(C_FLAP));
+    fl.position.set(-0.38,0,0); flH.add(fl); grp.add(flH);
+    return {grp,ailH,flH};
+  }
+  const wl=wingHalf(-1), wr=wingHalf(1);
+  g.add(wl.grp); g.add(wr.grp);
+  parts.ailL=wl.ailH; parts.ailR=wr.ailH; parts.flapL=wl.flH; parts.flapR=wr.flH;
+
+  // ---- two engine nacelles on the wings, with spinners + props ----
+  function nacelle(side){
+    const grp=new THREE.Group(); const zc=side*3.0;
+    const nac=new THREE.Mesh(new THREE.CylinderGeometry(0.5,0.42,2.4,14),mat(dark));
+    nac.rotation.z=Math.PI/2; nac.position.set(1.4,wingY+0.05,zc); grp.add(nac);
+    const spin=new THREE.Mesh(new THREE.ConeGeometry(0.32,0.5,14),mat(0x23282f));
+    spin.rotation.z=-Math.PI/2; spin.position.set(2.75,wingY+0.05,zc); grp.add(spin);
+    const propG=new THREE.Group(); propG.position.set(2.55,wingY+0.05,zc);
+    const blade=new THREE.Mesh(new THREE.BoxGeometry(0.08,3.4,0.3),mat(0x0c0f13));
+    propG.add(blade); grp.add(propG);
+    return {grp,propG};
+  }
+  const nL=nacelle(-1), nR=nacelle(1);
+  g.add(nL.grp); g.add(nR.grp);
+  parts.propL=nL.propG; parts.propR=nR.propG;
+
+  // horizontal stab + elevator
+  const hstab=new THREE.Mesh(new THREE.BoxGeometry(1.5,0.14,5.6),mat(white));
+  hstab.position.set(-4.0,0.3,0); g.add(hstab);
+  const elevH=new THREE.Group(); elevH.position.set(-4.6,0.3,0);
+  const elev=new THREE.Mesh(new THREE.BoxGeometry(0.75,0.1,5.4),mat(C_ELEV));
+  elev.position.set(-0.37,0,0); elevH.add(elev); g.add(elevH); parts.elev=elevH;
+
+  // swept vertical fin + rudder
+  const finShape=new THREE.Shape();
+  finShape.moveTo(0.9,0); finShape.lineTo(-0.9,0); finShape.lineTo(-1.1,2.5); finShape.lineTo(-0.35,2.5); finShape.closePath();
+  const vstab=new THREE.Mesh(new THREE.ExtrudeGeometry(finShape,{depth:0.16,bevelEnabled:false}),mat(white));
+  vstab.position.set(-3.8,0.2,-0.08); g.add(vstab);
+  const rudShape=new THREE.Shape();
+  rudShape.moveTo(0,0); rudShape.lineTo(-0.85,0); rudShape.lineTo(-1.05,2.35); rudShape.lineTo(-0.18,2.35); rudShape.closePath();
+  const rudH=new THREE.Group(); rudH.position.set(-4.7,0.25,0);
+  const rud=new THREE.Mesh(new THREE.ExtrudeGeometry(rudShape,{depth:0.12,bevelEnabled:false}),mat(C_RUD));
+  rud.position.z=-0.06; rudH.add(rud); g.add(rudH); parts.rud=rudH;
+
+  // gear
+  function leg(x,z){const l=new THREE.Mesh(new THREE.CylinderGeometry(0.07,0.07,1.3,6),mat(dark));
+    l.position.set(x,-1.0,z);g.add(l);
+    const w=new THREE.Mesh(new THREE.CylinderGeometry(0.4,0.4,0.28,12),mat(0x15181d));
+    w.rotation.x=Math.PI/2;w.position.set(x,-1.6,z);g.add(w);}
+  leg(1.4,3.0); leg(1.4,-3.0); leg(3.6,0);
+}
+
+/* ---- flow: asymmetric slipstream + thrust-line markers ---- */
+let flowGroup, flow={};
+function buildFlow(g){
+  flowGroup=new THREE.Group(); g.add(flowGroup);
+  const wingY=-0.3;
+  function slip(side){
+    const N=70, turns=2.4, len=10, rad=0.7, pts=[]; const zc=side*3.0;
+    for(let i=0;i<=N;i++){const t=i/N;const x=2.6-t*len, ang=t*turns*Math.PI*2;
+      pts.push(new THREE.Vector3(x, wingY+0.05+Math.sin(ang)*rad*(1-0.1*t), zc+Math.cos(ang)*rad*(1-0.1*t)));}
+    const geo=new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts),70,0.09,8,false);
+    return new THREE.Mesh(geo,new THREE.MeshBasicMaterial({color:0xffd27f,transparent:true,opacity:0.0,depthWrite:false}));
+  }
+  flow.slipL=slip(-1); flow.slipR=slip(1); flowGroup.add(flow.slipL); flowGroup.add(flow.slipR);
+  // thrust-line arrows (show where each engine's effective thrust acts)
+  function thrustArrow(side){
+    const grp=new THREE.Group();
+    const shaft=new THREE.Mesh(new THREE.CylinderGeometry(0.06,0.06,2.4,8),
+      new THREE.MeshBasicMaterial({color:0xff5e5e,transparent:true,opacity:0}));
+    shaft.rotation.z=Math.PI/2; shaft.position.set(0.6,wingY+0.05,side*3.0); grp.add(shaft);
+    const head=new THREE.Mesh(new THREE.ConeGeometry(0.18,0.4,10),
+      new THREE.MeshBasicMaterial({color:0xff5e5e,transparent:true,opacity:0}));
+    head.rotation.z=-Math.PI/2; head.position.set(1.9,wingY+0.05,side*3.0); grp.add(head);
+    return grp;
+  }
+  flow.thrustL=thrustArrow(-1); flow.thrustR=thrustArrow(1);
+  flowGroup.add(flow.thrustL); flowGroup.add(flow.thrustR);
+}
+
+function resize(){const w=$('scene').clientWidth,h=$('scene').clientHeight;
+  renderer.setSize(w,h,false);cam.aspect=w/h;cam.updateProjectionMatrix();}
+
+/* ===================== FLIGHT MODEL ===================== */
+function step(dt){
+  // combine yoke/tilt
+  const useStick=S.usingStick&&(Math.abs(S.stickAil)>0.01||Math.abs(S.stickElev)>0.01);
+  S.aileron=useStick?S.stickAil:S.tiltAil;
+  S.elevator=useStick?S.stickElev:S.tiltElev;
+
+  // effective engine power (failed → ~0, windmilling drag ignored for clarity)
+  const pL=S.failL?0:S.pL, pR=S.failR?0:S.pR;
+  const asym = pR - pL;          // + = right stronger (left engine weak/out)
+
+  // --- airspeed: thrust vs drag, simplified ---
+  const totalThrust=(pL+pR)/2;
+  S.ias += ((totalThrust-0.5)*40 - (S.ias-100)*0.05 - S.pitch*0.25)*dt;
+  S.ias=clamp(S.ias,35,180);
+  const V=Math.max(8,S.ias*0.5144);
+
+  // --- yaw from asymmetric thrust ---
+  const armL=2.6, armR=3.1;       // right arm longer → losing LEFT is worse (critical)
+  // Thrust asymmetry yaw (deg/s): toward the dead engine. Uses the moment arms.
+  const yawFromThrust = (pR*armR - pL*armL) * 3.0;     // + = yaw toward left/dead-left
+  // Rudder authority ∝ V² (aerodynamic force), normalized so full rudder exactly
+  // balances max thrust asymmetry AT Vmc — above Vmc it wins, below it loses.
+  const vRatio = V/(VMC*0.5144);
+  const maxRudderYaw = 1.0*armR*3.0 * (vRatio*vRatio);  // full-deflection capability
+  const rudderEffect = S.rudder * maxRudderYaw;
+  const netYaw = yawFromThrust - rudderEffect;
+  S.hdg=(S.hdg + netYaw*dt + 360)%360;
+  S.yaw += netYaw*dt;
+
+  // sideslip builds with uncorrected yaw; bank into good engine reduces it (zero-sideslip)
+  S.beta = lerp(S.beta, clamp(netYaw*1.4 - S.roll*0.8,-25,25), 1-Math.pow(0.2,dt));
+
+  // roll: asymmetric thrust also rolls toward the dead engine
+  const rollFromAsym = asym * 6;
+  S.roll = clamp(S.roll + (S.aileron*40 + rollFromAsym)*dt, -70, 70);
+
+  // pitch
+  S.pitch = clamp(S.pitch + (S.elevator*13)*dt, -16, 18);
+  if(Math.abs(S.elevator)<0.05) S.pitch=lerp(S.pitch,1,1-Math.pow(0.7,dt));
+
+  // --- Vmc: below Vmc, even FULL rudder can't balance the thrust asymmetry ---
+  const controllable = maxRudderYaw >= Math.abs(yawFromThrust) - 0.3;
+  S.vmc = (Math.abs(asym)>0.3) && (V < VMC*0.5144*1.08);
+  S.lostControl = (Math.abs(asym)>0.3) && !controllable;
+  if(S.lostControl){
+    const dir = Math.sign(yawFromThrust);
+    S.roll = clamp(S.roll + dir*-38*dt, -90, 90);
+    S.hdg = (S.hdg + dir*28*dt +360)%360;
+  }
+
+  // vertical speed / alt — single-engine climb is fragile and config-sensitive
+  const asymOut = Math.abs(asym)>0.3;
+  const windmillL = (S.failL && !S.featherL) ? 1 : 0;
+  const windmillR = (S.failR && !S.featherR) ? 1 : 0;
+  const dragPenalty = (S.gear?260:0) + (S.flaps*340) + (windmillL+windmillR)*420;
+  const baseClimb = (totalThrust-0.5)*1200 + S.pitch*60;
+  const vyseFactor = asymOut ? clamp(1 - Math.abs(S.ias-VYSE)/45, 0.2, 1) : 1;
+  S.vsi = baseClimb*vyseFactor - dragPenalty - (asymOut?300:0);
+  S.sepClimb = S.vsi;
+  S.alt = clamp(S.alt + S.vsi/60*dt, 0, 16000);
+
+  applyToMesh(dt);
+  if(S.mode==='maneuver') manTick(dt);
+  cfiTick(dt);
+  updateHUD();
+}
+
+/* ===== MEI instructor commentary: event-driven, contextual, cooldown-gated ===== */
+const cfi={t:0, cool:0, last:'', shownUntil:0, prev:{}, remIdx:0, remTimer:0};
+const CFI_REMINDERS=[
+  'Remember — <b>dead foot, dead engine</b>. The foot that isn’t working is pointing at the failure.',
+  'Remember — <i>verify</i> with the throttle before you feather. Feathering the good engine is how this goes fatal.',
+  'Remember — pitch for <b>blue line (Vyse)</b> first. It buys you the best the airplane has left.',
+  'Remember — a few degrees of bank <i>into the good engine</i> = zero sideslip = least drag, best climb.',
+  'Remember — adding power to the <i>good</i> engine to fight Vmc makes it <b>worse</b>, not better.',
+  'Remember — clean it up: gear and a windmilling prop can erase your entire single-engine climb.'
+];
+function cfiSay(msg, holdSec, key){
+  if(!S.showCFI || cfi.cool>0) return;
+  if(key && cfi.last===key && cfi.t<cfi.shownUntil+6) return;
+  const el=$('cfiText'); if(!el) return;
+  el.innerHTML=msg; $('cfiTip').classList.add('show');
+  cfi.shownUntil=cfi.t+(holdSec||5); cfi.cool=2.2; cfi.last=key||msg;
+}
+function cfiTick(dt){
+  cfi.t+=dt; if(cfi.cool>0) cfi.cool-=dt;
+  if(!S.showCFI){ $('cfiTip')&&$('cfiTip').classList.remove('show'); return; }
+  if(cfi.t>cfi.shownUntil) $('cfiTip').classList.remove('show');
+  const p=cfi.prev;
+  const anyFail=S.failL||S.failR, deadStr=S.failL?'LEFT':S.failR?'RIGHT':null;
+  if(S.lostControl && !p.lostControl)
+    cfiSay('You’re <b>below Vmc</b> with asymmetric thrust — full rudder can’t hold it and it’s rolling toward the dead engine. <i>Recover now:</i> reduce power on the good engine and lower the nose.',6,'vmcloss');
+  else if(anyFail && !p.anyFail)
+    cfiSay(`Engine failure, <b>${deadStr}</b>. First: <i>fly the airplane</i> — pitch for blue line, identify with “dead foot, dead engine,” then verify before you feather.`+(S.failL?' This is the <b>critical</b> engine — larger moment, lower margin.':''),7,'fail');
+  else if(((S.failL&&S.featherL)||(S.failR&&S.featherR)) && !((p.featherL&&p.failL)||(p.featherR&&p.failR)))
+    cfiSay('Feathered — watch the <b>climb rate jump</b>. A windmilling prop is often the single biggest drag item; that’s <i>why</i> we feather.',6,'feather');
+  else if(anyFail && S.gear && !p.gearWithFail && p.anyFail)
+    cfiSay('Gear coming down on one engine — watch the climb bleed away. In a real go-around decision, that’s often the moment you’re <i>committed to land</i>.',6,'gear');
+  else if(anyFail && S.ias<VSSE && (p.ias||100)>=VSSE)
+    cfiSay('You’re below <b>Vsse</b> now on one engine — getting slow. Vmc is just below the red line; recover at the <i>first</i> sign of trouble.',5,'vsse');
+  else if(anyFail && Math.abs(S.beta)<3 && Math.abs(p.beta||9)>=3)
+    cfiSay('Nicely done — <b>β ≈ 0</b>, that’s <i>zero sideslip</i>. A couple degrees of bank into the good engine just bought you your best single-engine climb.',5,'zerobeta');
+  else {
+    const calm = !anyFail && Math.abs(S.roll)<12;
+    if(calm){cfi.remTimer+=dt;
+      if(cfi.remTimer>24 && cfi.cool<=0){cfi.remTimer=0;
+        cfiSay(CFI_REMINDERS[cfi.remIdx%CFI_REMINDERS.length],6,'rem'+cfi.remIdx); cfi.remIdx++;}
+    } else cfi.remTimer=Math.max(0,cfi.remTimer-dt);
+  }
+  cfi.prev={lostControl:S.lostControl,anyFail,failL:S.failL,failR:S.failR,
+    featherL:S.featherL,featherR:S.featherR,gearWithFail:(anyFail&&S.gear),ias:S.ias,beta:S.beta,roll:S.roll};
+}
+
+function applyToMesh(dt){
+  plane.rotation.order='YZX';
+  plane.rotation.set(S.roll*D2R, -S.yaw*D2R*0.12, S.pitch*D2R);
+  // surfaces
+  const ailDef=S.aileron*20;
+  parts.ailL.rotation.z=-ailDef*D2R; parts.ailR.rotation.z=ailDef*D2R;
+  parts.elev.rotation.z=-(-S.elevator*20)*D2R;
+  parts.rud.rotation.y=S.rudder*25*D2R;
+  // props spin at their power; failed→0; feathered→barely turning (knife-edge)
+  const spnL=S.failL?(S.featherL?0.04:0.5):S.pL*1.1;
+  const spnR=S.failR?(S.featherR?0.04:0.5):S.pR*1.1;
+  parts.propL.rotation.x += spnL; parts.propR.rotation.x += spnR;
+
+  // camera orbit
+  const az=S.camAz, el=S.camEl, d=S.camDist;
+  cam.position.set(-Math.cos(el)*Math.cos(az)*d, S.up+Math.sin(el)*d, Math.cos(el)*Math.sin(az)*d);
+  cam.up.set(0,1,0); cam.lookAt(0,0.4,0);
+  ground.position.x=(performance.now()*0.001*S.ias*0.02)%70-35;
+
+  updateFlow();
+  updateLabels();
+}
+
+function updateFlow(){
+  if(!flowGroup) return;
+  const pL=S.failL?0:S.pL, pR=S.failR?0:S.pR;
+  const show=S.showFlow;
+  // slipstream brightness ∝ that engine's power → dead engine's slipstream vanishes
+  flow.slipL.visible=show; flow.slipR.visible=show;
+  flow.slipL.material.opacity = show? clamp(pL*0.85,0,0.85):0;
+  flow.slipR.material.opacity = show? clamp(pR*0.85,0,0.85):0;
+  // thrust-line arrows: length/opacity ∝ power; right arm visibly longer (critical engine)
+  [['thrustL',pL,-1],['thrustR',pR,1]].forEach(([k,p,side])=>{
+    flow[k].visible=show;
+    flow[k].traverse(o=>{if(o.material) o.material.opacity= show? clamp(p*0.9,0,0.9):0;});
+    flow[k].scale.x = side>0? 1.18 : 1.0; // right thrust arm longer
+  });
+}
+
+/* labels */
+const labelDefs=[
+  {key:'eL',pos:[2.0,-0.25,-3.0],txt:'L ENG',col:'#ff9e9e',live:()=>!S.failL},
+  {key:'eR',pos:[2.0,-0.25,3.0],txt:'R ENG',col:'#ff9e9e',live:()=>!S.failR},
+  {key:'rud',pos:[-5.2,2.4,0],txt:'RUDDER',col:'#ffa24d',live:()=>true},
+];
+let labelEls={};
+function buildLabels(){const box=$('labels');
+  labelDefs.forEach(d=>{const el=document.createElement('div');el.className='slab';el.textContent=d.txt;
+    el.style.color=d.col;el.style.borderColor=d.col;box.appendChild(el);labelEls[d.key]=el;});}
+const _v=new THREE.Vector3();
+function updateLabels(){const w=renderer.domElement.clientWidth,h=renderer.domElement.clientHeight;
+  labelDefs.forEach(d=>{const el=labelEls[d.key];
+    _v.set(...d.pos);plane.localToWorld(_v);_v.project(cam);
+    const vis=_v.z<1 && (d.key.startsWith('e')? true:true);
+    el.style.opacity=vis?1:0;
+    el.style.left=(_v.x*0.5+0.5)*w+'px'; el.style.top=(-_v.y*0.5+0.5)*h+'px';
+    if(d.key==='eL') el.textContent=S.failL?'L ENG — OUT':'L ENG';
+    if(d.key==='eR') el.textContent=S.failR?'R ENG — OUT':'R ENG';
+    el.style.borderColor = (d.key==='eL'&&S.failL)||(d.key==='eR'&&S.failR) ? '#ff4a3a' : d.col;
+  });
+}
+
+/* HUD */
+function updateHUD(){
+  const dead = S.failL?'LEFT':S.failR?'RIGHT':null;
+  let html=`<span class="k">IAS</span> <span class="v">${Math.round(S.ias)}</span> kt &nbsp; `+
+           `<span class="k">Vmc</span> <span class="v">${VMC}</span><br>`;
+  if(dead){
+    const crit = (dead==='LEFT'); // left is the critical engine in this model
+    html+=`<span class="k">Dead engine:</span> <span class="bad">${dead}</span>`+
+          (crit?` <span class="bad">(CRITICAL)</span>`:` <span class="k">(non-critical)</span>`)+`<br>`;
+    html+=`<span class="k">Sideslip β:</span> <span class="${Math.abs(S.beta)<3?'ok':'bad'}">${S.beta>0?'+':''}${S.beta.toFixed(0)}°</span> `+
+          `${Math.abs(S.beta)<3?'<span class="ok">~zero</span>':''}<br>`;
+    html+= S.lostControl? `<span class="bad">▼ BELOW Vmc — DIRECTIONAL CONTROL LOST</span>`
+         : S.vmc? `<span class="bad">approaching Vmc — rudder near limit</span>`
+         : `<span class="ok">controllable — holding heading</span>`;
+  } else {
+    html+=`<span class="ok">both engines running</span>`;
+  }
+  $('hud').innerHTML=html;
+}
+
+/* ===================== PFD ===================== */
+const px=$('pfdCanvas').getContext('2d');
+function drawPFD(){
+  const W=800,H=170; px.clearRect(0,0,W,H); px.fillStyle='#000'; px.fillRect(0,0,W,H);
+  const ax=W/2, ay=H/2, aw=210, ah=H-20;
+  px.save(); px.beginPath(); px.rect(ax-aw/2,10,aw,ah); px.clip();
+  px.translate(ax,ay); px.rotate(-S.roll*D2R);
+  const pp=S.pitch*3;
+  px.fillStyle='#3a7bd5'; px.fillRect(-300,-300+pp,600,300);
+  px.fillStyle='#9c6b2f'; px.fillRect(-300,pp,600,300);
+  px.strokeStyle='#fff'; px.lineWidth=2; px.beginPath(); px.moveTo(-aw,pp); px.lineTo(aw,pp); px.stroke();
+  px.restore();
+  // fixed aircraft + slip/skid ball
+  px.save(); px.translate(ax,ay);
+  px.strokeStyle='#ffcf00'; px.lineWidth=3;
+  px.beginPath(); px.moveTo(-46,0); px.lineTo(-16,0); px.moveTo(16,0); px.lineTo(46,0); px.moveTo(0,0); px.lineTo(0,7); px.stroke();
+  // slip/skid: ball driven by sideslip β
+  px.fillStyle='#0a0c10'; px.fillRect(-30,-(ah/2-6),60,9);
+  const bx=clamp(S.beta*1.6,-26,26);
+  px.fillStyle='#d6d68a'; px.beginPath(); px.arc(bx,-(ah/2-1.5),5,0,7); px.fill();
+  px.restore();
+  px.strokeStyle='#444'; px.strokeRect(ax-aw/2,10,aw,ah);
+  // airspeed + Vmc redline
+  drawTape(px, ax-aw/2-66,10,60,ah, S.ias);
+  // heading box
+  px.fillStyle='#000'; px.strokeStyle='#0f0'; px.fillRect(ax-22,H-22,44,16); px.strokeRect(ax-22,H-22,44,16);
+  px.fillStyle='#0f0'; px.font='600 12px "Share Tech Mono"'; px.textAlign='center';
+  px.fillText(String(Math.round(S.hdg)).padStart(3,'0'),ax,H-10);
+  px.fillStyle='#0f0'; px.font='11px "Share Tech Mono"'; px.textAlign='left'; px.fillText('TWIN PFD',8,16);
+}
+function drawTape(c,x,y,w,h,val){
+  c.save(); c.beginPath(); c.rect(x,y,w,h); c.clip();
+  c.fillStyle='rgba(20,24,30,.85)'; c.fillRect(x,y,w,h);
+  const cy=y+h/2, ppu=h/100;
+  // V-speed reference marks: Vmc (red), Vsse (white), Vyse (blue line)
+  const mark=(spd,col,lbl)=>{const yy=cy-(spd-val)*ppu; if(yy<y||yy>y+h)return;
+    c.strokeStyle=col;c.lineWidth=3;c.beginPath();c.moveTo(x,yy);c.lineTo(x+w,yy);c.stroke();
+    c.fillStyle=col;c.font='8px "Share Tech Mono"';c.textAlign='left';c.fillText(lbl,x+2,yy-2);};
+  mark(VMC,'#ff3b30','Vmc');
+  mark(VSSE,'#e8e8e8','Vsse');
+  mark(VYSE,'#3a9bff','Vyse');     // the blue line
+  c.strokeStyle='#556';c.lineWidth=1;c.fillStyle='#fff';c.font='12px "Share Tech Mono"';c.textAlign='right';
+  for(let v=Math.round((val-50)/10)*10; v<=val+50; v+=10){const yy=cy-(v-val)*ppu;
+    if(yy<y||yy>y+h)continue; c.beginPath();c.moveTo(x+w,yy);c.lineTo(x+w-6,yy);c.stroke();
+    c.fillText(v,x+w-9,yy+4);}
+  c.restore();
+  c.fillStyle='#000';c.strokeStyle=val<VMC?'#ff3b30':'#fff';c.lineWidth=1.5;
+  c.fillRect(x+3,cy-11,w-6,22); c.strokeRect(x+3,cy-11,w-6,22);
+  c.fillStyle=val<VMC?'#ff6b5e':'#fff'; c.font='600 15px "Share Tech Mono"'; c.textAlign='center';
+  c.fillText(Math.round(val),x+w/2,cy+5);
+}
+
+/* ===================== SCENARIOS (MEI demo) ===================== */
+/* ===================== MANEUVERS (MEI walkthroughs) =====================
+   Each step: prompt, a check() to advance, hold time, and MEI callout cards
+   (say = verbalize, ensure = good technique, avoid = the ride-buster mistake). */
+const MANEUVERS = [
+ {id:'efail', name:'Engine Failure — Cleanup Flow',
+  blurb:'Identify-Verify-Feather and the memory flow after a failure in cruise/climb.',
+  steps:[
+   {n:'SET UP', t:'Both engines running, cruise. Tap <b>Fail L</b> to lose the (critical) left engine.',
+    check:()=>S.failL,
+    co:[['say','"Engine failure!" — first action is FLY THE AIRPLANE.'],
+        ['ensure','Pitch for and hold blue line (Vyse, 88) — best single-engine climb.'],
+        ['avoid','Don’t rush to the dead engine before controlling yaw and pitch.']]},
+   {n:'CONTROL', t:'<b>Pitch + power + drag:</b> mixtures, props, throttles FORWARD; flaps & gear UP. Raise the gear now (tap <b>Gear</b>).',
+    check:()=>!S.gear,
+    co:[['say','"Mixtures, props, throttles — up. Flaps, gear — up."'],
+        ['ensure','Clean up drag first; gear & windmilling prop are huge climb killers.'],
+        ['avoid','Leaving the gear down can erase your entire single-engine climb.']]},
+   {n:'IDENTIFY', t:'<b>Identify the dead engine:</b> "dead foot, dead engine." Hold heading with the working foot — apply <b>right rudder</b>.',
+    check:()=>S.rudder>0.35,
+    co:[['say','"Dead foot, dead engine — left is dead."'],
+        ['ensure','The foot doing nothing points at the failed engine.'],
+        ['avoid','Identifying by guess or by sound, not by which rudder is holding it.']]},
+   {n:'VERIFY', t:'<b>Verify</b> before feathering: retard the suspected dead throttle (left) — no change confirms it’s truly dead.',
+    check:()=>S.pL<0.25 || S.failL,
+    co:[['say','"Verify — retard the left throttle… no change. Confirmed dead."'],
+        ['ensure','Always verify with the throttle before touching the prop control.'],
+        ['avoid','FEATHERING THE WRONG (good) ENGINE — the classic fatal error. Verify first.']]},
+   {n:'FEATHER', t:'<b>Feather</b> the dead engine’s prop (tap <b>Feather L</b>) to kill windmilling drag and restore climb.',
+    check:()=>S.featherL,
+    co:[['say','"Feather left." Watch the climb rate improve.'],
+        ['ensure','Feathering removes the biggest single drag item — note VSI jump.'],
+        ['avoid','Forgetting to feather; a windmilling prop can make level flight impossible.']]},
+   {n:'SECURE', t:'<b>Establish</b> blue-line climb (Vyse ≈ 88) with the bank into the good engine for zero sideslip (β≈0).',
+    check:()=>S.ias>VYSE-6 && S.ias<VYSE+8 && Math.abs(S.beta)<3.5 && S.sepClimb>-50,
+    co:[['say','"Blue line, zero sideslip, positive rate."'],
+        ['ensure','~2–3° bank into the operating engine minimizes drag (zero sideslip).'],
+        ['avoid','Wings perfectly level with lots of rudder — more drag, less climb.']]},
+  ]},
+
+ {id:'vmc', name:'Vmc Demonstration',
+  blurb:'Show loss of directional control as speed decays on one engine — done at altitude.',
+  steps:[
+   {n:'SET UP', t:'At a safe altitude, reduce the <b>left</b> engine to idle (or tap Fail L). Keep the right engine at high power.',
+    check:()=>S.failL || S.pL<0.2,
+    co:[['say','"Simulated failure, left engine."'],
+        ['ensure','Begin at or above Vsse (≈82) — never below for an intentional demo.'],
+        ['avoid','Starting the demo too slow, or at low altitude.']]},
+   {n:'HOLD', t:'Hold heading with right rudder and slowly <b>reduce speed</b> toward the red line. Watch rudder authority fade.',
+    check:()=>S.ias<VSSE && S.ias>VMC-2,
+    co:[['say','"Decelerating… rudder coming in… approaching Vmc."'],
+        ['ensure','Recover at the FIRST sign of loss of control OR a stall horn — whichever first.'],
+        ['avoid','Riding it past Vmc into a Vmc roll — especially if stall comes first.']]},
+   {n:'RECOVER', t:'<b>Recovery:</b> reduce power on the OPERATING (right) engine AND lower the nose to regain speed above Vmc.',
+    check:()=>S.pR<0.6 && S.ias>VMC+6 && !S.lostControl,
+    co:[['say','"Reduce power, lower the nose, recover."'],
+        ['ensure','Reducing the GOOD engine’s power removes the asymmetry instantly.'],
+        ['avoid','Adding MORE power to the good engine — that worsens the yaw and the roll.']]},
+  ]},
+
+ {id:'drag', name:'Drag Demonstration',
+  blurb:'Feel how gear, flaps, and a windmilling prop each destroy single-engine climb.',
+  steps:[
+   {n:'BASELINE', t:'One engine out, <b>clean</b> (gear up, flaps up, dead prop feathered). Note the climb rate on the VSI.',
+    check:()=>(S.failL||S.failR) && !S.gear && S.flaps<0.05 && (S.featherL||S.featherR),
+    co:[['say','"Clean configuration, single engine — baseline climb."'],
+        ['ensure','This is your best case: feathered, clean, blue line.'],
+        ['avoid','—']]},
+   {n:'WINDMILL', t:'<b>Unfeather</b> the dead prop (tap Feather to toggle off) and watch the climb collapse from windmilling drag.',
+    check:()=>(S.failL&&!S.featherL)||(S.failR&&!S.featherR),
+    co:[['say','"Windmilling prop — note the climb loss."'],
+        ['ensure','A windmilling prop is often the single largest drag item — this is WHY we feather.'],
+        ['avoid','Underestimating windmill drag; it can exceed gear + flaps combined.']]},
+   {n:'GEAR', t:'Now drop the <b>gear</b> (tap Gear Dn) — watch climb degrade further.',
+    check:()=>S.gear,
+    co:[['say','"Gear down — climb degrading."'],
+        ['ensure','Gear is a major drag penalty; clean up early in a real failure.'],
+        ['avoid','—']]},
+   {n:'FLAPS', t:'Add <b>flaps</b> (tap Flaps) — the climb may go to zero or negative. This is the lesson.',
+    check:()=>S.flaps>0.3,
+    co:[['say','"Full drag — single-engine climb gone."'],
+        ['ensure','Each item compounds; this is why the cleanup flow exists and order matters.'],
+        ['avoid','Ever being slow + dirty + single-engine near the ground.']]},
+  ]},
+
+ {id:'sega', name:'Single-Engine Approach & Go-Around',
+  blurb:'Fly an approach on one engine — and understand why the go-around may be a trap.',
+  steps:[
+   {n:'CONFIG', t:'One engine out, feathered. Set up the approach: blue-line-ish speed, gear down when landing is assured.',
+    check:()=>(S.failL||S.failR) && S.gear && S.ias>VMC+5,
+    co:[['say','"Single-engine approach, gear down, landing assured."'],
+        ['ensure','Delay gear/flaps until landing is assured to preserve climb if you must go around.'],
+        ['avoid','Dirtying up early; you may not be able to climb away.']]},
+   {n:'DECISION', t:'<b>Commit to land.</b> A single-engine go-around at low speed and high drag may be impossible.',
+    check:()=>true, info:true,
+    co:[['say','"Committed to land."'],
+        ['ensure','In most light twins, once low/slow/dirty on one engine — LAND. Don’t attempt the go-around.'],
+        ['avoid','Attempting a go-around that the airplane can’t perform — a common fatal scenario.']]},
+   {n:'TOUCHDOWN', t:'Maintain directional control with rudder through the flare; reduce the good engine smoothly.',
+    check:()=>S.ias<VMC+10,
+    co:[['say','"Maintaining centerline, power coming back."'],
+        ['ensure','Asymmetry shrinks as power reduces — but keep that working foot in.'],
+        ['avoid','Relaxing rudder while power is still up — the yaw is still there.']]},
+  ]},
+];
+
+let MAN=null;
+function manRenderPicker(){
+  const box=$('mpPick'); box.innerHTML=''; $('mpBody').classList.add('hidden'); box.classList.remove('hidden');
+  MANEUVERS.forEach(m=>{const c=document.createElement('div');c.className='mp-card';
+    c.innerHTML=`<h3>${m.name}</h3><p>${m.blurb}</p>`;
+    c.onclick=()=>{MAN=m;S.manStep=0;S.manHold=0;manRenderStep();};box.appendChild(c);});
+}
+function manRenderStep(){
+  $('mpPick').classList.add('hidden'); $('mpBody').classList.remove('hidden');
+  const s=MAN.steps[S.manStep];
+  $('mpStep').innerHTML=`<span class="sn">Step ${S.manStep+1}/${MAN.steps.length} — ${s.n}</span>${s.t}`;
+  const co=$('mpCallouts'); co.innerHTML='';
+  s.co.forEach(([type,txt])=>{if(txt==='—')return;const d=document.createElement('div');
+    d.className='co '+type;const ic=type==='say'?'SAY':type==='ensure'?'✓ DO':'✗ AVOID';
+    d.innerHTML=`<span class="ic">${ic}</span><span>${txt}</span>`;co.appendChild(d);});
+  $('mpProg').innerHTML = s.info? '<span class="hold">tap here to continue →</span>' : 'perform the step…';
+  $('mpProg').style.cursor = s.info?'pointer':'default';
+  $('mpProg').onclick = s.info? manNext : null;
+}
+function manTick(dt){
+  if(!MAN || $('manPanel').classList.contains('hidden')) return;
+  if($('mpBody').classList.contains('hidden')) return;
+  const s=MAN.steps[S.manStep]; if(!s) return;
+  if(s.info){$('mpProg').innerHTML='<span class="hold">tap “next” when ready</span>'; return;}
+  if(s.check()){S.manHold+=dt; const pct=Math.min(1,S.manHold/1.4);
+    $('mpProg').innerHTML=`<span class="hold">holding ${(pct*100|0)}%</span>`;
+    if(S.manHold>=1.4){S.manStep++;S.manHold=0;
+      if(S.manStep>=MAN.steps.length){$('mpStep').innerHTML='<b>Maneuver complete ✓</b>';
+        $('mpCallouts').innerHTML='';$('mpProg').innerHTML='Pick another maneuver.';
+        setTimeout(manRenderPicker,1400);}
+      else manRenderStep();}
+  } else {S.manHold=Math.max(0,S.manHold-dt*2);
+    $('mpProg').innerHTML = S.lostControl? '<span class="warn">control lost — recover!</span>':'perform the step…';}
+}
+// "info" steps advance via the exit/next button area
+function manNext(){const s=MAN&&MAN.steps[S.manStep];if(s&&s.info){S.manStep++;S.manHold=0;
+  if(S.manStep>=MAN.steps.length)manRenderPicker();else manRenderStep();}}
+
+/* ===================== INPUT ===================== */
+function initThrottles(){
+  [['thrL','pL','failL','thrLpct'],['thrR','pR','failR','thrRpct']].forEach(([tid,pk,fk,pid])=>{
+    const el=$(tid), grip=el.querySelector('.grip'), lever=el.querySelector('.lever');
+    let active=false;
+    function place(){const H=lever.clientHeight; grip.style.top=(H-11 - S[pk]*(H-22))+'px';
+      $(pid).textContent=S[fk]?'OUT':Math.round(S[pk]*100); el.classList.toggle('dead',S[fk]);}
+    function set(e){const r=lever.getBoundingClientRect();
+      const y=(e.touches?e.touches[0].clientY:e.clientY)-r.top;
+      S[pk]=clamp(1-(y-11)/(r.height-22),0,1); if(S[pk]>0.02) S[fk]=false; place();}
+    const down=e=>{active=true;set(e);e.preventDefault();};
+    el.addEventListener('touchstart',down,{passive:false}); el.addEventListener('mousedown',down);
+    window.addEventListener('touchmove',e=>{if(active){set(e);e.preventDefault&&e.preventDefault();}},{passive:false});
+    window.addEventListener('mousemove',e=>{if(active)set(e);});
+    window.addEventListener('touchend',()=>active=false); window.addEventListener('mouseup',()=>active=false);
+    el._place=place; place();
+  });
+}
+function refreshThrottles(){$('thrL')._place&&$('thrL')._place();$('thrR')._place&&$('thrR')._place();}
+
+function initPedals(){
+  const pedL=$('pedL'),pedR=$('pedR'),kL=pedL.querySelector('.knob'),kR=pedR.querySelector('.knob');
+  let active=null;
+  function setR(r){S.rudder=clamp(r,-1,1);place(kL,-S.rudder);place(kR,S.rudder);}
+  function place(k,f){const H=k.parentElement.clientHeight;k.style.top=(H/2-f*(H/2-20))+'px';}
+  function ptr(ped,e,sign){const r=ped.getBoundingClientRect();
+    const y=(e.touches?e.touches[0].clientY:e.clientY)-r.top;
+    setR(sign*clamp((r.height/2-y)/(r.height/2-20),-1,1));}
+  function bind(ped,sign){const d=e=>{active={ped,sign};ptr(ped,e,sign);e.preventDefault();};
+    ped.addEventListener('touchstart',d,{passive:false});ped.addEventListener('mousedown',d);}
+  bind(pedL,-1);bind(pedR,1);
+  window.addEventListener('touchmove',e=>{if(active){ptr(active.ped,e,active.sign);e.preventDefault&&e.preventDefault();}},{passive:false});
+  window.addEventListener('mousemove',e=>{if(active)ptr(active.ped,e,active.sign);});
+  window.addEventListener('touchend',()=>active=null);window.addEventListener('mouseup',()=>active=null);
+  setInterval(()=>{if(!active&&Math.abs(S.rudder)>0.01)setR(S.rudder*0.85);else if(!active)setR(0);},45);
+  setR(0);
+}
+
+function initStick(){
+  const stick=$('stick'),wheel=$('yokeWheel');let active=false;
+  function render(){wheel.style.transform=`rotate(${S.stickAil*60}deg) scale(${1+S.stickElev*0.22})`;}
+  function set(e){const r=stick.getBoundingClientRect();
+    const px2=(e.touches?e.touches[0].clientX:e.clientX),py=(e.touches?e.touches[0].clientY:e.clientY);
+    S.stickAil=clamp((px2-(r.left+r.width/2))/(r.width/2-10),-1,1);
+    S.stickElev=-clamp((py-(r.top+r.height/2))/(r.height/2-10),-1,1);
+    S.usingStick=true;render();}
+  const d=e=>{active=true;set(e);e.preventDefault();};
+  stick.addEventListener('touchstart',d,{passive:false});stick.addEventListener('mousedown',d);
+  window.addEventListener('touchmove',e=>{if(active){set(e);e.preventDefault&&e.preventDefault();}},{passive:false});
+  window.addEventListener('mousemove',e=>{if(active)set(e);});
+  window.addEventListener('touchend',()=>active=false);window.addEventListener('mouseup',()=>active=false);
+  setInterval(()=>{if(!active&&S.usingStick){S.stickAil*=0.85;S.stickElev*=0.85;
+    if(Math.abs(S.stickAil)<0.02&&Math.abs(S.stickElev)<0.02){S.stickAil=0;S.stickElev=0;}render();}},45);
+  render();
+}
+
+function initCam(){const el=$('scene');let drag=false,lx,ly,pd=0;
+  const dist=t=>Math.hypot(t[0].clientX-t[1].clientX,t[0].clientY-t[1].clientY);
+  el.addEventListener('touchstart',e=>{if(e.touches.length===1){drag=true;lx=e.touches[0].clientX;ly=e.touches[0].clientY;}
+    else if(e.touches.length===2){drag=false;pd=dist(e.touches);}},{passive:true});
+  el.addEventListener('touchmove',e=>{if(e.touches.length===2){const d=dist(e.touches);S.camDist=clamp(S.camDist*(pd/d),9,55);pd=d;}
+    else if(drag&&e.touches.length===1){const x=e.touches[0].clientX,y=e.touches[0].clientY;
+      S.camAz=clamp(S.camAz+(x-lx)*0.008,-Math.PI*0.9,Math.PI*0.9);S.camEl=clamp(S.camEl-(y-ly)*0.006,-0.2,1.1);lx=x;ly=y;}},{passive:true});
+  el.addEventListener('touchend',()=>drag=false);
+  el.addEventListener('mousedown',e=>{drag=true;lx=e.clientX;ly=e.clientY;});
+  window.addEventListener('mousemove',e=>{if(!drag)return;S.camAz=clamp(S.camAz+(e.clientX-lx)*0.008,-Math.PI*0.9,Math.PI*0.9);
+    S.camEl=clamp(S.camEl-(e.clientY-ly)*0.006,-0.2,1.1);lx=e.clientX;ly=e.clientY;});
+  window.addEventListener('mouseup',()=>drag=false);
+  el.addEventListener('wheel',e=>{S.camDist=clamp(S.camDist+e.deltaY*0.02,9,55);e.preventDefault();},{passive:false});
+}
+
+function initBar(){
+  $('bSand').onclick=()=>{S.mode='sandbox';$('bSand').classList.add('on');$('bMan').classList.remove('on');
+    $('manPanel').classList.add('hidden');$('cmd').style.display='none';};
+  $('bMan').onclick=()=>{S.mode='maneuver';$('bMan').classList.add('on');$('bSand').classList.remove('on');
+    $('manPanel').classList.remove('hidden');$('cmd').style.display='none';manRenderPicker();};
+  $('mpExit').onclick=()=>manRenderPicker();
+  $('bFailL').onclick=()=>{S.failL=!S.failL;if(S.failL)S.featherL=false;$('bFailL').classList.toggle('on',S.failL);refreshThrottles();};
+  $('bFailR').onclick=()=>{S.failR=!S.failR;if(S.failR)S.featherR=false;$('bFailR').classList.toggle('on',S.failR);refreshThrottles();};
+  $('bFeaL').onclick=()=>{S.featherL=!S.featherL;$('bFeaL').classList.toggle('on',S.featherL);};
+  $('bFeaR').onclick=()=>{S.featherR=!S.featherR;$('bFeaR').classList.toggle('on',S.featherR);};
+  $('bGear').onclick=()=>{S.gear=!S.gear;$('bGear').classList.toggle('on',S.gear);
+    $('bGear').textContent=S.gear?'Gear Dn':'Gear Up';};
+  $('bFlap').onclick=()=>{S.flaps=S.flaps>0.5?0:(S.flaps>0.05?1:0.5);
+    $('bFlap').classList.toggle('on',S.flaps>0.05);$('bFlap').textContent=S.flaps>0.5?'Flaps Full':S.flaps>0.05?'Flaps T/O':'Flaps';};
+  $('bRestart').onclick=()=>{S.failL=S.failR=false;S.featherL=S.featherR=false;S.pL=S.pR=1;
+    S.roll=0;S.beta=0;S.ias=100;S.hdg=90;S.gear=true;S.flaps=0;
+    ['bFailL','bFailR','bFeaL','bFeaR'].forEach(id=>$(id).classList.remove('on'));
+    $('bGear').classList.add('on');$('bGear').textContent='Gear Dn';
+    $('bFlap').classList.remove('on');$('bFlap').textContent='Flaps';refreshThrottles();};
+  $('bFlow').onclick=()=>{S.showFlow=!S.showFlow;$('bFlow').classList.toggle('on',S.showFlow);};
+  $('bInfo').onclick=()=>$('infoBox').classList.toggle('hidden');
+  $('ibClose').onclick=()=>$('infoBox').classList.add('hidden');
+  $('bCFI').onclick=function(){S.showCFI=!S.showCFI;this.classList.toggle('on',S.showCFI);
+    if(!S.showCFI)$('cfiTip').classList.remove('show');};
+  $('bCenter').onclick=async()=>{
+    const secure=window.isSecureContext;
+    try{if(typeof DeviceOrientationEvent!=='undefined'&&DeviceOrientationEvent.requestPermission)await DeviceOrientationEvent.requestPermission();}catch(e){}
+    const grab=ev=>{if(ev.beta==null)return;const land=matchMedia('(orientation:landscape)').matches;
+      S.pitchZero=land?ev.gamma:(ev.beta-45);S.rollZero=land?(ev.beta-45):ev.gamma;S.tiltArmed=true;
+      removeEventListener('deviceorientation',grab,true);$('hint').textContent='Attitude centered ✓ — tilt to fly';};
+    addEventListener('deviceorientation',grab,true);
+    setTimeout(()=>{if(!S.haveTilt)$('hint').textContent=secure?'No tilt sensor — use the YOKE pad':'Tilt needs HTTPS — use the YOKE pad (open via https to enable tilt)';},700);
+  };
+  addEventListener('deviceorientation',ev=>{if(ev.beta==null)return;S.haveTilt=true;if(!S.tiltArmed)return;
+    const land=matchMedia('(orientation:landscape)').matches;
+    S.tiltElev=clamp(-((land?ev.gamma:ev.beta-45)-S.pitchZero)/30,-1,1);
+    S.tiltAil=clamp(((land?ev.beta-45:ev.gamma)-S.rollZero)/30,-1,1);S.usingStick=false;},true);
+}
+
+/* ===================== BOOT ===================== */
+initThree(); buildLabels(); initThrottles(); initPedals(); initStick(); initCam(); initBar();
+$('cmd').style.display='none';
+let last=performance.now();
+function frame(){const now=performance.now();const dt=Math.min(0.05,(now-last)/1000);last=now;
+  step(dt); renderer.render(scene,cam); drawPFD(); requestAnimationFrame(frame);}
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>

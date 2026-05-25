@@ -4,6 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Six-Pack &amp; Compass Errors — Trainer</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Oswald:wght@300;400;500;600&family=Share+Tech+Mono&display=swap');
   :root{
@@ -101,6 +103,18 @@
   .profstage{aspect-ratio:auto;max-width:520px;width:100%;height:170px;}
   .trackstage canvas,.profstage canvas{width:100%;height:100%;display:block;
     background:#0a0e13;border:1px solid var(--edge,#252b34);border-radius:10px;}
+  #trkMap{width:100%;height:100%;border-radius:10px;border:1px solid var(--edge,#252b34);
+    background:#0a0e13;overflow:hidden;}
+  #trkMap.hidden{display:none;}
+  .leaflet-container{background:#0a0e13;font-family:'Share Tech Mono',monospace;}
+  .leaflet-control-attribution{font-size:.5rem;background:rgba(10,14,19,.7);color:#828c99;}
+  .leaflet-control-layers{background:rgba(12,16,22,.94)!important;border:1px solid var(--edge,#252b34)!important;
+    border-radius:8px!important;color:var(--ink,#e4e9ef);font-family:'Share Tech Mono',monospace;font-size:.66rem;}
+  .leaflet-control-layers label{margin:3px 0;}
+  .leaflet-control-layers-selector{accent-color:#ffb347;}
+  .leaflet-bar a{background:#12161c!important;color:#e4e9ef!important;border-color:#252b34!important;}
+  .trackmode{display:flex;gap:0;}
+  .trackmode button{flex:1;}
   .trk-cap{position:absolute;bottom:6px;left:10px;right:10px;font-family:'Share Tech Mono';
     font-size:.58rem;letter-spacing:.08em;color:var(--ink-dim);text-transform:uppercase;pointer-events:none;}
   #btnMetar,#btnMetarAuto{flex:1;}
@@ -215,9 +229,17 @@
       <div class="live-status" id="metarStat">METAR sets your altimeter (Kollsman) so baro altitude reads true MSL. AGL uses field elevation.</div>
     </div>
 
+    <div class="seg trackmode" id="trackMode" style="margin-bottom:10px">
+      <button data-tm="map" class="on">Map view</button>
+      <button data-tm="plain">Plain (ground-ref)</button>
+    </div>
+
     <div class="track-grid">
-      <div class="stage trackstage"><canvas id="trk" width="640" height="640"></canvas>
-        <div class="trk-cap">Ground track (top-down) · <span id="trkInfo">no fix</span></div></div>
+      <div class="stage trackstage">
+        <div id="trkMap"></div>
+        <canvas id="trk" width="640" height="640" class="hidden"></canvas>
+        <div class="trk-cap">Ground track · <span id="trkInfo">no fix</span></div>
+      </div>
       <div class="stage profstage"><canvas id="prof" width="640" height="300"></canvas>
         <div class="trk-cap">Altitude profile · <span id="profInfo">—</span></div></div>
     </div>
@@ -258,6 +280,7 @@ const state={
   baseAlt:null,alt:0,vsi:0,lastAlt:null,lastT:null,
   // track & weather
   trackActive:false, geoId:null, fixes:[], rawPressure:null,
+  trackMode:'map', lmap:null, lpoly:null, lstart:null, lcur:null, lmapReady:false,
   altSetting:29.92, metarAuto:false, metarTimer:null, fieldElev:810,
   msl:null, lastMetar:null,
   smoothErr:0,shown:0
@@ -529,7 +552,58 @@ function setView(v){
   $('simPanel').classList.toggle('hidden',v!=='sim');
   $('livePanel').classList.toggle('hidden',v!=='live');
   if(v==='quiz'&&!quizState.q){quizState.q=makeQuestion();renderQuiz();}
-  if(v==='track'){drawTrack();drawProfile();}
+  if(v==='track'){ initTrackMap(); applyTrackMode(); drawTrack(); drawProfile(); }
+}
+
+/* ---- Leaflet map for the ground track ---- */
+function initTrackMap(){
+  if(state.lmapReady || typeof L==='undefined') return;
+  const el=$('trkMap'); if(!el) return;
+  const map=L.map(el,{zoomControl:true,attributionControl:true}).setView([39.83,-86.06],13); // KEYE-ish default
+
+  // Base layers chosen for balloon work: terrain+vegetation, real imagery, and roads.
+  const topo=L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png',{
+    maxZoom:17, attribution:'© OpenTopoMap (CC-BY-SA), © OSM'});         // contours, hillshade, forest
+  const sat=L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{
+    maxZoom:19, attribution:'© Esri World Imagery'});                    // real fields/trees
+  const satLabels=L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}',{
+    maxZoom:19, opacity:.9});                                            // town/road labels over imagery
+  const satGroup=L.layerGroup([sat,satLabels]);
+  const roads=L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
+    maxZoom:19, attribution:'© OpenStreetMap'});
+
+  topo.addTo(map);  // default: terrain + vegetation, most useful for balloon site/wind reading
+  L.control.layers(
+    {'Terrain + trees (Topo)':topo, 'Satellite (real fields)':satGroup, 'Roads (OSM)':roads},
+    null, {position:'topright', collapsed:false}
+  ).addTo(map);
+
+  state.lmap=map; state.lmapReady=true;
+  state.lpoly=L.polyline([],{color:'#ff3b6b',weight:4,opacity:.95}).addTo(map); // pink reads on green/satellite
+  setTimeout(()=>map.invalidateSize(),120);
+}
+function applyTrackMode(){
+  const mapOn = state.trackMode==='map' && typeof L!=='undefined';
+  $('trkMap').classList.toggle('hidden',!mapOn);
+  $('trk').classList.toggle('hidden',mapOn);
+  document.querySelectorAll('#trackMode button').forEach(b=>b.classList.toggle('on',b.dataset.tm===state.trackMode));
+  if(mapOn && state.lmap){ setTimeout(()=>state.lmap.invalidateSize(),60); updateMapTrack(); }
+  else drawTrack();
+}
+function updateMapTrack(){
+  if(!state.lmapReady) return;
+  const f=state.fixes; if(!f.length){ $('trkInfo').textContent='no fix'; return; }
+  const latlngs=f.map(p=>[p.lat,p.lon]);
+  state.lpoly.setLatLngs(latlngs);
+  const cur=latlngs[latlngs.length-1], start=latlngs[0];
+  if(!state.lstart){ state.lstart=L.circleMarker(start,{radius:6,color:'#5fd99b',fillColor:'#5fd99b',fillOpacity:1}).addTo(state.lmap); }
+  else state.lstart.setLatLng(start);
+  if(!state.lcur){ state.lcur=L.circleMarker(cur,{radius:7,color:'#ffb347',fillColor:'#ffb347',fillOpacity:1}).addTo(state.lmap); }
+  else state.lcur.setLatLng(cur);
+  // keep the latest fix in view; fit bounds once there's a real track
+  if(latlngs.length===1) state.lmap.setView(cur,15);
+  else state.lmap.fitBounds(state.lpoly.getBounds().pad(0.25));
+  $('trkInfo').textContent=`${f.length} fixes`;
 }
 $('tSim').onclick=()=>setView('sim');$('tLive').onclick=()=>setView('live');
 $('tQuiz').onclick=()=>setView('quiz');$('tPanel').onclick=()=>setView('panel');
@@ -549,10 +623,13 @@ function startTrack(){
     $('trackStat').innerHTML=`Tracking · ${state.fixes.length} fixes · ±${Math.round(accuracy)} m`;
     // if no METAR yet, try to auto-fetch for this position
     if(!state.lastMetar) fetchMetar(latitude,longitude,true);
-    drawTrack();
+    if(state.trackMode==='map') updateMapTrack(); else drawTrack();
   }, err=>{$('trackStat').innerHTML='<span class="no">GPS error:</span> '+err.message;},
   {enableHighAccuracy:true,maximumAge:1000,timeout:15000});
 }
+// track-mode toggle
+document.querySelectorAll('#trackMode button').forEach(b=>b.onclick=()=>{
+  state.trackMode=b.dataset.tm; applyTrackMode();});
 $('btnTrack').onclick=()=>{ if(state.geoId==null) startTrack();
   else {navigator.geolocation.clearWatch(state.geoId);state.geoId=null;state.trackActive=false;
     $('btnTrack').textContent='Start GPS track';$('trackStat').textContent='Track paused.';return;}
@@ -631,21 +708,29 @@ function updateAltReadout(){
 }
 $('sFE').oninput=e=>{state.fieldElev=+e.target.value;$('vFE').textContent=state.fieldElev+' ft';fillRange(e.target);updateAltReadout();};
 
-// METAR fetch via aviationweather.gov data API (CORS-enabled, HTTPS)
+// METAR via aviationweather.gov; falls back through CORS proxies if the direct call is blocked.
+async function fetchJSONwithFallback(targetUrl){
+  // 1) direct
+  try{ const r=await fetch(targetUrl); if(r.ok){ return await r.json(); } }catch(e){}
+  // 2) corsproxy.io
+  try{ const r=await fetch('https://corsproxy.io/?url='+encodeURIComponent(targetUrl));
+       if(r.ok){ return await r.json(); } }catch(e){}
+  // 3) allorigins (wraps body in {contents:"..."} as text)
+  try{ const r=await fetch('https://api.allorigins.win/get?url='+encodeURIComponent(targetUrl));
+       if(r.ok){ const j=await r.json(); return JSON.parse(j.contents); } }catch(e){}
+  throw new Error('all fetch routes blocked');
+}
 async function fetchMetar(lat,lon,quiet){
   if(!window.isSecureContext){if(!quiet)$('metarStat').innerHTML='<span class="no">METAR needs HTTPS.</span> Host on GitHub Pages first.';return;}
   if(lat==null){ if(state.fixes.length){const p=state.fixes[state.fixes.length-1];lat=p.lat;lon=p.lon;}
     else if('geolocation' in navigator){navigator.geolocation.getCurrentPosition(p=>fetchMetar(p.coords.latitude,p.coords.longitude,quiet),
-      ()=>{$('metarStat').innerHTML='<span class="no">Need a GPS fix or location permission first.</span>';},{enableHighAccuracy:false});return;}
+      ()=>{$('metarStat').innerHTML='<span class="no">Need a GPS fix or location permission first.</span> Tap “Start GPS track” or allow location.';},{enableHighAccuracy:false});return;}
     else {$('metarStat').innerHTML='<span class="no">No location available.</span>';return;}}
   if(!quiet)$('metarStat').textContent='Fetching nearest METAR…';
   try{
-    const url=`https://aviationweather.gov/api/data/metar?format=json&distance=120&latlon=${lat.toFixed(4)},${lon.toFixed(4)}`;
-    const r=await fetch(url);
-    if(!r.ok)throw new Error('HTTP '+r.status);
-    const data=await r.json();
-    if(!data||!data.length)throw new Error('no station nearby');
-    // nearest = first; altimeter in inHg sometimes as altim (hPa) — normalize
+    const url=`https://aviationweather.gov/api/data/metar?format=json&distance=180&latlon=${lat.toFixed(4)},${lon.toFixed(4)}`;
+    const data=await fetchJSONwithFallback(url);
+    if(!data||!data.length)throw new Error('no station within range');
     const m=data[0];
     let altimInHg = m.altim!=null ? (m.altim>200? m.altim/33.8639 : m.altim) : 29.92;
     state.altSetting=altimInHg; state.lastMetar=m;
@@ -653,7 +738,7 @@ async function fetchMetar(lat,lon,quiet){
     const obs=m.obsTime?new Date(m.obsTime*1000):new Date();
     $('metarStat').innerHTML=`<span class="ok">${m.icaoId||'METAR'}</span> · alt ${altimInHg.toFixed(2)}" · ${m.temp!=null?m.temp+'°C · ':''}${obs.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})}`;
     updateAltReadout();
-  }catch(e){ if(!quiet)$('metarStat').innerHTML='<span class="no">METAR fetch failed:</span> '+e.message+'. (Some networks/CORS block it.)';}
+  }catch(e){ if(!quiet)$('metarStat').innerHTML='<span class="no">METAR unavailable:</span> '+e.message+'. Altimeter stays at '+state.altSetting.toFixed(2)+'".';}
 }
 $('btnMetar').onclick=()=>fetchMetar(null,null,false);
 $('btnMetarAuto').onclick=()=>{state.metarAuto=!state.metarAuto;$('autoState').textContent=state.metarAuto?'on':'off';
@@ -673,28 +758,47 @@ async function enableSensors(statEl){
     if(typeof DeviceMotionEvent!=='undefined'&&DeviceMotionEvent.requestPermission){await DeviceMotionEvent.requestPermission();}
   }catch(err){}
   if(!granted){statEl.innerHTML='<span class="no">Permission denied.</span> Enable motion access in browser settings, then retry.';return;}
-  let gotO=false,gotM=false;
-  window.addEventListener('deviceorientationabsolute',onOrient,true);
-  window.addEventListener('deviceorientation',onOrient,true);
+  let gotO=false,gotM=false,haveAbsolute=false;
+  window.addEventListener('deviceorientationabsolute',e=>onOrient(e,true),true);
+  window.addEventListener('deviceorientation',e=>onOrient(e,false),true);
   window.addEventListener('devicemotion',onMotion,true);
-  function onOrient(ev){if(ev.alpha==null)return;gotO=true;
-    let h=(ev.webkitCompassHeading!=null)?ev.webkitCompassHeading:(360-ev.alpha);
-    state.liveHdg=((h%360)+360)%360;
-    if(ev.beta!=null)state.livePitch=Math.max(-40,Math.min(40,state.mount==='vert'?(ev.beta-90):ev.beta));
-    if(ev.gamma!=null)state.liveBank=Math.max(-60,Math.min(60,ev.gamma));
-    refresh();}
+  function onOrient(ev,absolute){
+    // Heading source priority: iOS webkitCompassHeading > absolute alpha > relative alpha.
+    // Don't require alpha to mark the sensor present — beta/gamma alone still drive tilt.
+    let hdg=null;
+    if(ev.webkitCompassHeading!=null) hdg=ev.webkitCompassHeading;
+    else if(ev.alpha!=null){
+      // alpha is degrees counterclockwise from north → compass heading = 360-alpha
+      if(absolute || ev.absolute) { hdg=360-ev.alpha; haveAbsolute=true; }
+      else if(!haveAbsolute) hdg=360-ev.alpha;   // use relative only if no absolute source yet
+    }
+    if(hdg!=null){ state.liveHdg=((hdg%360)+360)%360; gotO=true; }
+    if(ev.beta!=null){ state.livePitch=Math.max(-40,Math.min(40,state.mount==='vert'?(ev.beta-90):ev.beta)); gotO=true; }
+    if(ev.gamma!=null){ state.liveBank=Math.max(-60,Math.min(60,ev.gamma)); }
+    refresh();
+  }
   function onMotion(ev){const a=ev.accelerationIncludingGravity||ev.acceleration;if(!a)return;gotM=true;
-    // total G magnitude
     const gmag=Math.sqrt((a.x||0)**2+(a.y||0)**2+(a.z||0)**2)/9.81;state.liveG=state.liveG*0.8+gmag*0.2;
-    // lateral g for the ball (x axis)
     state.liveLat=state.liveLat*0.7+((a.x||0)/9.81)*0.3;
-    // fore/aft for compass accel
     let foreAft=state.mount==='vert'?(a.y||0):(a.z||0);
     state.liveAccel=state.liveAccel*0.7+((-foreAft/9.81)*0.3);
-    // turn rate from gyro if available
     if(ev.rotationRate&&ev.rotationRate.alpha!=null)state.liveTurnRate=state.liveTurnRate*0.7+ev.rotationRate.alpha*0.3;
     refresh();}
-  // barometer via Sensor API if present
+  // Sensor API fallback (Chrome/Android): AbsoluteOrientationSensor → reliable magnetometer heading
+  try{
+    if('AbsoluteOrientationSensor' in window){
+      const sensor=new AbsoluteOrientationSensor({frequency:20,referenceFrame:'device'});
+      sensor.addEventListener('reading',()=>{
+        const q=sensor.quaternion; if(!q)return;
+        // yaw (heading) from quaternion
+        const [x,y,z,w]=q;
+        const yaw=Math.atan2(2*(w*z+x*y),1-2*(y*y+z*z))*R2D;
+        state.liveHdg=((( -yaw)%360)+360)%360; gotO=true; refresh();
+      });
+      sensor.addEventListener('error',()=>{});
+      sensor.start();
+    }
+  }catch(e){}
   try{ if('Barometer' in window){const baro=new Barometer({frequency:4});
     baro.addEventListener('reading',()=>{const p=baro.pressure;state.rawPressure=p;
       // pressure-altitude (hPa), then shift to MSL using the local altimeter setting (inHg→hPa)
@@ -705,7 +809,11 @@ async function enableSensors(statEl){
       const now=performance.now();if(state.lastAlt!=null){const dt=(now-state.lastT)/1000;if(dt>0)state.vsi=state.vsi*0.7+((state.alt-state.lastAlt)/dt*60)*0.3;}
       state.lastAlt=state.alt;state.lastT=now; updateAltReadout();});baro.start();}
   }catch(e){}
+  let lastKey='';
   function refresh(){state.liveActive=true;
+    const key=(gotO?'1':'0')+(gotM?'1':'0');
+    if(key===lastKey) return;   // only touch the DOM when on/off state changes (no flashing)
+    lastKey=key;
     statEl.innerHTML=`Heading <span class="${gotO?'ok':'no'}">${gotO?'OK':'…'}</span> · Motion <span class="${gotM?'ok':'no'}">${gotM?'OK':'…'}</span> · move the phone to drive the instruments.`;}
   statEl.innerHTML='Listening… move the phone slightly.';
   setTimeout(()=>{if(!gotO&&!gotM)statEl.innerHTML='<span class="no">No sensor events.</span> The page must be served over HTTPS (or localhost) for sensors. Open it via https:// in Chrome.';},1500);

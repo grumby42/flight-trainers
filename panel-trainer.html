@@ -1,0 +1,719 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Six-Pack &amp; Compass Errors — Trainer</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Oswald:wght@300;400;500;600&family=Share+Tech+Mono&display=swap');
+  :root{
+    --panel:#14171c; --panel-2:#1b1f26; --panel-edge:#2a2f38;
+    --ink:#d7dce3; --ink-dim:#8a93a0;
+    --amber:#ffb347; --amber-bright:#ffcf7a;
+    --green:#5fd99b; --red:#ff6b5e; --cyan:#62d6e8;
+    --shadow:rgba(0,0,0,.55);
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;padding:0;
+    background:radial-gradient(120% 90% at 50% -10%, #20252e 0%, #0d0f13 60%, #08090c 100%);
+    color:var(--ink);font-family:'Oswald',sans-serif;font-weight:300;min-height:100%;}
+  body{padding:14px 12px 44px;max-width:600px;margin:0 auto;}
+  h1{font-size:1.2rem;font-weight:500;letter-spacing:.07em;text-transform:uppercase;margin:.2rem 0 .1rem;color:var(--amber);}
+  .sub{font-size:.7rem;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-dim);margin-bottom:14px;font-family:'Share Tech Mono',monospace;}
+
+  /* top-level tabs */
+  .tabs{display:flex;gap:6px;margin-bottom:14px;}
+  .tabs button{flex:1;background:var(--panel);border:1px solid var(--panel-edge);color:var(--ink-dim);
+     font-family:'Oswald';font-weight:400;letter-spacing:.06em;text-transform:uppercase;font-size:.7rem;
+     padding:10px 4px;border-radius:7px;transition:.18s;cursor:pointer;}
+  .tabs button.active{color:#0d0f13;background:linear-gradient(180deg,var(--amber-bright),var(--amber));
+     border-color:var(--amber);box-shadow:0 0 14px rgba(255,179,71,.25);font-weight:600;}
+
+  .stage{position:relative;width:100%;aspect-ratio:1/1;max-width:380px;margin:0 auto 6px;}
+  canvas.inst{width:100%;height:100%;display:block;filter:drop-shadow(0 10px 24px var(--shadow));}
+  .glass{position:absolute;inset:0;border-radius:50%;pointer-events:none;
+     background:radial-gradient(120% 120% at 30% 20%, rgba(255,255,255,.07), transparent 45%);}
+
+  .readout-row{display:flex;gap:8px;justify-content:center;margin:2px 0 14px;flex-wrap:wrap;}
+  .chip{background:var(--panel);border:1px solid var(--panel-edge);border-radius:6px;padding:7px 12px;text-align:center;min-width:92px;}
+  .chip .lbl{font-size:.58rem;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-dim);font-family:'Share Tech Mono';}
+  .chip .val{font-family:'Share Tech Mono';font-size:1.3rem;color:var(--amber);line-height:1.1;}
+  .chip.smart .val{color:var(--cyan);}
+  .chip .val small{font-size:.7rem;color:var(--ink-dim);}
+
+  #banner{min-height:46px;background:var(--panel-2);border:1px solid var(--panel-edge);border-left:3px solid var(--amber);
+     border-radius:6px;padding:9px 12px;margin-bottom:16px;font-size:.82rem;line-height:1.35;transition:.2s;}
+  #banner b{color:var(--amber-bright);font-weight:600;}
+  #banner.err-acc{border-left-color:var(--red);} #banner.err-turn{border-left-color:var(--cyan);} #banner.err-none{border-left-color:var(--green);}
+
+  .panel{background:var(--panel);border:1px solid var(--panel-edge);border-radius:9px;padding:14px 14px 6px;margin-bottom:14px;}
+  .panel h2{font-size:.68rem;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-dim);margin:0 0 10px;font-family:'Share Tech Mono';font-weight:400;}
+  .ctl{margin-bottom:13px;}
+  .ctl label{display:flex;justify-content:space-between;font-size:.78rem;margin-bottom:5px;}
+  .ctl label .v{font-family:'Share Tech Mono';color:var(--amber);}
+  input[type=range]{-webkit-appearance:none;width:100%;height:4px;border-radius:3px;background:var(--panel-edge);outline:none;}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;border-radius:50%;background:var(--amber-bright);border:2px solid #0d0f13;box-shadow:0 1px 5px rgba(0,0,0,.6);}
+  input[type=range]::-moz-range-thumb{width:18px;height:18px;border-radius:50%;background:var(--amber-bright);border:2px solid #0d0f13;}
+  .seg{display:flex;gap:6px;margin-bottom:13px;}
+  .seg button{flex:1;background:var(--panel-2);border:1px solid var(--panel-edge);color:var(--ink-dim);padding:8px 4px;border-radius:6px;font-family:'Oswald';font-size:.7rem;letter-spacing:.05em;text-transform:uppercase;cursor:pointer;transition:.15s;}
+  .seg button.on{background:var(--amber);color:#0d0f13;border-color:var(--amber);font-weight:600;}
+  .nudge{display:flex;gap:6px;flex-wrap:wrap;}
+  .nudge button{flex:1;min-width:0;background:var(--panel-2);border:1px solid var(--panel-edge);color:var(--ink);padding:9px 4px;border-radius:6px;font-family:'Oswald';font-size:.7rem;cursor:pointer;}
+  .nudge button:active{background:var(--amber);color:#0d0f13;}
+  .live-status{font-family:'Share Tech Mono';font-size:.7rem;color:var(--ink-dim);line-height:1.5;margin-top:4px;}
+  .live-status .ok{color:var(--green);} .live-status .no{color:var(--red);}
+  .bigbtn{width:100%;background:linear-gradient(180deg,var(--green),#3fae78);color:#08130c;border:none;border-radius:8px;padding:13px;font-family:'Oswald';font-weight:600;letter-spacing:.1em;text-transform:uppercase;font-size:.85rem;cursor:pointer;box-shadow:0 4px 14px rgba(63,174,120,.3);}
+  .amp-toggle{display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-top:1px solid var(--panel-edge);margin-top:4px;}
+  .switch{position:relative;width:46px;height:24px;flex:0 0 auto;}
+  .switch input{display:none;}
+  .switch .track{position:absolute;inset:0;background:var(--panel-2);border:1px solid var(--panel-edge);border-radius:14px;transition:.18s;}
+  .switch .knob{position:absolute;top:2px;left:2px;width:18px;height:18px;border-radius:50%;background:var(--ink-dim);transition:.18s;}
+  .switch input:checked + .track{background:rgba(255,179,71,.25);border-color:var(--amber);}
+  .switch input:checked + .track + .knob{transform:translateX(22px);background:var(--amber-bright);}
+  .footnote{font-size:.67rem;color:var(--ink-dim);line-height:1.45;margin-top:6px;font-family:'Share Tech Mono';}
+  .amp-flag{display:inline-block;background:var(--red);color:#1a0604;font-family:'Share Tech Mono';font-size:.6rem;letter-spacing:.1em;padding:2px 7px;border-radius:4px;font-weight:bold;margin-left:6px;}
+  details{margin-top:4px;} details summary{font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;color:var(--amber);cursor:pointer;font-family:'Share Tech Mono';padding:6px 0;}
+  details p,details li{font-size:.8rem;line-height:1.5;color:var(--ink);}
+  .hidden{display:none !important;}
+
+  /* quiz */
+  .quiz-q{background:var(--panel-2);border:1px solid var(--panel-edge);border-radius:9px;padding:16px;margin-bottom:14px;}
+  .quiz-q .scen{font-size:.95rem;line-height:1.45;margin-bottom:4px;}
+  .quiz-q .scen b{color:var(--amber-bright);}
+  .quiz-opts{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;}
+  .quiz-opts button{background:var(--panel);border:1px solid var(--panel-edge);color:var(--ink);padding:13px 8px;border-radius:7px;font-family:'Oswald';font-size:.9rem;letter-spacing:.03em;cursor:pointer;transition:.13s;}
+  .quiz-opts button:hover{border-color:var(--amber);}
+  .quiz-opts button.correct{background:linear-gradient(180deg,var(--green),#3fae78);color:#08130c;border-color:var(--green);font-weight:600;}
+  .quiz-opts button.wrong{background:linear-gradient(180deg,var(--red),#c4463c);color:#1a0604;border-color:var(--red);font-weight:600;}
+  .quiz-opts button:disabled{cursor:default;}
+  .quiz-fb{font-size:.84rem;line-height:1.4;min-height:40px;padding:4px 2px;}
+  .quiz-fb b{color:var(--amber-bright);}
+  .quiz-score{display:flex;justify-content:space-between;font-family:'Share Tech Mono';font-size:.74rem;color:var(--ink-dim);margin-bottom:10px;}
+  .quiz-score .s{color:var(--green);}
+
+  /* panel grid */
+  .grid6{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;}
+  .gauge{position:relative;width:100%;aspect-ratio:1/1;}
+  .gauge canvas{width:100%;height:100%;display:block;}
+  .gauge .cap{position:absolute;bottom:2px;left:0;right:0;text-align:center;font-family:'Share Tech Mono';font-size:.58rem;letter-spacing:.12em;color:var(--ink-dim);text-transform:uppercase;}
+  .track-grid{display:flex;flex-direction:column;gap:12px;margin-bottom:12px;}
+  .trackstage{aspect-ratio:1/1;max-width:420px;width:100%;}
+  .profstage{aspect-ratio:auto;max-width:520px;width:100%;height:170px;}
+  .trackstage canvas,.profstage canvas{width:100%;height:100%;display:block;
+    background:#0a0e13;border:1px solid var(--edge,#252b34);border-radius:10px;}
+  .trk-cap{position:absolute;bottom:6px;left:10px;right:10px;font-family:'Share Tech Mono';
+    font-size:.58rem;letter-spacing:.08em;color:var(--ink-dim);text-transform:uppercase;pointer-events:none;}
+  #btnMetar,#btnMetarAuto{flex:1;}
+</style>
+</head>
+<body>
+
+  <h1>Six-Pack &amp; Compass Errors</h1>
+  <div class="sub">Real S20 sensors · ANDS / UNOS · quiz</div>
+
+  <div class="tabs">
+    <button id="tSim" class="active">Compass Sim</button>
+    <button id="tLive">Compass Live</button>
+    <button id="tQuiz">Quiz</button>
+    <button id="tPanel">Live Panel</button>
+    <button id="tTrack">Track &amp; Wx</button>
+  </div>
+
+  <!-- ============ COMPASS STAGE (sim + live share it) ============ -->
+  <div id="compassView">
+    <div class="stage"><canvas id="card" class="inst" width="600" height="600"></canvas><div class="glass"></div></div>
+    <div class="readout-row">
+      <div class="chip"><div class="lbl">Compass reads</div><div class="val" id="rdShown">000<small>°</small></div></div>
+      <div class="chip smart"><div class="lbl">Actual heading</div><div class="val" id="rdTrue">000<small>°</small></div></div>
+      <div class="chip"><div class="lbl">Error</div><div class="val" id="rdErr">0<small>°</small></div></div>
+    </div>
+    <div id="banner" class="err-none">Level, no acceleration — the card sits steady. Pick a heading, then accelerate or bank to see the error.</div>
+
+    <!-- sim controls -->
+    <div id="simPanel">
+      <div class="panel"><h2>Heading</h2>
+        <div class="ctl"><label>Magnetic heading <span class="v" id="vHdg">000°</span></label><input type="range" id="sHdg" min="0" max="359" value="0"></div>
+        <div class="nudge">
+          <button data-hdg="0">N</button><button data-hdg="45">NE</button><button data-hdg="90">E</button><button data-hdg="135">SE</button>
+          <button data-hdg="180">S</button><button data-hdg="225">SW</button><button data-hdg="270">W</button><button data-hdg="315">NW</button>
+        </div>
+      </div>
+      <div class="panel"><h2>Motion input</h2>
+        <div class="ctl"><label>Longitudinal accel <span class="v" id="vAcc">0.0 g</span></label><input type="range" id="sAcc" min="-50" max="50" value="0"></div>
+        <div class="ctl"><label>Bank angle <span class="v" id="vBank">0°</span></label><input type="range" id="sBank" min="-45" max="45" value="0"></div>
+        <div class="footnote">Accel = + (speeding up) · bank right = +. Same input → big error near N/S vs E/W depending on the rule.</div>
+      </div>
+      <div class="panel"><h2>Location field model</h2>
+        <div class="ctl"><label>Dip angle (inclination) <span class="v" id="vDip">68°</span></label><input type="range" id="sDip" min="0" max="85" value="68"></div>
+        <div class="footnote">KEYE ≈ 68° dip (WMM2025). Drag to 0° (equator) → errors vanish; to 85° (pole) → they blow up. This is *why* ANDS/UNOS exist.</div>
+      </div>
+    </div>
+
+    <!-- live controls -->
+    <div id="livePanel" class="hidden">
+      <div class="panel"><h2>Sensors</h2>
+        <button class="bigbtn" id="btnLive">Enable phone sensors</button>
+        <div class="live-status" id="liveStat">Tap to grant motion &amp; orientation access (browser requires it).</div>
+      </div>
+      <div class="panel"><h2>Mounting</h2>
+        <div class="seg" id="mountSeg"><button data-mount="flat" class="on">Flat / handheld</button><button data-mount="vert">Vertical (cradle)</button></div>
+        <div class="footnote">Flat reads the field cleanly. Vertical mimics a panel mount and uses real fore/aft accel from driving/walking.</div>
+      </div>
+      <div class="panel"><h2>Sensitivity</h2>
+        <div class="amp-toggle"><span>Amplify real motion <span id="ampFlag" class="amp-flag hidden">AMPLIFIED ×<span id="ampN">6</span></span></span>
+          <label class="switch"><input type="checkbox" id="ampChk"><span class="track"></span><span class="knob"></span></label></div>
+        <div class="ctl" id="ampSliderWrap" style="opacity:.4;"><label>Gain <span class="v" id="vAmp">×6</span></label><input type="range" id="sAmp" min="2" max="20" value="6" disabled></div>
+        <div class="footnote">Car/walk g-loads are mild → true-scale errors are small but real. Amplify scales real motion up to a visible swing; the card flags AMPLIFIED so it's never mistaken for true magnitude.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ QUIZ ============ -->
+  <div id="quizView" class="hidden">
+    <div class="quiz-score"><span>Question <span id="qNum">1</span></span><span>Score <span class="s" id="qScore">0</span> / <span id="qTotal">0</span></span></div>
+    <div class="stage" style="max-width:300px;"><canvas id="qCard" class="inst" width="600" height="600"></canvas><div class="glass"></div></div>
+    <div class="quiz-q">
+      <div class="scen" id="qScen">—</div>
+    </div>
+    <div class="quiz-opts" id="qOpts"></div>
+    <div class="quiz-fb" id="qFb"></div>
+    <button class="bigbtn hidden" id="qNext">Next question →</button>
+  </div>
+
+  <!-- ============ LIVE PANEL ============ -->
+  <div id="panelView" class="hidden">
+    <div class="panel"><h2>Sensors</h2>
+      <button class="bigbtn" id="btnLive2">Enable phone sensors</button>
+      <div class="live-status" id="liveStat2">All gauges below run on real S20 sensors once enabled.</div>
+    </div>
+    <div class="grid6">
+      <div class="gauge"><canvas id="gAI" width="300" height="300"></canvas><div class="cap">Attitude (FPV)</div></div>
+      <div class="gauge"><canvas id="gDG" width="300" height="300"></canvas><div class="cap">Heading (DG)</div></div>
+      <div class="gauge"><canvas id="gTC" width="300" height="300"></canvas><div class="cap">Turn coordinator</div></div>
+      <div class="gauge"><canvas id="gG" width="300" height="300"></canvas><div class="cap">G-meter</div></div>
+      <div class="gauge"><canvas id="gALT" width="300" height="300"></canvas><div class="cap">Baro altimeter</div></div>
+      <div class="gauge"><canvas id="gVSI" width="300" height="300"></canvas><div class="cap">Vertical speed</div></div>
+    </div>
+    <details open><summary>Honesty grades — what's real vs. approximate</summary>
+      <p><b>Turn coordinator + G-meter:</b> direct accelerometer/gyro reads. The most truthful — no modeling. The ball slips for real when you corner.</p>
+      <p><b>Heading (DG):</b> magnetometer, accurate. Unlike the compass it has no ANDS/UNOS — that's why you carry both.</p>
+      <p><b>Attitude (FPV):</b> accurate at rest & slow tilt. <b>Honest catch:</b> it can't tell gravity from sustained acceleration, so accelerating reads a false pitch-up — the same physics that makes the compass lie under ANDS.</p>
+      <p><b>Baro altimeter + VSI:</b> the S20 has a real barometer. Trend is real (drive uphill, ride an elevator); absolute value drifts and is noisy.</p>
+      <p><b>Airspeed:</b> deliberately absent — a phone has no pitot/static. GPS groundspeed ≠ airspeed, and teaching them as equal is a dangerous habit.</p>
+    </details>
+  </div>
+
+  <!-- ============ TRACK & WEATHER ============ -->
+  <div id="trackView" class="hidden">
+    <div class="panel"><h2>Position &amp; weather</h2>
+      <button class="bigbtn" id="btnTrack">Start GPS track</button>
+      <div class="live-status" id="trackStat">Uses your phone's GPS for the ground track. Requires HTTPS (won't work from a downloaded file).</div>
+      <div class="seg" style="margin-top:10px">
+        <button id="btnMetar">Fetch nearest METAR</button>
+        <button id="btnMetarAuto">Auto every 10 min: <b id="autoState">off</b></button>
+      </div>
+      <div class="live-status" id="metarStat">METAR sets your altimeter (Kollsman) so baro altitude reads true MSL. AGL uses field elevation.</div>
+    </div>
+
+    <div class="track-grid">
+      <div class="stage trackstage"><canvas id="trk" width="640" height="640"></canvas>
+        <div class="trk-cap">Ground track (top-down) · <span id="trkInfo">no fix</span></div></div>
+      <div class="stage profstage"><canvas id="prof" width="640" height="300"></canvas>
+        <div class="trk-cap">Altitude profile · <span id="profInfo">—</span></div></div>
+    </div>
+
+    <div class="readout-row">
+      <div class="chip"><div class="lbl">Altimeter (Kollsman)</div><div class="val" id="rdAltset">29.92<small>"</small></div></div>
+      <div class="chip smart"><div class="lbl">Altitude MSL</div><div class="val" id="rdMSL">—</div></div>
+      <div class="chip"><div class="lbl">Altitude AGL</div><div class="val" id="rdAGL">—</div></div>
+    </div>
+    <div class="ctl" style="margin-top:6px"><label>Field elevation for AGL <span class="v" id="vFE">810 ft</span></label>
+      <input type="range" id="sFE" min="0" max="6000" step="10" value="810"></div>
+    <div class="footnote">KEYE field elevation ≈ 810 ft MSL. AGL = MSL − field elevation. With no METAR the altimeter defaults to 29.92"; fetching one corrects it to local pressure for a true MSL read.</div>
+
+    <details><summary>How the altitude math works</summary>
+      <p><b>Raw baro → MSL:</b> your phone's barometer reads station pressure. The standard formula converts pressure to a pressure-altitude; applying the local <b>altimeter setting</b> (from the METAR, in inHg) shifts it to true MSL — exactly the Kollsman window on a real altimeter.</p>
+      <p><b>MSL → AGL:</b> subtract the field/terrain elevation. We use a field-elevation slider since the phone has no terrain database.</p>
+      <p><b>Honesty:</b> consumer barometers are noisy (a few feet to tens of feet) and drift. Trends are trustworthy; treat the absolute number as approximate.</p>
+    </details>
+  </div>
+
+  <details>
+    <summary>Teaching notes — why the compass lies</summary>
+    <p><b>Cause:</b> the magnetized float card hangs from a pivot above its CG, and the field dips ~68° into the ground here. Fore/aft accel or bank tips that offset CG; the down-pulling field turns the tip into a heading swing.</p>
+    <p><b>ANDS:</b> on E/W, <b>A</b>ccel → shows <b>N</b>, <b>D</b>ecel → <b>S</b>. Worst E/W, zero N/S.</p>
+    <p><b>UNOS:</b> rolling out, <b>U</b>ndershoot <b>N</b>orth, <b>O</b>vershoot <b>S</b>outh. Worst near N/S.</p>
+    <p><b>Variation</b> ≈4–5° W near KEYE (true vs magnetic). <b>Deviation</b> = aircraft's own metal. Neither depends on motion — only dip does.</p>
+  </details>
+
+<script>
+const D2R=Math.PI/180,R2D=180/Math.PI;
+const $=id=>document.getElementById(id);
+
+const state={
+  view:'sim',
+  hdg:0,accel:0,bank:0,dip:68,
+  mount:'flat',amp:false,ampN:6,
+  liveActive:false,liveHdg:0,liveAccel:0,liveLat:0,liveBank:0,livePitch:0,liveTurnRate:0,liveG:1,
+  baseAlt:null,alt:0,vsi:0,lastAlt:null,lastT:null,
+  // track & weather
+  trackActive:false, geoId:null, fixes:[], rawPressure:null,
+  altSetting:29.92, metarAuto:false, metarTimer:null, fieldElev:810,
+  msl:null, lastMetar:null,
+  smoothErr:0,shown:0
+};
+
+/* ---------- compass error model (verified) ---------- */
+function computeError(hdg,accel,bank,dipDeg){
+  const dipFactor=Math.tan(dipDeg*D2R);
+  const accErr=accel*dipFactor*Math.sin(hdg*D2R)*28;
+  const turnErr=-bank*dipFactor*Math.cos(hdg*D2R)*0.55*0.35;
+  return accErr+turnErr;
+}
+function classify(hdg,accel,bank){
+  const nearNS=Math.abs(Math.cos(hdg*D2R))>0.7, nearEW=Math.abs(Math.sin(hdg*D2R))>0.7;
+  if(Math.abs(bank)>4&&nearNS)return 'turn';
+  if(Math.abs(accel)>0.04&&nearEW)return 'acc';
+  if(Math.abs(bank)<4&&Math.abs(accel)<0.04)return 'none';
+  return 'mix';
+}
+const dirName=d=>['N','NE','E','SE','S','SW','W','NW'][Math.round((((d%360)+360)%360)/45)%8];
+
+function banner(hdg,accel,bank){
+  const b=$('banner'),k=classify(hdg,accel,bank),dir=dirName(hdg);
+  b.className='err-'+(k==='acc'?'acc':k==='turn'?'turn':'none');
+  if(k==='none')b.innerHTML=`Steady on <b>${dir}</b>. Card reads true. Accelerate (ANDS) or bank near N/S (UNOS).`;
+  else if(k==='acc'){const dec=accel<0;b.innerHTML=`<b>Acceleration error (ANDS).</b> ${dec?'Decelerating':'Accelerating'} on ${dir} — card swings toward <b>${dec?'South':'North'}</b>. Strongest E/W.`;}
+  else if(k==='turn')b.innerHTML=`<b>Turning error (UNOS).</b> Banking through ${dir} — card <b>${Math.cos(hdg*D2R)>0?'undershoots North':'overshoots South'}</b>. Worst near N/S.`;
+  else b.innerHTML=`Mixed input on <b>${dir}</b>. Isolate one: pure accel on E/W, or pure bank near N/S.`;
+}
+
+/* ---------- shared compass-card renderer ---------- */
+function drawCard(ctx,shown,bankTilt,showAmp){
+  const CX=300,CY=300,R=250;
+  ctx.clearRect(0,0,600,600);
+  ctx.save();ctx.translate(CX,CY);
+  let bz=ctx.createRadialGradient(0,-60,40,0,0,R+30);bz.addColorStop(0,'#2b313b');bz.addColorStop(1,'#0c0e12');
+  ctx.fillStyle=bz;ctx.beginPath();ctx.arc(0,0,R+24,0,7);ctx.fill();
+  ctx.strokeStyle='#3a414c';ctx.lineWidth=3;ctx.stroke();
+  ctx.fillStyle='#0a0c10';ctx.beginPath();ctx.arc(0,0,R+4,0,7);ctx.fill();ctx.restore();
+
+  ctx.save();ctx.translate(CX,CY);
+  ctx.rotate(bankTilt*D2R*0.15);ctx.rotate(-shown*D2R);
+  let cg=ctx.createRadialGradient(0,0,20,0,0,R);cg.addColorStop(0,'#1c2128');cg.addColorStop(.8,'#141921');cg.addColorStop(1,'#0e1218');
+  ctx.fillStyle=cg;ctx.beginPath();ctx.arc(0,0,R-2,0,7);ctx.fill();
+  for(let a=0;a<360;a+=5){const rad=a*D2R,major=(a%30===0),r1=major?R-30:R-18,r2=R-6;
+    ctx.strokeStyle=major?'#e7ecf2':'#5b6470';ctx.lineWidth=major?2.4:1.2;
+    ctx.beginPath();ctx.moveTo(Math.sin(rad)*r1,-Math.cos(rad)*r1);ctx.lineTo(Math.sin(rad)*r2,-Math.cos(rad)*r2);ctx.stroke();}
+  ctx.textAlign='center';ctx.textBaseline='middle';
+  for(let a=0;a<360;a+=30){const rad=a*D2R,rr=R-52,x=Math.sin(rad)*rr,y=-Math.cos(rad)*rr;
+    ctx.save();ctx.translate(x,y);ctx.rotate(rad);
+    let lbl=a===0?'N':a===90?'E':a===180?'S':a===270?'W':String(a/10);
+    const card=(a%90===0);ctx.fillStyle=card?(a===0?'#ff6b5e':'#ffcf7a'):'#cfd6df';
+    ctx.font=`${card?'600 38':'400 30'}px Oswald`;ctx.fillText(lbl,0,0);ctx.restore();}
+  ctx.restore();
+
+  ctx.save();ctx.translate(CX,CY);ctx.strokeStyle='#ffb347';ctx.lineWidth=3;
+  ctx.beginPath();ctx.moveTo(0,-R+2);ctx.lineTo(0,-R+38);ctx.stroke();
+  ctx.fillStyle='#ffb347';ctx.beginPath();ctx.arc(0,0,5,0,7);ctx.fill();ctx.restore();
+  if(showAmp){ctx.fillStyle='rgba(255,107,94,.92)';ctx.fillRect(CX-78,CY+R-30,156,26);
+    ctx.fillStyle='#1a0604';ctx.font='600 16px "Share Tech Mono"';ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.fillText('AMPLIFIED ×'+state.ampN,CX,CY+R-17);}
+}
+
+const cardCtx=$('card').getContext('2d');
+function loopCompass(){
+  let hdg,accel,bank;
+  if(state.view==='live'&&state.liveActive){hdg=state.liveHdg;const g=state.amp?state.ampN:1;
+    accel=state.liveAccel*g;bank=state.liveBank*(state.amp?Math.min(state.ampN,4):1);}
+  else {hdg=state.hdg;accel=state.accel;bank=state.bank;}
+  const err=computeError(hdg,accel,bank,state.dip);
+  let diff=(hdg+err)-state.smoothErr;while(diff>180)diff-=360;while(diff<-180)diff+=360;
+  state.smoothErr+=diff*0.12;const shown=((state.smoothErr%360)+360)%360;
+  $('rdShown').innerHTML=String(Math.round(shown)).padStart(3,'0')+'<small>°</small>';
+  $('rdTrue').innerHTML=String(Math.round(((hdg%360)+360)%360)).padStart(3,'0')+'<small>°</small>';
+  let e=Math.round(shown-(((hdg%360)+360)%360));while(e>180)e-=360;while(e<-180)e+=360;
+  $('rdErr').innerHTML=(e>0?'+':'')+e+'<small>°</small>';
+  banner(hdg,accel,bank);
+  drawCard(cardCtx,shown,state.view==='live'?state.liveBank:state.bank,state.view==='live'&&state.liveActive&&state.amp);
+}
+
+/* ====================== QUIZ ====================== */
+const quizState={i:0,score:0,total:0,q:null,answered:false};
+function makeQuestion(){
+  // Cardinal headings only — these have clean, unambiguous answers.
+  // (Intercardinals have real but partial errors that don't fit a right/wrong format;
+  //  explore those in the Sim tab instead.)
+  const headings=[['North',0],['East',90],['South',180],['West',270]];
+  const h=headings[Math.floor(Math.random()*headings.length)];
+  const isNS=(h[1]===0||h[1]===180), isN=(h[1]===0), isE=(h[1]===90), isW=(h[1]===270);
+  const type=Math.random()<0.5?'acc':'turn';
+  let scen,correct,opts,why;
+  if(type==='acc'){
+    const accel=Math.random()<0.5;
+    scen=`Straight-and-level on a heading of <b>${h[0]}</b>. You <b>${accel?'accelerate':'decelerate'}</b>. Which way does the whiskey compass swing?`;
+    if(isNS){correct='No error';
+      why=`On a ${h[0]} heading acceleration error is <b>zero</b> — ANDS only appears on East/West headings.`;}
+    else {correct=accel?'Toward North':'Toward South';
+      why=`<b>ANDS:</b> on E/W, <b>A</b>ccelerate → <b>N</b>orth, <b>D</b>ecelerate → <b>S</b>outh. Heading ${h[0]}, ${accel?'accelerating':'decelerating'} → ${correct.toLowerCase()}.`;}
+    opts=['Toward North','Toward South','No error','Toward East'];
+  } else {
+    scen=`Rolling out of a turn onto a heading of <b>${h[0]}</b> (Northern Hemisphere). What does the compass do as you level the wings?`;
+    if(isE||isW){correct='No lead/lag';
+      why=`Near East/West the turning error is minimal — UNOS appears near North/South.`;}
+    else if(isN){correct='Lags (undershoots)';
+      why=`<b>UNOS:</b> <b>U</b>ndershoot <b>N</b>orth. The card lags the actual heading, so you roll out <em>before</em> reaching the desired number.`;}
+    else {correct='Leads (overshoots)';
+      why=`<b>UNOS:</b> <b>O</b>vershoot <b>S</b>outh. The card leads the actual heading, so you roll out <em>after</em> passing the desired number.`;}
+    opts=['Lags (undershoots)','Leads (overshoots)','No lead/lag','Spins freely'];
+  }
+  // ensure correct is in opts
+  if(!opts.includes(correct))opts[0]=correct;
+  // shuffle
+  for(let i=opts.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[opts[i],opts[j]]=[opts[j],opts[i]];}
+  return {scen,correct,opts,why,hdg:h[1]};
+}
+const qCardCtx=$('qCard').getContext('2d');
+function renderQuiz(){
+  const q=quizState.q;
+  $('qNum').textContent=quizState.i+1;
+  $('qScore').textContent=quizState.score;$('qTotal').textContent=quizState.total;
+  $('qScen').innerHTML=q.scen;
+  drawCard(qCardCtx,q.hdg,0,false);
+  const box=$('qOpts');box.innerHTML='';
+  q.opts.forEach(o=>{const b=document.createElement('button');b.textContent=o;
+    b.onclick=()=>answer(o,b);box.appendChild(b);});
+  $('qFb').innerHTML='';$('qNext').classList.add('hidden');quizState.answered=false;
+}
+function answer(choice,btn){
+  if(quizState.answered)return;quizState.answered=true;quizState.total++;
+  const q=quizState.q,right=(choice===q.correct);
+  if(right)quizState.score++;
+  document.querySelectorAll('#qOpts button').forEach(b=>{b.disabled=true;
+    if(b.textContent===q.correct)b.classList.add('correct');
+    else if(b===btn)b.classList.add('wrong');});
+  $('qFb').innerHTML=(right?'<b>Correct.</b> ':'<b>Not quite.</b> ')+q.why;
+  $('qScore').textContent=quizState.score;$('qTotal').textContent=quizState.total;
+  $('qNext').classList.remove('hidden');
+}
+$('qNext').onclick=()=>{quizState.i++;quizState.q=makeQuestion();renderQuiz();};
+
+/* ====================== LIVE PANEL GAUGES ====================== */
+function gaugeBezel(ctx,R){ctx.save();ctx.translate(150,150);
+  let bz=ctx.createRadialGradient(0,-40,20,0,0,R+18);bz.addColorStop(0,'#2b313b');bz.addColorStop(1,'#0c0e12');
+  ctx.fillStyle=bz;ctx.beginPath();ctx.arc(0,0,R+14,0,7);ctx.fill();
+  ctx.strokeStyle='#3a414c';ctx.lineWidth=2;ctx.stroke();
+  ctx.fillStyle='#0a0c10';ctx.beginPath();ctx.arc(0,0,R+2,0,7);ctx.fill();ctx.restore();}
+
+function drawAI(ctx){const R=130;ctx.clearRect(0,0,300,300);gaugeBezel(ctx,R);
+  ctx.save();ctx.translate(150,150);
+  ctx.beginPath();ctx.arc(0,0,R,0,7);ctx.clip();
+  ctx.rotate(-state.liveBank*D2R);
+  const ph=state.livePitch*2.2; // px per deg
+  // sky / ground
+  ctx.fillStyle='#3a7bd5';ctx.fillRect(-R*2,-R*2+ph,R*4,R*2);
+  ctx.fillStyle='#8a5a2b';ctx.fillRect(-R*2,ph,R*4,R*2);
+  ctx.strokeStyle='#fff';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(-R,ph);ctx.lineTo(R,ph);ctx.stroke();
+  // pitch ladder
+  ctx.strokeStyle='rgba(255,255,255,.7)';ctx.lineWidth=1.5;ctx.fillStyle='#fff';ctx.font='12px Share Tech Mono';ctx.textAlign='center';
+  for(let p=-30;p<=30;p+=10){if(p===0)continue;const y=ph - p*2.2;ctx.beginPath();ctx.moveTo(-26,y);ctx.lineTo(26,y);ctx.stroke();}
+  ctx.restore();
+  // fixed aircraft symbol
+  ctx.save();ctx.translate(150,150);ctx.strokeStyle='#ffcf7a';ctx.lineWidth=4;
+  ctx.beginPath();ctx.moveTo(-40,0);ctx.lineTo(-12,0);ctx.moveTo(12,0);ctx.lineTo(40,0);ctx.moveTo(0,-6);ctx.lineTo(0,6);ctx.stroke();
+  ctx.fillStyle='#ffcf7a';ctx.beginPath();ctx.arc(0,0,3,0,7);ctx.fill();ctx.restore();}
+
+function drawDG(ctx){const R=130;ctx.clearRect(0,0,300,300);gaugeBezel(ctx,R);
+  ctx.save();ctx.translate(150,150);ctx.rotate(-state.liveHdg*D2R);
+  ctx.fillStyle='#11151b';ctx.beginPath();ctx.arc(0,0,R-2,0,7);ctx.fill();
+  ctx.textAlign='center';ctx.textBaseline='middle';
+  for(let a=0;a<360;a+=5){const rad=a*D2R,maj=(a%30===0),r1=maj?R-22:R-12,r2=R-4;
+    ctx.strokeStyle=maj?'#e7ecf2':'#5b6470';ctx.lineWidth=maj?2:1;
+    ctx.beginPath();ctx.moveTo(Math.sin(rad)*r1,-Math.cos(rad)*r1);ctx.lineTo(Math.sin(rad)*r2,-Math.cos(rad)*r2);ctx.stroke();}
+  for(let a=0;a<360;a+=30){const rad=a*D2R,rr=R-40,x=Math.sin(rad)*rr,y=-Math.cos(rad)*rr;
+    ctx.save();ctx.translate(x,y);ctx.rotate(rad);
+    let lbl=a===0?'N':a===90?'E':a===180?'S':a===270?'W':String(a/10);
+    ctx.fillStyle=(a%90===0)?'#ffcf7a':'#cfd6df';ctx.font=`${a%90===0?'600 22':'400 17'}px Oswald`;ctx.fillText(lbl,0,0);ctx.restore();}
+  ctx.restore();
+  ctx.save();ctx.translate(150,150);ctx.fillStyle='#ffb347';
+  ctx.beginPath();ctx.moveTo(0,-R+4);ctx.lineTo(-7,-R+20);ctx.lineTo(7,-R+20);ctx.closePath();ctx.fill();
+  // plane symbol
+  ctx.strokeStyle='#ffcf7a';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(0,-18);ctx.lineTo(0,18);ctx.moveTo(-16,4);ctx.lineTo(16,4);ctx.moveTo(-7,16);ctx.lineTo(7,16);ctx.stroke();ctx.restore();}
+
+function drawTC(ctx){const R=130;ctx.clearRect(0,0,300,300);gaugeBezel(ctx,R);
+  ctx.save();ctx.translate(150,150);ctx.fillStyle='#11151b';ctx.beginPath();ctx.arc(0,0,R-2,0,7);ctx.fill();
+  // miniature plane banked by turn rate
+  const tr=Math.max(-1,Math.min(1,state.liveTurnRate/6)); // ~3deg/s std rate maps mid
+  ctx.save();ctx.rotate(tr*0.5);ctx.strokeStyle='#ffcf7a';ctx.lineWidth=4;
+  ctx.beginPath();ctx.moveTo(-70,0);ctx.lineTo(-15,0);ctx.moveTo(15,0);ctx.lineTo(70,0);ctx.moveTo(0,0);ctx.lineTo(0,-22);ctx.stroke();
+  ctx.fillStyle='#ffcf7a';ctx.beginPath();ctx.arc(0,0,5,0,7);ctx.fill();ctx.restore();
+  // L / R std-rate marks
+  ctx.fillStyle='#cfd6df';ctx.font='16px Oswald';ctx.textAlign='center';ctx.fillText('L',-46,-30);ctx.fillText('R',46,-30);
+  // inclinometer tube at bottom
+  ctx.fillStyle='#0a0c10';ctx.fillRect(-46,72,92,22);ctx.strokeStyle='#3a414c';ctx.strokeRect(-46,72,92,22);
+  ctx.strokeStyle='#5b6470';ctx.beginPath();ctx.moveTo(-10,72);ctx.lineTo(-10,94);ctx.moveTo(10,72);ctx.lineTo(10,94);ctx.stroke();
+  // ball position from lateral g
+  const bx=Math.max(-34,Math.min(34,-state.liveLat*60));
+  ctx.fillStyle='#1a1d12';ctx.beginPath();ctx.arc(bx,83,8,0,7);ctx.fill();
+  ctx.fillStyle='#d6d68a';ctx.beginPath();ctx.arc(bx,83,7,0,7);ctx.fill();ctx.restore();}
+
+function drawG(ctx){const R=130;ctx.clearRect(0,0,300,300);gaugeBezel(ctx,R);
+  ctx.save();ctx.translate(150,150);ctx.fillStyle='#11151b';ctx.beginPath();ctx.arc(0,0,R-2,0,7);ctx.fill();
+  // dial -1..+3 g over 270deg
+  ctx.textAlign='center';ctx.textBaseline='middle';
+  for(let g=-1;g<=3;g+=0.5){const frac=(g+1)/4;const a=(-135+frac*270)*D2R;const r1=R-20,r2=R-6;
+    ctx.strokeStyle=(g%1===0)?'#e7ecf2':'#5b6470';ctx.lineWidth=(g%1===0)?2:1;
+    ctx.beginPath();ctx.moveTo(Math.sin(a)*r1,-Math.cos(a)*r1);ctx.lineTo(Math.sin(a)*r2,-Math.cos(a)*r2);ctx.stroke();
+    if(g%1===0){ctx.fillStyle='#cfd6df';ctx.font='15px Oswald';const rr=R-38;ctx.fillText(g,Math.sin(a)*rr,-Math.cos(a)*rr);}}
+  const gv=Math.max(-1,Math.min(3,state.liveG));const frac=(gv+1)/4;const a=(-135+frac*270)*D2R;
+  ctx.strokeStyle='#ffb347';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(Math.sin(a)*(R-26),-Math.cos(a)*(R-26));ctx.stroke();
+  ctx.fillStyle='#ffb347';ctx.beginPath();ctx.arc(0,0,5,0,7);ctx.fill();
+  ctx.fillStyle='#ffcf7a';ctx.font='600 20px Share Tech Mono';ctx.fillText(gv.toFixed(2)+'g',0,46);ctx.restore();}
+
+function drawALT(ctx){const R=130;ctx.clearRect(0,0,300,300);gaugeBezel(ctx,R);
+  ctx.save();ctx.translate(150,150);ctx.fillStyle='#11151b';ctx.beginPath();ctx.arc(0,0,R-2,0,7);ctx.fill();
+  ctx.textAlign='center';ctx.textBaseline='middle';
+  for(let n=0;n<10;n++){const a=n*36*D2R,r1=R-20,r2=R-6;ctx.strokeStyle='#e7ecf2';ctx.lineWidth=2;
+    ctx.beginPath();ctx.moveTo(Math.sin(a)*r1,-Math.cos(a)*r1);ctx.lineTo(Math.sin(a)*r2,-Math.cos(a)*r2);ctx.stroke();
+    ctx.fillStyle='#cfd6df';ctx.font='16px Oswald';ctx.fillText(n,Math.sin(a)*(R-36),-Math.cos(a)*(R-36));}
+  const altf=state.alt;const hundreds=(altf/100)%10,thousands=(altf/1000)%10;
+  const ah=hundreds*36*D2R,at=thousands*36*D2R;
+  ctx.strokeStyle='#fff';ctx.lineWidth=4;ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(Math.sin(ah)*(R-30),-Math.cos(ah)*(R-30));ctx.stroke();
+  ctx.lineWidth=5;ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(Math.sin(at)*(R-66),-Math.cos(at)*(R-66));ctx.stroke();
+  ctx.fillStyle='#ffcf7a';ctx.beginPath();ctx.arc(0,0,5,0,7);ctx.fill();
+  ctx.fillStyle='#ffcf7a';ctx.font='600 15px Share Tech Mono';ctx.fillText(Math.round(altf)+' ft',0,52);ctx.restore();}
+
+function drawVSI(ctx){const R=130;ctx.clearRect(0,0,300,300);gaugeBezel(ctx,R);
+  ctx.save();ctx.translate(150,150);ctx.fillStyle='#11151b';ctx.beginPath();ctx.arc(0,0,R-2,0,7);ctx.fill();
+  ctx.textAlign='center';ctx.textBaseline='middle';
+  // -2..+2 thousand fpm over 320deg, 0 at left(9 o'clock)? classic VSI 0 at 9 o'clock going clockwise. Simplify: 0 at left.
+  for(let v=-2;v<=2;v++){const frac=(v+2)/4;const a=(-160+frac*320)*D2R;const r1=R-20,r2=R-6;
+    ctx.strokeStyle='#e7ecf2';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(Math.sin(a)*r1,-Math.cos(a)*r1);ctx.lineTo(Math.sin(a)*r2,-Math.cos(a)*r2);ctx.stroke();
+    ctx.fillStyle='#cfd6df';ctx.font='15px Oswald';ctx.fillText(Math.abs(v),Math.sin(a)*(R-36),-Math.cos(a)*(R-36));}
+  const vv=Math.max(-2,Math.min(2,state.vsi/1000));const frac=(vv+2)/4;const a=(-160+frac*320)*D2R;
+  ctx.strokeStyle='#ffb347';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(Math.sin(a)*(R-26),-Math.cos(a)*(R-26));ctx.stroke();
+  ctx.fillStyle='#ffb347';ctx.beginPath();ctx.arc(0,0,5,0,7);ctx.fill();
+  ctx.fillStyle='#ffcf7a';ctx.font='600 14px Share Tech Mono';ctx.fillText((state.vsi>=0?'+':'')+Math.round(state.vsi)+' fpm',0,50);ctx.restore();}
+
+const ctxAI=$('gAI').getContext('2d'),ctxDG=$('gDG').getContext('2d'),ctxTC=$('gTC').getContext('2d'),
+      ctxG=$('gG').getContext('2d'),ctxALT=$('gALT').getContext('2d'),ctxVSI=$('gVSI').getContext('2d');
+function loopPanel(){drawAI(ctxAI);drawDG(ctxDG);drawTC(ctxTC);drawG(ctxG);drawALT(ctxALT);drawVSI(ctxVSI);}
+
+/* ====================== MASTER LOOP ====================== */
+function frame(){
+  if(state.view==='sim'||state.view==='live')loopCompass();
+  else if(state.view==='panel')loopPanel();
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+
+/* ====================== CONTROLS ====================== */
+function fillRange(el){const min=+el.min,max=+el.max,v=+el.value,pct=(v-min)/(max-min)*100;
+  el.style.background=`linear-gradient(90deg,var(--amber) ${pct}%,var(--panel-edge) ${pct}%)`;}
+['sHdg','sAcc','sBank','sDip','sAmp'].forEach(id=>fillRange($(id)));
+$('sHdg').oninput=e=>{state.hdg=+e.target.value;$('vHdg').textContent=String(state.hdg).padStart(3,'0')+'°';fillRange(e.target);};
+$('sAcc').oninput=e=>{state.accel=+e.target.value/100;$('vAcc').textContent=(state.accel>=0?'+':'')+state.accel.toFixed(2)+' g';fillRange(e.target);};
+$('sBank').oninput=e=>{state.bank=+e.target.value;$('vBank').textContent=(state.bank>0?'R':state.bank<0?'L':'')+Math.abs(state.bank)+'°';fillRange(e.target);};
+$('sDip').oninput=e=>{state.dip=+e.target.value;$('vDip').textContent=state.dip+'°';fillRange(e.target);};
+document.querySelectorAll('.nudge button').forEach(b=>b.onclick=()=>{state.hdg=+b.dataset.hdg;$('sHdg').value=state.hdg;$('vHdg').textContent=String(state.hdg).padStart(3,'0')+'°';fillRange($('sHdg'));});
+
+function setView(v){
+  state.view=v;
+  $('tSim').classList.toggle('active',v==='sim');$('tLive').classList.toggle('active',v==='live');
+  $('tQuiz').classList.toggle('active',v==='quiz');$('tPanel').classList.toggle('active',v==='panel');
+  $('tTrack').classList.toggle('active',v==='track');
+  $('compassView').classList.toggle('hidden',!(v==='sim'||v==='live'));
+  $('quizView').classList.toggle('hidden',v!=='quiz');
+  $('panelView').classList.toggle('hidden',v!=='panel');
+  $('trackView').classList.toggle('hidden',v!=='track');
+  $('simPanel').classList.toggle('hidden',v!=='sim');
+  $('livePanel').classList.toggle('hidden',v!=='live');
+  if(v==='quiz'&&!quizState.q){quizState.q=makeQuestion();renderQuiz();}
+  if(v==='track'){drawTrack();drawProfile();}
+}
+$('tSim').onclick=()=>setView('sim');$('tLive').onclick=()=>setView('live');
+$('tQuiz').onclick=()=>setView('quiz');$('tPanel').onclick=()=>setView('panel');
+$('tTrack').onclick=()=>setView('track');
+
+/* ====================== TRACK & WEATHER ====================== */
+// GPS ground track
+function startTrack(){
+  if(!('geolocation' in navigator)){$('trackStat').innerHTML='<span class="no">No geolocation API.</span>';return;}
+  if(!window.isSecureContext){$('trackStat').innerHTML='<span class="no">GPS needs HTTPS.</span> Host on GitHub Pages, then reopen via https://';return;}
+  $('trackStat').textContent='Acquiring GPS…';
+  state.geoId=navigator.geolocation.watchPosition(pos=>{
+    state.trackActive=true;
+    const {latitude,longitude,altitude,accuracy}=pos.coords;
+    state.fixes.push({lat:latitude,lon:longitude,t:pos.timestamp,gpsAlt:altitude});
+    if(state.fixes.length>3000)state.fixes.shift();
+    $('trackStat').innerHTML=`Tracking · ${state.fixes.length} fixes · ±${Math.round(accuracy)} m`;
+    // if no METAR yet, try to auto-fetch for this position
+    if(!state.lastMetar) fetchMetar(latitude,longitude,true);
+    drawTrack();
+  }, err=>{$('trackStat').innerHTML='<span class="no">GPS error:</span> '+err.message;},
+  {enableHighAccuracy:true,maximumAge:1000,timeout:15000});
+}
+$('btnTrack').onclick=()=>{ if(state.geoId==null) startTrack();
+  else {navigator.geolocation.clearWatch(state.geoId);state.geoId=null;state.trackActive=false;
+    $('btnTrack').textContent='Start GPS track';$('trackStat').textContent='Track paused.';return;}
+  $('btnTrack').textContent='Stop GPS track';};
+
+function drawTrack(){
+  const c=$('trk'); if(!c)return; const x=c.getContext('2d'),W=c.width,H=c.height;
+  x.clearRect(0,0,W,H); x.fillStyle='#0a0e13';x.fillRect(0,0,W,H);
+  // grid
+  x.strokeStyle='rgba(255,255,255,.05)';x.lineWidth=1;
+  for(let i=0;i<=8;i++){const p=i/8*W;x.beginPath();x.moveTo(p,0);x.lineTo(p,H);x.moveTo(0,p);x.lineTo(W,p);x.stroke();}
+  const f=state.fixes;
+  if(f.length<2){x.fillStyle='#828c99';x.font='13px "Share Tech Mono"';x.textAlign='center';
+    x.fillText('waiting for GPS fixes…',W/2,H/2);$('trkInfo').textContent='no fix';return;}
+  // project lat/lon to local meters (equirectangular about the mean)
+  const lat0=f.reduce((s,p)=>s+p.lat,0)/f.length, lon0=f.reduce((s,p)=>s+p.lon,0)/f.length;
+  const mPerLat=111320, mPerLon=111320*Math.cos(lat0*D2R);
+  const pts=f.map(p=>({x:(p.lon-lon0)*mPerLon, y:(p.lat-lat0)*mPerLat}));
+  let minX=Infinity,maxX=-Infinity,minY=Infinity,maxY=-Infinity;
+  pts.forEach(p=>{minX=Math.min(minX,p.x);maxX=Math.max(maxX,p.x);minY=Math.min(minY,p.y);maxY=Math.max(maxY,p.y);});
+  const spanX=Math.max(maxX-minX,30),spanY=Math.max(maxY-minY,30),span=Math.max(spanX,spanY)*1.2;
+  const cx=(minX+maxX)/2, cy=(minY+maxY)/2, sc=(W-50)/span;
+  const px=p=>W/2+(p.x-cx)*sc, py=p=>H/2-(p.y-cy)*sc; // north up
+  // path
+  x.strokeStyle='#62d6e8';x.lineWidth=2.5;x.beginPath();
+  pts.forEach((p,i)=>{const X=px(p),Y=py(p);i?x.lineTo(X,Y):x.moveTo(X,Y);});x.stroke();
+  // start + current markers
+  x.fillStyle='#5fd99b';x.beginPath();x.arc(px(pts[0]),py(pts[0]),5,0,7);x.fill();
+  const last=pts[pts.length-1];x.fillStyle='#ffb347';x.beginPath();x.arc(px(last),py(last),6,0,7);x.fill();
+  // north arrow + scale
+  x.fillStyle='#828c99';x.font='11px "Share Tech Mono"';x.textAlign='left';
+  x.fillText('N↑',10,18);
+  const scaleM=span/1.2/4; x.fillText(scaleM>1000?(scaleM/1000).toFixed(1)+' km/div':Math.round(scaleM)+' m/div',10,H-10);
+  $('trkInfo').textContent=`${f.length} fixes`;
+}
+
+function drawProfile(){
+  const c=$('prof'); if(!c)return; const x=c.getContext('2d'),W=c.width,H=c.height;
+  x.clearRect(0,0,W,H);x.fillStyle='#0a0e13';x.fillRect(0,0,W,H);
+  const f=state.fixes.filter(p=>p.gpsAlt!=null);
+  // prefer baro MSL history if we have it; else GPS altitude
+  const series = state.altHist&&state.altHist.length>1 ? state.altHist
+    : f.map(p=>({t:p.t,a:p.gpsAlt*3.281}));
+  x.strokeStyle='rgba(255,255,255,.05)';
+  for(let i=0;i<=5;i++){const p=i/5*H;x.beginPath();x.moveTo(0,p);x.lineTo(W,p);x.stroke();}
+  if(!series||series.length<2){x.fillStyle='#828c99';x.font='13px "Share Tech Mono"';x.textAlign='center';
+    x.fillText('altitude profile builds as you move…',W/2,H/2);$('profInfo').textContent='—';return;}
+  let minA=Infinity,maxA=-Infinity;series.forEach(s=>{minA=Math.min(minA,s.a);maxA=Math.max(maxA,s.a);});
+  const padA=Math.max((maxA-minA)*0.15,20);minA-=padA;maxA+=padA;
+  const t0=series[0].t,t1=series[series.length-1].t,spanT=Math.max(t1-t0,1);
+  const px=t=>10+(t-t0)/spanT*(W-20), py=a=>H-18-(a-minA)/(maxA-minA)*(H-34);
+  // fill under curve
+  x.beginPath();x.moveTo(px(series[0].t),H-18);
+  series.forEach(s=>x.lineTo(px(s.t),py(s.a)));x.lineTo(px(t1),H-18);x.closePath();
+  x.fillStyle='rgba(255,179,71,.12)';x.fill();
+  x.strokeStyle='#ffb347';x.lineWidth=2;x.beginPath();
+  series.forEach((s,i)=>{const X=px(s.t),Y=py(s.a);i?x.lineTo(X,Y):x.moveTo(X,Y);});x.stroke();
+  // axis labels
+  x.fillStyle='#828c99';x.font='10px "Share Tech Mono"';x.textAlign='left';
+  x.fillText(Math.round(maxA)+' ft',4,12);x.fillText(Math.round(minA)+' ft',4,H-4);
+  $('profInfo').textContent=`${Math.round(series[series.length-1].a)} ft MSL`;
+}
+
+// altitude readouts + history sampling
+function updateAltReadout(){
+  if(state.msl==null)return;
+  $('rdMSL').innerHTML=Math.round(state.msl)+'<small> ft</small>';
+  const agl=state.msl-state.fieldElev;
+  $('rdAGL').innerHTML=Math.round(agl)+'<small> ft</small>';
+  state.altHist=state.altHist||[];
+  const now=Date.now();
+  if(!state.altHist.length || now-state.altHist[state.altHist.length-1].t>1500){
+    state.altHist.push({t:now,a:state.msl}); if(state.altHist.length>1200)state.altHist.shift();
+    if(state.view==='track')drawProfile();
+  }
+}
+$('sFE').oninput=e=>{state.fieldElev=+e.target.value;$('vFE').textContent=state.fieldElev+' ft';fillRange(e.target);updateAltReadout();};
+
+// METAR fetch via aviationweather.gov data API (CORS-enabled, HTTPS)
+async function fetchMetar(lat,lon,quiet){
+  if(!window.isSecureContext){if(!quiet)$('metarStat').innerHTML='<span class="no">METAR needs HTTPS.</span> Host on GitHub Pages first.';return;}
+  if(lat==null){ if(state.fixes.length){const p=state.fixes[state.fixes.length-1];lat=p.lat;lon=p.lon;}
+    else if('geolocation' in navigator){navigator.geolocation.getCurrentPosition(p=>fetchMetar(p.coords.latitude,p.coords.longitude,quiet),
+      ()=>{$('metarStat').innerHTML='<span class="no">Need a GPS fix or location permission first.</span>';},{enableHighAccuracy:false});return;}
+    else {$('metarStat').innerHTML='<span class="no">No location available.</span>';return;}}
+  if(!quiet)$('metarStat').textContent='Fetching nearest METAR…';
+  try{
+    const url=`https://aviationweather.gov/api/data/metar?format=json&distance=120&latlon=${lat.toFixed(4)},${lon.toFixed(4)}`;
+    const r=await fetch(url);
+    if(!r.ok)throw new Error('HTTP '+r.status);
+    const data=await r.json();
+    if(!data||!data.length)throw new Error('no station nearby');
+    // nearest = first; altimeter in inHg sometimes as altim (hPa) — normalize
+    const m=data[0];
+    let altimInHg = m.altim!=null ? (m.altim>200? m.altim/33.8639 : m.altim) : 29.92;
+    state.altSetting=altimInHg; state.lastMetar=m;
+    $('rdAltset').innerHTML=altimInHg.toFixed(2)+'<small>"</small>';
+    const obs=m.obsTime?new Date(m.obsTime*1000):new Date();
+    $('metarStat').innerHTML=`<span class="ok">${m.icaoId||'METAR'}</span> · alt ${altimInHg.toFixed(2)}" · ${m.temp!=null?m.temp+'°C · ':''}${obs.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})}`;
+    updateAltReadout();
+  }catch(e){ if(!quiet)$('metarStat').innerHTML='<span class="no">METAR fetch failed:</span> '+e.message+'. (Some networks/CORS block it.)';}
+}
+$('btnMetar').onclick=()=>fetchMetar(null,null,false);
+$('btnMetarAuto').onclick=()=>{state.metarAuto=!state.metarAuto;$('autoState').textContent=state.metarAuto?'on':'off';
+  if(state.metarAuto){fetchMetar(null,null,false);state.metarTimer=setInterval(()=>fetchMetar(null,null,true),600000);}
+  else {clearInterval(state.metarTimer);state.metarTimer=null;}};
+
+
+document.querySelectorAll('#mountSeg button').forEach(b=>b.onclick=()=>{document.querySelectorAll('#mountSeg button').forEach(x=>x.classList.remove('on'));b.classList.add('on');state.mount=b.dataset.mount;});
+$('ampChk').onchange=e=>{state.amp=e.target.checked;$('ampFlag').classList.toggle('hidden',!state.amp);$('sAmp').disabled=!state.amp;$('ampSliderWrap').style.opacity=state.amp?'1':'.4';};
+$('sAmp').oninput=e=>{state.ampN=+e.target.value;$('vAmp').textContent='×'+state.ampN;$('ampN').textContent=state.ampN;fillRange(e.target);};
+
+/* ====================== SENSORS (shared) ====================== */
+async function enableSensors(statEl){
+  let granted=true;
+  try{
+    if(typeof DeviceOrientationEvent!=='undefined'&&DeviceOrientationEvent.requestPermission){const p=await DeviceOrientationEvent.requestPermission();granted=(p==='granted');}
+    if(typeof DeviceMotionEvent!=='undefined'&&DeviceMotionEvent.requestPermission){await DeviceMotionEvent.requestPermission();}
+  }catch(err){}
+  if(!granted){statEl.innerHTML='<span class="no">Permission denied.</span> Enable motion access in browser settings, then retry.';return;}
+  let gotO=false,gotM=false;
+  window.addEventListener('deviceorientationabsolute',onOrient,true);
+  window.addEventListener('deviceorientation',onOrient,true);
+  window.addEventListener('devicemotion',onMotion,true);
+  function onOrient(ev){if(ev.alpha==null)return;gotO=true;
+    let h=(ev.webkitCompassHeading!=null)?ev.webkitCompassHeading:(360-ev.alpha);
+    state.liveHdg=((h%360)+360)%360;
+    if(ev.beta!=null)state.livePitch=Math.max(-40,Math.min(40,state.mount==='vert'?(ev.beta-90):ev.beta));
+    if(ev.gamma!=null)state.liveBank=Math.max(-60,Math.min(60,ev.gamma));
+    refresh();}
+  function onMotion(ev){const a=ev.accelerationIncludingGravity||ev.acceleration;if(!a)return;gotM=true;
+    // total G magnitude
+    const gmag=Math.sqrt((a.x||0)**2+(a.y||0)**2+(a.z||0)**2)/9.81;state.liveG=state.liveG*0.8+gmag*0.2;
+    // lateral g for the ball (x axis)
+    state.liveLat=state.liveLat*0.7+((a.x||0)/9.81)*0.3;
+    // fore/aft for compass accel
+    let foreAft=state.mount==='vert'?(a.y||0):(a.z||0);
+    state.liveAccel=state.liveAccel*0.7+((-foreAft/9.81)*0.3);
+    // turn rate from gyro if available
+    if(ev.rotationRate&&ev.rotationRate.alpha!=null)state.liveTurnRate=state.liveTurnRate*0.7+ev.rotationRate.alpha*0.3;
+    refresh();}
+  // barometer via Sensor API if present
+  try{ if('Barometer' in window){const baro=new Barometer({frequency:4});
+    baro.addEventListener('reading',()=>{const p=baro.pressure;state.rawPressure=p;
+      // pressure-altitude (hPa), then shift to MSL using the local altimeter setting (inHg→hPa)
+      const setHpa=state.altSetting*33.8639;
+      const altM=44330*(1-Math.pow(p/setHpa,0.1903));
+      const ft=altM*3.281; state.msl=ft;
+      if(state.baseAlt==null)state.baseAlt=ft;state.alt=ft-state.baseAlt;
+      const now=performance.now();if(state.lastAlt!=null){const dt=(now-state.lastT)/1000;if(dt>0)state.vsi=state.vsi*0.7+((state.alt-state.lastAlt)/dt*60)*0.3;}
+      state.lastAlt=state.alt;state.lastT=now; updateAltReadout();});baro.start();}
+  }catch(e){}
+  function refresh(){state.liveActive=true;
+    statEl.innerHTML=`Heading <span class="${gotO?'ok':'no'}">${gotO?'OK':'…'}</span> · Motion <span class="${gotM?'ok':'no'}">${gotM?'OK':'…'}</span> · move the phone to drive the instruments.`;}
+  statEl.innerHTML='Listening… move the phone slightly.';
+  setTimeout(()=>{if(!gotO&&!gotM)statEl.innerHTML='<span class="no">No sensor events.</span> The page must be served over HTTPS (or localhost) for sensors. Open it via https:// in Chrome.';},1500);
+}
+$('btnLive').onclick=()=>enableSensors($('liveStat'));
+$('btnLive2').onclick=()=>enableSensors($('liveStat2'));
+
+setView('sim');
+</script>
+</body>
+</html>

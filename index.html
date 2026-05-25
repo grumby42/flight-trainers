@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Grumby Flight Trainers</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Oswald:wght@300;400;500;600&family=Share+Tech+Mono&display=swap');
+  :root{
+    --bg:#070a0e; --panel:#11151b; --edge:#252b34; --edge-hi:#37404c;
+    --ink:#e4e9ef; --ink-dim:#828c99; --amber:#ffb347; --amber-bright:#ffcf7a;
+    --cyan:#62d6e8; --green:#5fd99b; --red:#ff6b5e;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html,body{background:var(--bg);color:var(--ink);font-family:'Oswald',sans-serif;font-weight:300;
+    min-height:100%;-webkit-font-smoothing:antialiased;}
+  body{
+    background-image:
+      radial-gradient(circle at 18% -10%, rgba(255,179,71,.07), transparent 45%),
+      radial-gradient(circle at 90% 110%, rgba(98,214,232,.06), transparent 50%),
+      repeating-linear-gradient(0deg, transparent 0 38px, rgba(255,255,255,.012) 38px 39px),
+      repeating-linear-gradient(90deg, transparent 0 38px, rgba(255,255,255,.012) 38px 39px);
+    background-attachment:fixed;
+  }
+  /* film-grain overlay */
+  body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:99;opacity:.025;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");}
+
+  .wrap{max-width:980px;margin:0 auto;padding:34px 20px 70px;}
+
+  /* masthead */
+  header{position:relative;border-bottom:1px solid var(--edge);padding-bottom:22px;margin-bottom:30px;}
+  .kicker{font-family:'Share Tech Mono';font-size:.66rem;letter-spacing:.42em;text-transform:uppercase;
+    color:var(--amber);margin-bottom:12px;display:flex;align-items:center;gap:10px;}
+  .kicker::before{content:"";width:26px;height:1px;background:var(--amber);display:inline-block;}
+  h1{font-weight:300;font-size:clamp(2.1rem,7vw,3.6rem);line-height:.98;letter-spacing:-.01em;}
+  h1 b{font-weight:600;color:var(--amber-bright);}
+  .tagline{margin-top:14px;color:var(--ink-dim);font-size:1rem;max-width:60ch;line-height:1.5;}
+  .meta{margin-top:16px;display:flex;flex-wrap:wrap;gap:8px 18px;font-family:'Share Tech Mono';
+    font-size:.64rem;letter-spacing:.06em;color:var(--ink-dim);text-transform:uppercase;}
+  .meta span b{color:var(--cyan);font-weight:400;}
+
+  /* card grid */
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px;}
+  .card{position:relative;display:block;text-decoration:none;color:inherit;
+    background:linear-gradient(160deg, var(--panel), #0c1014);
+    border:1px solid var(--edge);border-radius:13px;padding:20px 20px 18px;overflow:hidden;
+    transition:border-color .25s, transform .25s, box-shadow .25s;}
+  .card:hover{border-color:var(--edge-hi);transform:translateY(-3px);
+    box-shadow:0 14px 36px rgba(0,0,0,.5);}
+  .card::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--accent,var(--amber));
+    opacity:.85;}
+  .card .idx{font-family:'Share Tech Mono';font-size:.6rem;letter-spacing:.2em;color:var(--ink-dim);}
+  .card h2{font-weight:500;font-size:1.28rem;margin:7px 0 4px;letter-spacing:-.01em;}
+  .card h2 .em{color:var(--accent,var(--amber-bright));}
+  .card .lvl{font-family:'Share Tech Mono';font-size:.58rem;letter-spacing:.14em;text-transform:uppercase;
+    color:var(--accent,var(--amber));border:1px solid currentColor;border-radius:4px;padding:2px 6px;
+    display:inline-block;margin-bottom:11px;opacity:.85;}
+  .card p{color:var(--ink-dim);font-size:.86rem;line-height:1.46;}
+  .card .feat{margin-top:13px;display:flex;flex-wrap:wrap;gap:6px;}
+  .card .feat span{font-family:'Share Tech Mono';font-size:.58rem;letter-spacing:.04em;
+    background:rgba(255,255,255,.04);border:1px solid var(--edge);border-radius:4px;padding:3px 7px;color:var(--ink-dim);}
+  .card .go{margin-top:16px;font-family:'Share Tech Mono';font-size:.68rem;letter-spacing:.12em;
+    text-transform:uppercase;color:var(--accent,var(--amber));display:flex;align-items:center;gap:7px;}
+  .card .go::after{content:"→";transition:transform .25s;}
+  .card:hover .go::after{transform:translateX(5px);}
+
+  /* note block */
+  .note{margin-top:28px;background:rgba(98,214,232,.05);border:1px solid rgba(98,214,232,.28);
+    border-left:3px solid var(--cyan);border-radius:10px;padding:15px 17px;}
+  .note h3{font-family:'Share Tech Mono';font-size:.66rem;letter-spacing:.16em;text-transform:uppercase;
+    color:var(--cyan);margin-bottom:8px;}
+  .note p{font-size:.86rem;line-height:1.5;color:var(--ink);}
+  .note b{color:var(--cyan);}
+
+  footer{margin-top:38px;padding-top:20px;border-top:1px solid var(--edge);
+    font-family:'Share Tech Mono';font-size:.62rem;letter-spacing:.06em;color:var(--ink-dim);
+    display:flex;flex-wrap:wrap;gap:6px 16px;justify-content:space-between;}
+  footer a{color:var(--ink-dim);text-decoration:none;border-bottom:1px dotted var(--edge-hi);}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="kicker">Flight Training Tools · KEYE</div>
+    <h1>Grumby <b>Flight Trainers</b></h1>
+    <p class="tagline">Interactive, browser-based “digital die-cast” aircraft for teaching ACS &amp; checkride concepts — control surfaces, aerodynamics, magnetic compass behavior, and multi-engine Vmc. Built to <em>explain the concept</em>, then confirm specifics in the POH and ACS.</p>
+    <div class="meta">
+      <span>Phase · <b>CFI / MEI prep</b></span>
+      <span>Runs on · <b>any browser</b></span>
+      <span>Sensors · <b>require HTTPS</b></span>
+    </div>
+  </header>
+
+  <div class="grid">
+    <a class="card" href="archer-trainer.html" style="--accent:#49b85a">
+      <div class="idx">01 / SINGLE-ENGINE</div>
+      <h2>Archer <span class="em">Control-Surface</span> Trainer</h2>
+      <span class="lvl">CFI</span>
+      <p>3-D Piper Archer with live control surfaces, a G1000-style PFD, an airflow layer, and a live instructor commentary track.</p>
+      <div class="feat"><span>AoA &amp; stall</span><span>adverse yaw</span><span>load factor</span><span>left-turning ×4</span><span>aero overlays</span></div>
+      <div class="go">Open trainer</div>
+    </a>
+
+    <a class="card" href="twin-trainer.html" style="--accent:#ff8c2a">
+      <div class="idx">02 / MULTI-ENGINE</div>
+      <h2>Twin <span class="em">Vmc &amp; Critical Engine</span></h2>
+      <span class="lvl">MEI</span>
+      <p>Two-engine airframe centered on Vmc, the critical engine, zero-sideslip, and the engine-failure flow — with guided maneuvers and MEI callouts.</p>
+      <div class="feat"><span>Vmc demo</span><span>identify-verify-feather</span><span>drag demo</span><span>blue line</span><span>SE go-around</span></div>
+      <div class="go">Open trainer</div>
+    </a>
+
+    <a class="card" href="panel-trainer.html" style="--accent:#62d6e8">
+      <div class="idx">03 / INSTRUMENTS</div>
+      <h2>Six-Pack <span class="em">&amp; Compass Errors</span></h2>
+      <span class="lvl">CFI</span>
+      <p>The magnetic compass (ANDS/UNOS) plus a six-instrument panel that runs on your phone’s real sensors. Includes a quiz mode.</p>
+      <div class="feat"><span>ANDS / UNOS</span><span>live magnetometer</span><span>six-pack</span><span>quiz</span><span>flight track</span></div>
+      <div class="go">Open trainer</div>
+    </a>
+
+    <a class="card" href="compass-errors.html" style="--accent:#9a8cff">
+      <div class="idx">04 / REFERENCE</div>
+      <h2>Whiskey <span class="em">Compass Errors</span></h2>
+      <span class="lvl">CFI · STANDALONE</span>
+      <p>The original standalone magnetic-compass-error tool. Superseded by the panel trainer, kept here for a focused, single-topic view.</p>
+      <div class="feat"><span>dip &amp; variation</span><span>acceleration error</span><span>turning error</span></div>
+      <div class="go">Open tool</div>
+    </a>
+  </div>
+
+  <div class="note">
+    <h3>Why some features need HTTPS</h3>
+    <p>Phone motion sensors (tilt, magnetometer), live weather, and barometric altitude only work when a page is served over a <b>secure context</b> — HTTPS or localhost. Opened straight from a downloaded file (<b>file:///</b>), the browser silently blocks them. Hosting these on GitHub Pages serves them over HTTPS and turns all of that on.</p>
+  </div>
+
+  <footer>
+    <span>Conceptual teaching models — not flight simulators. Use the POH/AFM &amp; ACS for real numbers.</span>
+    <span>github.com/<a href="https://github.com/grumby42">grumby42</a></span>
+  </footer>
+</div>
+</body>
+</html>

@@ -2,11 +2,11 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Whiskey Compass Errors — Trainer</title>
 <style>
   /* ---------- Type & palette: analog avionics, dark panel ---------- */
-  @import url('https://fonts.googleapis.com/css2?family=Oswald:wght@300;400;500;600&family=Share+Tech+Mono&display=swap');
+  @import url('vendor/fonts.css');
 
   :root{
     --panel:#14171c;
@@ -197,16 +197,18 @@
         <label>Bank angle <span class="v" id="vBank">0°</span></label>
         <input type="range" id="sBank" min="-45" max="45" value="0">
       </div>
-      <div class="footnote">Accelerating = + (speeding up) · banking right = +. Watch how the same input produces a big error near N/S and almost none near E/W.</div>
+      <div class="amp-toggle"><span>Fly the turn (bank changes heading, 100 kt)</span>
+          <label class="switch"><input type="checkbox" id="turnChk"><span class="track"></span><span class="knob"></span></label></div>
+      <div class="footnote">Accelerating = + (speeding up) · banking right = +. Acceleration error is largest on E/W and nil on N/S; turning error is largest near N/S and least near E/W.</div>
     </div>
 
     <div class="panel">
       <h2>Location field model</h2>
       <div class="ctl">
         <label>Magnetic latitude proxy → dip angle <span class="v" id="vDip">68°</span></label>
-        <input type="range" id="sDip" min="0" max="85" value="68">
+        <input type="range" id="sDip" min="-85" max="85" value="68">
       </div>
-      <div class="footnote">KEYE ≈ 68° dip (WMM2025). Drag toward 0° (equator) to watch errors vanish; toward 85° (near pole) to watch them blow up. This is the whole reason ANDS/UNOS exist.</div>
+      <div class="footnote">Central Indiana is about 68° of dip (verify with the NOAA WMM calculator). Drag toward 0° (magnetic equator) and the errors vanish; toward 85° they grow; below 0° is the Southern Hemisphere, where both rules reverse.</div>
     </div>
   </div>
 
@@ -246,12 +248,14 @@
 
   <details>
     <summary>Teaching notes — why the card lies</summary>
-    <p><b>The cause:</b> the float card is magnetized and the Earth's field dips steeply into the ground at our latitude (~68°). The card's center of gravity hangs slightly below its pivot. Any fore/aft acceleration or bank tips that offset CG, and because the card is also being pulled <em>downward</em> by the dipping field, it swings off heading.</p>
-    <p><b>ANDS (acceleration/deceleration):</b> on an <b>E or W</b> heading, <b>A</b>ccelerate → card shows <b>N</b>orth, <b>D</b>ecelerate → <b>S</b>outh. Worst on E/W, zero on N/S.</p>
-    <p><b>UNOS (turning):</b> rolling out of a turn, the card <b>U</b>ndershoots <b>N</b>orth and <b>O</b>vershoots <b>S</b>outh. Worst near N/S headings, minimal near E/W.</p>
-    <p><b>Variation</b> = true vs magnetic north (≈4–5° W near KEYE). <b>Deviation</b> = the aircraft's own metal/electrics; corrected on the compass card placard. Neither depends on motion — only dip does.</p>
-    <p>Pull exact field values for any airport from NOAA's WMM calculator (ngdc.noaa.gov/geomag) and set the dip slider to match.</p>
+    <p><b>Cause (PHAK ch. 8):</b> the Earth's field dips steeply into the ground at this latitude (about 68°). The float is weighted to keep the card level against that pull, so its centre of gravity is not at the pivot. Accelerate, decelerate or bank, and inertia or the vertical part of the field swings the card off the true magnetic heading.</p>
+    <p><b>ANDS (acceleration error):</b> on an <b>east or west</b> heading, <b>A</b>ccelerate and the compass shows a turn toward <b>N</b>orth; <b>D</b>ecelerate and it shows a turn toward <b>S</b>outh. Largest on E/W, none on N/S.</p>
+    <p><b>UNOS (turning error):</b> turning from a northerly heading the compass <b>lags</b> and may first show a turn the wrong way; from a southerly heading it <b>leads</b>. So <i>you</i> <b>U</b>ndershoot <b>N</b>orth (roll out early) and <b>O</b>vershoot <b>S</b>outh (roll out late). The lead or lag is roughly your latitude, adjusted by your normal rollout lead. Largest near N/S, least near E/W.</p>
+    <p><b>Southern Hemisphere:</b> both errors reverse. Drag the dip slider below zero to see it.</p>
+    <p><b>The other errors:</b> <b>variation</b> (true vs magnetic north, about 5° W here), <b>deviation</b> (the aircraft's own magnetic fields, listed on the compass correction card) and <b>oscillation</b> (turbulence and rough control). Read the compass only in steady, wings-level, unaccelerated flight.</p>
+    <p>This is a teaching model: the directions and where the errors peak are right; the magnitudes are tuned for the classroom.</p>
   </details>
+  <div class="footnote" style="margin-top:18px;text-align:center">Build 2026-11-23T18:54:31Z · Training aid only: not for navigation, and no substitute for the POH, the FAA handbooks or your instructor · <a href="index.html" style="color:var(--amber)">All trainers</a></div>
 
 <script>
 /* ====================================================================
@@ -288,9 +292,9 @@ function computeError(hdg, accel, bank, dipDeg){
   // ----- Acceleration error (ANDS) -----
   // Inertial force acts fore/aft. Its turning effect on the card is
   // proportional to how much the heading lies E/W (sin of heading from N).
-  // Accelerate on E/W -> swings toward N (positive). On N/S -> ~0.
+  // Accelerate on E/W -> reading swings toward N. On N/S -> ~0.
   const accGain = 28; // deg per g at this dip, classroom-tuned
-  const accErr = accel * dipFactor * Math.sin(hdg*D2R) * accGain;
+  const accErr = -accel * dipFactor * Math.sin(hdg*D2R) * accGain;   // accelerate on E/W -> reads toward North (N. Hemisphere)
 
   // ----- Turning error (UNOS) -----
   // Bank tips the card; effect is strongest when heading is N/S
@@ -324,9 +328,9 @@ function banner(hdg, accel, bank){
     b.innerHTML = `Steady on <b>${dir}</b>. No acceleration, wings level — the card reads true. Now accelerate (for ANDS) or bank near N/S (for UNOS).`;
   } else if(k==='acc'){
     const dec = accel < 0;
-    b.innerHTML = `<b>Acceleration error (ANDS).</b> ${dec?'Decelerating':'Accelerating'} on a ${dir} heading — the card swings toward <b>${dec?'South':'North'}</b>. Strongest on E/W, this is the "ANDS" you brief.`;
+    const toN=(dec!==(state.dip<0));b.innerHTML = `<b>Acceleration error (ANDS).</b> ${dec?'Decelerating':'Accelerating'} on a ${dir} heading: the compass shows a turn toward <b>${toN?'North':'South'}</b>. Largest on E/W.${state.dip<0?' (Southern Hemisphere: reversed.)':''}`;
   } else if(k==='turn'){
-    b.innerHTML = `<b>Turning error (UNOS).</b> Banking through a ${dir} heading — the card <b>${Math.cos(hdg*D2R)>0?'lags/undershoots North':'leads/overshoots South'}</b>. Worst near N/S, the "UNOS" rule.`;
+    {const lag=Math.cos(hdg*D2R)*state.dip>0;b.innerHTML=`<b>Turning error (UNOS).</b> Turning through ${dir}: the compass <b>${lag?'lags':'leads'}</b> the airplane. ${lag?'Roll out EARLY: Undershoot North.':'Roll out LATE: Overshoot South.'}${state.dip<0?' (Southern Hemisphere: reversed.)':''}`;}
   } else {
     b.innerHTML = `Mixed input on <b>${dir}</b>. Try isolating one: pure acceleration on E or W, or pure bank near N or S.`;
   }
@@ -335,11 +339,36 @@ function banner(hdg, accel, bank){
 /* ====================================================================
    RENDER — the floating compass card
 ==================================================================== */
+
+/* The round card above is a top-down teaching view. This strip shows the same
+   reading the way a real whiskey compass presents it: you read the BACK of the
+   card, so the numbers run the opposite way (larger headings to the LEFT). */
+function drawWindow(ctx,shown){
+  const CX=300,CY=300,w=300,h=78,x0=CX-w/2,y0=CY+84,ppd=3.3;
+  ctx.save();
+  ctx.fillStyle='#05070a';ctx.strokeStyle='#3a414c';ctx.lineWidth=2;
+  ctx.beginPath();ctx.rect(x0,y0,w,h);ctx.fill();ctx.stroke();ctx.clip();
+  ctx.textAlign='center';ctx.textBaseline='middle';
+  const half=Math.ceil(w/2/ppd)+2;
+  for(let d=-half;d<=half;d++){
+    const v=Math.round(shown)-d, hd=((v%360)+360)%360;if(hd%5!==0)continue;
+    const xx=CX+(d+(shown-Math.round(shown)))*ppd, maj=hd%10===0;
+    ctx.strokeStyle=maj?'#e7ecf2':'#5b6470';ctx.lineWidth=maj?2:1;
+    ctx.beginPath();ctx.moveTo(xx,y0+h);ctx.lineTo(xx,y0+h-(maj?16:9));ctx.stroke();
+    if(hd%30===0){const lbl=hd===0?'N':hd===90?'E':hd===180?'S':hd===270?'W':String(hd/10);
+      ctx.fillStyle=hd%90===0?(hd===0?'#ff6b5e':'#ffcf7a'):'#e7ecf2';ctx.font='600 26px Oswald, sans-serif';ctx.fillText(lbl,xx,y0+30);}
+  }
+  ctx.restore();
+  ctx.save();ctx.strokeStyle='#ffb347';ctx.lineWidth=2.5;ctx.beginPath();ctx.moveTo(CX,y0);ctx.lineTo(CX,y0+h);ctx.stroke();
+  ctx.fillStyle='#8a93a0';ctx.font='13px "Share Tech Mono", monospace';ctx.textAlign='center';ctx.textBaseline='alphabetic';
+  ctx.fillText('AS THE COMPASS WINDOW SHOWS IT',CX,y0-6);ctx.restore();
+}
 const cv = document.getElementById('card');
 const ctx = cv.getContext('2d');
 const CX = 300, CY = 300, R = 250;
 
 function draw(){
+  flyTurn();
   // pick inputs by mode
   let hdg, accel, bank, dip = state.dip;
   if(state.mode==='live' && state.liveActive){
@@ -427,6 +456,7 @@ function draw(){
   }
   ctx.restore();
 
+  drawWindow(ctx,shown);
   // ---- fixed lubber line + glass glare ----
   ctx.save(); ctx.translate(CX,CY);
   ctx.strokeStyle='#ffb347'; ctx.lineWidth=3;
@@ -468,6 +498,16 @@ document.querySelectorAll('.nudge button').forEach(b=>{
   b.onclick=()=>{state.hdg=+b.dataset.hdg;$('sHdg').value=state.hdg;
     $('vHdg').textContent=String(state.hdg).padStart(3,'0')+'°';fillRange($('sHdg'));};
 });
+
+
+/* Fly the turn: with this on, bank actually turns the airplane (rate = 1091 tan(bank) / TAS). */
+let _turnT=performance.now();
+function flyTurn(){const now=performance.now(),dt=Math.min(0.1,(now-_turnT)/1000);_turnT=now;
+  const on=document.getElementById('turnChk');if(!on||!on.checked||state.bank===0)return;
+  const inSim=(state.mode?state.mode==='sim':state.view==='sim');if(!inSim)return;
+  state.hdg=(((state.hdg+1091*Math.tan(state.bank*D2R)/100*dt)%360)+360)%360;
+  const sl=document.getElementById('sHdg');sl.value=Math.round(state.hdg);
+  document.getElementById('vHdg').textContent=String(Math.round(state.hdg)%360).padStart(3,'0')+'\u00B0';fillRange(sl);}
 
 /* ====================================================================
    MODE SWITCH
@@ -530,15 +570,18 @@ async function enableSensors(){
     refreshStat(gotOrient,gotMotion);
   }
   function onMotion(ev){
-    const a = ev.accelerationIncludingGravity || ev.acceleration;
+    const lin = ev.acceleration, a = ev.accelerationIncludingGravity || lin;
     if(!a) return;
     gotMotion=true;
-    // Fore/aft accel: y-axis when phone upright, z when flat-ish.
-    // Convert m/s^2 to g, strip gravity baseline roughly.
-    let foreAft = state.mount==='vert' ? (a.y||0) : (a.z||0);
-    // crude high-pass so steady gravity doesn't read as constant accel
-    state.liveAccel = (state.liveAccel*0.7) + ((-foreAft/9.81)*0.3);
-    if(state.mount==='flat' && a.x!=null){ state.liveBank = Math.max(-45,Math.min(45,(a.x/9.81)*30)); }
+    // Fore/aft acceleration with gravity REMOVED. Flat: the top of the phone points
+    // ahead, so forward is device +y. Vertical cradle (screen toward you): forward is -z.
+    let fore;
+    if(lin && lin.y!=null){ fore = state.mount==='vert' ? -(lin.z||0) : (lin.y||0); }
+    else { const raw = state.mount==='vert' ? -(a.z||0) : (a.y||0);       // no linear sensor: high-pass
+      state._g0 = state._g0==null ? raw : state._g0*0.98 + raw*0.02; fore = raw - state._g0; }
+    state.liveAccel = (state.liveAccel*0.7) + ((fore/9.81)*0.3);        // + = speeding up
+    // Flat mount: bank from gravity. Right edge down = right bank = positive.
+    if(state.mount==='flat' && a.x!=null){ state.liveBank = Math.max(-45,Math.min(45,-Math.asin(Math.max(-1,Math.min(1,a.x/9.81)))*R2D)); }
     refreshStat(gotOrient,gotMotion);
   }
   function refreshStat(o,m){

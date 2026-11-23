@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Archer Control-Surface Trainer</title>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Oswald:wght@300;400;500;600&family=Share+Tech+Mono&display=swap');
+  @import url('vendor/fonts.css');
   :root{
     --ink:#dfe5ec; --ink-dim:#8a93a0;
     --amber:#ffb347; --green:#5fd99b; --red:#ff6b5e; --cyan:#62d6e8; --magenta:#e96fd0;
@@ -75,7 +75,7 @@
     padding:6px 5px;box-shadow:0 4px 14px rgba(0,0,0,.5);}
   #flaps .fl-ttl{font-family:'Share Tech Mono';font-size:.54rem;color:var(--ink-dim);
     text-align:center;letter-spacing:.1em;margin-bottom:4px;}
-  #flaps .fl-opt{display:block;width:100%;font-family:'Oswald';font-size:.62rem;letter-spacing:.04em;
+  #flaps .fl-opt{padding-top:3px!important;padding-bottom:3px!important;display:block;width:100%;font-family:'Oswald';font-size:.62rem;letter-spacing:.04em;
     text-transform:uppercase;padding:5px 2px;margin-bottom:3px;border-radius:5px;border:1px solid var(--edge);
     background:#0a0d12;color:var(--ink-dim);cursor:pointer;text-align:center;}
   #flaps .fl-opt.on{background:var(--amber);color:#06120a;border-color:var(--amber);font-weight:600;}
@@ -187,6 +187,7 @@
     <div class="ib-h">Conceptual teaching model</div>
     <p>This is a <b>concept demonstrator, not a flight simulator</b>. It illustrates <i>relationships and cause-and-effect</i> — which surfaces do what, why the wing stalls at an angle, how lift builds — using a simplified model with <b>tuned, non-literal magnitudes</b>.</p>
     <p>Do <b>not</b> read exact speeds, angles, or rates as real-aircraft numbers. For performance figures use the POH; for procedures use the ACS and your AFM. Use this to <i>explain the concept</i>, then confirm specifics in the real references.</p>
+    <p style="font-size:.7rem;opacity:.75">Stall speeds and flap notches follow the PA-28-181 POH (50 KIAS clean, 45 KIAS full flap; 0/10/25/40°). Build 2026-11-23T18:54:31Z · <a href="index.html" style="color:var(--amber)">All trainers</a></p>
     <button id="ibClose">Got it</button>
   </div>
 
@@ -228,8 +229,9 @@
     <div id="flaps">
       <div class="fl-ttl">FLAPS</div>
       <button class="fl-opt on" data-fl="0">Up 0°</button>
-      <button class="fl-opt" data-fl="1">T/O 10°</button>
-      <button class="fl-opt" data-fl="2">Full 40°</button>
+      <button class="fl-opt" data-fl="1">10°</button>
+      <button class="fl-opt" data-fl="2">25°</button>
+      <button class="fl-opt" data-fl="3">Full 40°</button>
     </div>
     <div id="stick" title="Drag = pitch/roll">
       <div id="yokeWheel">
@@ -244,7 +246,7 @@
   </div>
 </div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="vendor/three.min.js"></script>
 <script>
 /* =====================================================================
    STATE  — one shared model drives the 3D aircraft AND the G1000.
@@ -633,8 +635,9 @@ function updateAero(dt){
   // vortices
   const vOn=S.aero.vortex;
   [aero.vortexL,aero.vortexR].forEach(v=>{animate(v,vOn);
-    if(vOn){v.material.opacity=clamp(0.4+lift*0.5,0.3,0.98);
-      v.scale.set(1,0.6+lift*0.6,0.6+lift*0.6);}});
+    // Wake vortices are strongest heavy, CLEAN and slow (AIM 7-4): flaps weaken them a little.
+    if(vOn){const vs=clamp(0.25+aoa*0.6-S.defFlap*0.004,0.1,1.4);v.material.opacity=clamp(0.4+vs*0.5,0.3,0.98);
+      v.scale.set(1,0.6+vs*0.6,0.6+vs*0.6);}});
 
   // slipstream + P-factor offset
   animate(aero.slip,S.aero.slip);
@@ -710,7 +713,7 @@ function step(dt){
   const tgtAil=S.aileron*20;       // ±20°
   const tgtElev=-S.elevator*22;    // pull = +pitch, surface up
   const tgtRud=S.rudder*25;        // ±25°
-  const tgtFlap=[0,10,40][S.flapStep];
+  const tgtFlap=[0,10,25,40][S.flapStep];   // PA-28-181 notches (POH)
 
   // smooth surfaces (actuator rate)
   S.defAilL=lerp(S.defAilL,tgtAil,1-Math.pow(0.001,dt));
@@ -730,7 +733,7 @@ function step(dt){
   const critAoA = 16 - S.defFlap*0.06;
   S.stalled = S.aoa > critAoA;
   // stall speed rises with √n: Vs(turn) = Vs1g · √n  (shown in HUD)
-  S.vsAccel = 52 * Math.sqrt(S.loadFactor);   // ~52 kt 1-g stall, illustrative
+  S.vsAccel = (50 - S.defFlap*0.125) * Math.sqrt(S.loadFactor);   // POH: 50 KIAS clean, 45 KIAS flaps 40, at 1 g
   const aoaN = S.aoa/critAoA;
   S.cl = S.stalled ? clamp(1.4 - (S.aoa-critAoA)*0.10, 0.3, 1.5)
                    : clamp(0.15 + aoaN*1.25, 0.1, 1.5);
@@ -753,8 +756,9 @@ function step(dt){
   S.hdg=(S.hdg + totalYawRate*dt +360)%360;
   S.yaw=(S.yaw + totalYawRate*dt);
   // slip/skid ball: now includes adverse yaw — uncoordinated until rudder cancels it
-  const coordRud = (turnRate/8);
-  S.slip = clamp((S.rudder - coordRud) - adverseYaw/10, -1, 1);
+  // Ball position (+ = right). Rolling right drags the nose left, so the ball goes RIGHT:
+  // step on the ball. Rudder moves the ball away from the foot you press.
+  S.slip = clamp(-adverseYaw/10 - S.rudder + turnRate/40, -1, 1);
 
   // --- energy: simplified speed/alt ---
   const drag = 0.02 + S.defFlap*0.0012 + Math.abs(S.roll)*0.0004 + (S.stalled?0.04:0);
@@ -781,7 +785,7 @@ const cfi={t:0, cool:0, last:'', shownUntil:0, prev:{}, remIdx:0, remTimer:0};
 const CFI_REMINDERS=[
   'Remember — the wing stalls at an <i>angle</i>, not a speed. You can stall at any airspeed, any attitude.',
   'Remember — step on the ball to stay coordinated; the rudder is not optional in a turn.',
-  'Remember — pitch sets airspeed, power sets altitude, in the region of normal ops. Trim off the pressure.',
+  'Remember — pitch and power work together. On approach: pitch for airspeed, power for descent rate. Then trim off the pressure.',
   'Remember — load up the wing in a steep turn and stall speed climbs with it. √(load factor).',
   'Remember — left-turning tendencies all push the nose left under power; that’s what your right foot is for.'
 ];
@@ -803,7 +807,7 @@ function cfiTick(dt){
   if(S.stalled && !p.stalled)
     cfiSay('Watch what happens — you exceeded the <b>critical angle of attack</b>. Note it stalled from the <i>angle</i>, not a magic speed. Lower the nose to recover.',6,'stall');
   else if(S.loadFactor>1.6 && (p.loadFactor||1)<=1.6)
-    cfiSay('Watch the <b>G-load</b> and <b>Vs</b> climb as you bank. At 60° you’re pulling 2 G and the stall speed is up ~40%. This is the <i>accelerated stall</i> — how the base-to-final overshoot kills people.',6,'accel');
+    cfiSay('Watch the <b>G-load</b> and <b>Vs</b> climb as you bank. At 60° you’re pulling 2 G and the stall speed is up ~40%. This is the <i>accelerated stall</i>, and with a skid added it is the base-to-final stall/spin.',6,'accel');
   else if(Math.abs(S.adverse)>2.5 && Math.abs(p.adverse||0)<=2.5)
     cfiSay('Watch the nose swing <i>away</i> from your turn — that’s <b>adverse yaw</b> from the down-aileron’s drag. Add rudder <i>with</i> the aileron to keep the ball centered.',6,'adverse');
   else if(S.defFlap>5 && (p.defFlap||0)<=5)
@@ -954,7 +958,7 @@ function drawPFD(){
 
   // mode tag
   px.fillStyle='#0f0';px.font='11px "Share Tech Mono"';px.textAlign='left';
-  px.fillText('G1000 PFD', 8, 16);
+  px.fillText('PFD', 8, 16);
 
   // ----- AoA indicator (left of airspeed tape): a vertical chevron gauge -----
   const oax=14, oay=24, ow=22, oh=H-44;
@@ -1053,14 +1057,14 @@ const SCENARIOS=[
   {task:'Apply <b>right rudder</b> and watch the slip/skid ball move out of center.',
    check:()=>S.rudder>0.4, hold:2,
    tip:'Push the right slider forward — left springs back equally.'},
-  {task:'Set <b>takeoff flaps</b> (10°).',
-   check:()=>S.flapStep===1, hold:1.2,
-   tip:'Center flap switch position.'},
+  {task:'Set <b>25° of flap</b> (second notch): the POH setting for short- and soft-field takeoffs.',
+   check:()=>S.flapStep===2, hold:1.2,
+   tip:'The PA-28-181 has four positions: 0°, 10°, 25° and 40°. A normal takeoff is flaps up.'},
   {task:'Set <b>full flaps</b> (40°) and note the nose pitch and speed drop.',
-   check:()=>S.flapStep===2, hold:1.5},
+   check:()=>S.flapStep===3, hold:1.5},
   {task:'Establish a <b>coordinated right turn</b>: bank 15–25° right, ball centered.',
    check:()=>S.roll>13&&S.roll<27&&Math.abs(S.slip)<0.18, hold:3,
-   tip:'Bank with aileron, add a touch of right rudder to center the ball.'},
+   tip:'Lead with right rudder as you roll in (step on the ball), then ease it off once the bank is set.'},
   {task:'<b>Watch adverse yaw:</b> roll into a left bank and note the nose initially yaws <b>right</b> (away from the turn) before rudder is added.',
    check:()=>S.aileron<-0.3, hold:2,
    tip:'Turn on the Aero → Streamlines/Wind overlays to see the wake. The down-going right aileron drags that wing back.'},

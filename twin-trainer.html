@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Twin — Vmc &amp; Critical Engine Trainer</title>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Oswald:wght@300;400;500;600&family=Share+Tech+Mono&display=swap');
+  @import url('vendor/fonts.css');
   :root{
     --ink:#dfe5ec; --ink-dim:#8a93a0; --amber:#ffb347; --amber-bright:#ffcf7a;
     --green:#5fd99b; --red:#ff6b5e; --cyan:#62d6e8; --panel:#12151a; --edge:#2a2f38;
@@ -170,6 +170,9 @@
     <div class="ib-h">Conceptual teaching model</div>
     <p>This is a <b>concept demonstrator, not a flight simulator</b>. It illustrates the <i>relationships</i> behind Vmc, the critical engine, asymmetric thrust, and the single-engine drag picture — with <b>tuned, non-literal magnitudes</b>.</p>
     <p>Do <b>not</b> read exact V-speeds, climb rates, or Vmc values as real-aircraft numbers. For figures use the AFM; for procedures and tolerances use the ACS. Use this to <i>explain and brief the concept</i>, then confirm specifics in the real references.</p>
+    <p><b>Critical engine.</b> On a conventional twin both props turn clockwise, so the left engine is critical: P-factor, Accelerated slipstream, Spiraling slipstream and Torque (PAST) all make its loss worse. <i>Counter-rotating twins such as the Seminole have no critical engine.</i> This model is a conventional twin.</p>
+    <p><b>What moves Vmc.</b> Published Vmc assumes: critical engine windmilling, takeoff power on the other, gear up, flaps and trim for takeoff, aft CG, up to 5° of bank into the good engine, out of ground effect. Less power, forward CG or a feathered prop lower it; wings level raises it. Vmc falls with altitude while stall speed does not, so the stall can arrive first.</p>
+    <p style="font-size:.7rem;opacity:.75">Build 2026-11-23T18:54:31Z · <a href="index.html" style="color:var(--amber)">All trainers</a></p>
     <button id="ibClose">Got it</button>
   </div>
 
@@ -204,7 +207,7 @@
   </div>
 </div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="vendor/three.min.js"></script>
 <script>
 const D2R=Math.PI/180,R2D=180/Math.PI;
 const $=id=>document.getElementById(id);
@@ -378,21 +381,29 @@ function step(dt){
   // --- yaw from asymmetric thrust ---
   const armL=2.6, armR=3.1;       // right arm longer → losing LEFT is worse (critical)
   // Thrust asymmetry yaw (deg/s): toward the dead engine. Uses the moment arms.
-  const yawFromThrust = (pR*armR - pL*armL) * 3.0;     // + = yaw toward left/dead-left
+  // Yaw rate from asymmetric thrust (deg/s, + = nose RIGHT). The airplane yaws TOWARD the
+  // weaker engine; both engines matched = no yaw. Losing the left leaves the long right arm.
+  const yawFromThrust = -(asym>0 ? asym*armR : asym*armL) * 3.0;
   // Rudder authority ∝ V² (aerodynamic force), normalized so full rudder exactly
   // balances max thrust asymmetry AT Vmc — above Vmc it wins, below it loses.
   const vRatio = V/(VMC*0.5144);
   const maxRudderYaw = 1.0*armR*3.0 * (vRatio*vRatio);  // full-deflection capability
   const rudderEffect = S.rudder * maxRudderYaw;
-  const netYaw = yawFromThrust - rudderEffect;
+  const netYaw = yawFromThrust + rudderEffect;        // right rudder (+) swings the nose right
   S.hdg=(S.hdg + netYaw*dt + 360)%360;
   S.yaw += netYaw*dt;
 
   // sideslip builds with uncorrected yaw; bank into good engine reduces it (zero-sideslip)
-  S.beta = lerp(S.beta, clamp(netYaw*1.4 - S.roll*0.8,-25,25), 1-Math.pow(0.2,dt));
+  // Sideslip (deg, + = relative wind from the right). Holding heading with rudder, wings level,
+  // leaves a sideslip toward the dead engine; 2-3 degrees of bank into the operating engine removes it.
+  S.beta = lerp(S.beta, clamp(-netYaw*1.4 - S.rudder*6 + S.roll*2,-25,25), 1-Math.pow(0.2,dt));
+  // Ball = lateral force felt. Wings level and heading held: centred (but slipping). At zero
+  // sideslip it rides about half a ball toward the operating engine.
+  {const need=clamp(-yawFromThrust/Math.max(0.01,maxRudderYaw),-1,1);
+   const rbal=need>=0?Math.min(Math.max(S.rudder,0),need):Math.max(Math.min(S.rudder,0),need);S.ball=S.beta+6*rbal;}
 
   // roll: asymmetric thrust also rolls toward the dead engine
-  const rollFromAsym = asym * 6;
+  const rollFromAsym = netYaw * 1.2;                 // uncorrected yaw couples into roll toward the dead engine
   S.roll = clamp(S.roll + (S.aileron*40 + rollFromAsym)*dt, -70, 70);
 
   // pitch
@@ -405,7 +416,7 @@ function step(dt){
   S.lostControl = (Math.abs(asym)>0.3) && !controllable;
   if(S.lostControl){
     const dir = Math.sign(yawFromThrust);
-    S.roll = clamp(S.roll + dir*-38*dt, -90, 90);
+    S.roll = clamp(S.roll + dir*38*dt, -90, 90);      // rolls toward the dead engine
     S.hdg = (S.hdg + dir*28*dt +360)%360;
   }
 
@@ -416,7 +427,7 @@ function step(dt){
   const dragPenalty = (S.gear?260:0) + (S.flaps*340) + (windmillL+windmillR)*420;
   const baseClimb = (totalThrust-0.5)*1200 + S.pitch*60;
   const vyseFactor = asymOut ? clamp(1 - Math.abs(S.ias-VYSE)/45, 0.2, 1) : 1;
-  S.vsi = baseClimb*vyseFactor - dragPenalty - (asymOut?300:0);
+  S.vsi = baseClimb*vyseFactor - dragPenalty - (asymOut?120+Math.abs(S.beta)*30:0); // sideslip costs climb
   S.sepClimb = S.vsi;
   S.alt = clamp(S.alt + S.vsi/60*dt, 0, 16000);
 
@@ -570,9 +581,9 @@ function drawPFD(){
   px.save(); px.translate(ax,ay);
   px.strokeStyle='#ffcf00'; px.lineWidth=3;
   px.beginPath(); px.moveTo(-46,0); px.lineTo(-16,0); px.moveTo(16,0); px.lineTo(46,0); px.moveTo(0,0); px.lineTo(0,7); px.stroke();
-  // slip/skid: ball driven by sideslip β
+  // slip/skid ball: lateral force, not raw sideslip (see step())
   px.fillStyle='#0a0c10'; px.fillRect(-30,-(ah/2-6),60,9);
-  const bx=clamp(S.beta*1.6,-26,26);
+  const bx=clamp((S.ball||0)*2.2,-26,26);
   px.fillStyle='#d6d68a'; px.beginPath(); px.arc(bx,-(ah/2-1.5),5,0,7); px.fill();
   px.restore();
   px.strokeStyle='#444'; px.strokeRect(ax-aw/2,10,aw,ah);
@@ -630,7 +641,7 @@ const MANEUVERS = [
         ['ensure','The foot doing nothing points at the failed engine.'],
         ['avoid','Identifying by guess or by sound, not by which rudder is holding it.']]},
    {n:'VERIFY', t:'<b>Verify</b> before feathering: retard the suspected dead throttle (left) — no change confirms it’s truly dead.',
-    check:()=>S.pL<0.25 || S.failL,
+    check:()=>S.pL<0.25,
     co:[['say','"Verify — retard the left throttle… no change. Confirmed dead."'],
         ['ensure','Always verify with the throttle before touching the prop control.'],
         ['avoid','FEATHERING THE WRONG (good) ENGINE — the classic fatal error. Verify first.']]},
@@ -652,17 +663,17 @@ const MANEUVERS = [
    {n:'SET UP', t:'At a safe altitude, reduce the <b>left</b> engine to idle (or tap Fail L). Keep the right engine at high power.',
     check:()=>S.failL || S.pL<0.2,
     co:[['say','"Simulated failure, left engine."'],
-        ['ensure','Begin at or above Vsse (≈82) — never below for an intentional demo.'],
+        ['ensure','ACS CA.X.B.S1–S2: gear up, flaps and trim set for takeoff, props high RPM, critical engine at idle and windmilling, operating engine at takeoff power. Start about 10 kt above Vsse.'],
         ['avoid','Starting the demo too slow, or at low altitude.']]},
    {n:'HOLD', t:'Hold heading with right rudder and slowly <b>reduce speed</b> toward the red line. Watch rudder authority fade.',
     check:()=>S.ias<VSSE && S.ias>VMC-2,
     co:[['say','"Decelerating… rudder coming in… approaching Vmc."'],
-        ['ensure','Recover at the FIRST sign of loss of control OR a stall horn — whichever first.'],
+        ['ensure','Bank no more than 5° toward the operating engine and slow about 1 kt per second (S3–S4). Recover at the FIRST sign of lost directional control, stall warning or buffet (S5).'],
         ['avoid','Riding it past Vmc into a Vmc roll — especially if stall comes first.']]},
    {n:'RECOVER', t:'<b>Recovery:</b> reduce power on the OPERATING (right) engine AND lower the nose to regain speed above Vmc.',
     check:()=>S.pR<0.6 && S.ias>VMC+6 && !S.lostControl,
     co:[['say','"Reduce power, lower the nose, recover."'],
-        ['ensure','Reducing the GOOD engine’s power removes the asymmetry instantly.'],
+        ['ensure','Reducing the GOOD engine’s power removes the asymmetry at once. Recover within 20° of entry heading, then bring power back smoothly and accelerate to Vsse/Vyse ±5 (S6–S8).'],
         ['avoid','Adding MORE power to the good engine — that worsens the yaw and the roll.']]},
   ]},
 
@@ -704,8 +715,8 @@ const MANEUVERS = [
     co:[['say','"Committed to land."'],
         ['ensure','In most light twins, once low/slow/dirty on one engine — LAND. Don’t attempt the go-around.'],
         ['avoid','Attempting a go-around that the airplane can’t perform — a common fatal scenario.']]},
-   {n:'TOUCHDOWN', t:'Maintain directional control with rudder through the flare; reduce the good engine smoothly.',
-    check:()=>S.ias<VMC+10,
+   {n:'TOUCHDOWN', t:'Hold approach speed until landing is assured, then reduce the good engine smoothly and keep it straight with rudder.',
+    check:()=>(S.failL?S.pR:S.pL)<0.4 && S.ias>VMC+5,
     co:[['say','"Maintaining centerline, power coming back."'],
         ['ensure','Asymmetry shrinks as power reduces — but keep that working foot in.'],
         ['avoid','Relaxing rudder while power is still up — the yaw is still there.']]},
@@ -759,7 +770,7 @@ function initThrottles(){
       $(pid).textContent=S[fk]?'OUT':Math.round(S[pk]*100); el.classList.toggle('dead',S[fk]);}
     function set(e){const r=lever.getBoundingClientRect();
       const y=(e.touches?e.touches[0].clientY:e.clientY)-r.top;
-      S[pk]=clamp(1-(y-11)/(r.height-22),0,1); if(S[pk]>0.02) S[fk]=false; place();}
+      S[pk]=clamp(1-(y-11)/(r.height-22),0,1); place();}   // a failed engine stays failed: use Fail or Restart
     const down=e=>{active=true;set(e);e.preventDefault();};
     el.addEventListener('touchstart',down,{passive:false}); el.addEventListener('mousedown',down);
     window.addEventListener('touchmove',e=>{if(active){set(e);e.preventDefault&&e.preventDefault();}},{passive:false});

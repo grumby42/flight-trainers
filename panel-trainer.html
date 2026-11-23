@@ -2,12 +2,12 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Six-Pack &amp; Compass Errors — Trainer</title>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<link rel="stylesheet" href="vendor/leaflet.css"/>
+<script src="vendor/leaflet.js"></script>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Oswald:wght@300;400;500;600&family=Share+Tech+Mono&display=swap');
+  @import url('vendor/fonts.css');
   :root{
     --panel:#14171c; --panel-2:#1b1f26; --panel-edge:#2a2f38;
     --ink:#d7dce3; --ink-dim:#8a93a0;
@@ -155,11 +155,13 @@
       <div class="panel"><h2>Motion input</h2>
         <div class="ctl"><label>Longitudinal accel <span class="v" id="vAcc">0.0 g</span></label><input type="range" id="sAcc" min="-50" max="50" value="0"></div>
         <div class="ctl"><label>Bank angle <span class="v" id="vBank">0°</span></label><input type="range" id="sBank" min="-45" max="45" value="0"></div>
-        <div class="footnote">Accel = + (speeding up) · bank right = +. Same input → big error near N/S vs E/W depending on the rule.</div>
+        <div class="amp-toggle"><span>Fly the turn (bank changes heading, 100 kt)</span>
+          <label class="switch"><input type="checkbox" id="turnChk"><span class="track"></span><span class="knob"></span></label></div>
+      <div class="footnote">Accel = + (speeding up) · bank right = +. Acceleration error is largest on E/W; turning error is largest near N/S.</div>
       </div>
       <div class="panel"><h2>Location field model</h2>
-        <div class="ctl"><label>Dip angle (inclination) <span class="v" id="vDip">68°</span></label><input type="range" id="sDip" min="0" max="85" value="68"></div>
-        <div class="footnote">KEYE ≈ 68° dip (WMM2025). Drag to 0° (equator) → errors vanish; to 85° (pole) → they blow up. This is *why* ANDS/UNOS exist.</div>
+        <div class="ctl"><label>Dip angle (inclination) <span class="v" id="vDip">68°</span></label><input type="range" id="sDip" min="-85" max="85" value="68"></div>
+        <div class="footnote">Central Indiana is about 68° of dip. Drag to 0° (magnetic equator) and the errors vanish; to 85° they grow; below 0° is the Southern Hemisphere, where both rules reverse.</div>
       </div>
     </div>
 
@@ -210,7 +212,7 @@
     </div>
     <details open><summary>Honesty grades — what's real vs. approximate</summary>
       <p><b>Turn coordinator + G-meter:</b> direct accelerometer/gyro reads. The most truthful — no modeling. The ball slips for real when you corner.</p>
-      <p><b>Heading (DG):</b> magnetometer, accurate. Unlike the compass it has no ANDS/UNOS — that's why you carry both.</p>
+      <p><b>Heading (DG):</b> driven here by the phone's magnetometer, with no ANDS/UNOS. A real heading indicator is a gyro: it has no dip errors either, but it <b>precesses</b>, so you reset it to the magnetic compass about every 15 minutes, in straight, unaccelerated flight. That is why you carry both.</p>
       <p><b>Attitude (FPV):</b> accurate at rest & slow tilt. <b>Honest catch:</b> it can't tell gravity from sustained acceleration, so accelerating reads a false pitch-up — the same physics that makes the compass lie under ANDS.</p>
       <p><b>Baro altimeter + VSI:</b> the S20 has a real barometer. Trend is real (drive uphill, ride an elevator); absolute value drifts and is noisy.</p>
       <p><b>Airspeed:</b> deliberately absent — a phone has no pitot/static. GPS groundspeed ≠ airspeed, and teaching them as equal is a dangerous habit.</p>
@@ -226,7 +228,7 @@
         <button id="btnMetar">Fetch nearest METAR</button>
         <button id="btnMetarAuto">Auto every 10 min: <b id="autoState">off</b></button>
       </div>
-      <div class="live-status" id="metarStat">METAR sets your altimeter (Kollsman) so baro altitude reads true MSL. AGL uses field elevation.</div>
+      <div class="live-status" id="metarStat">METAR sets your altimeter (Kollsman) so baro altitude reads indicated MSL. AGL uses field elevation. If the direct request is blocked, your position is sent through a public relay (corsproxy.io or allorigins.win).</div>
     </div>
 
     <div class="seg trackmode" id="trackMode" style="margin-bottom:10px">
@@ -249,12 +251,12 @@
       <div class="chip smart"><div class="lbl">Altitude MSL</div><div class="val" id="rdMSL">—</div></div>
       <div class="chip"><div class="lbl">Altitude AGL</div><div class="val" id="rdAGL">—</div></div>
     </div>
-    <div class="ctl" style="margin-top:6px"><label>Field elevation for AGL <span class="v" id="vFE">810 ft</span></label>
-      <input type="range" id="sFE" min="0" max="6000" step="10" value="810"></div>
-    <div class="footnote">KEYE field elevation ≈ 810 ft MSL. AGL = MSL − field elevation. With no METAR the altimeter defaults to 29.92"; fetching one corrects it to local pressure for a true MSL read.</div>
+    <div class="ctl" style="margin-top:6px"><label>Field elevation for AGL <span class="v" id="vFE">823 ft</span></label>
+      <input type="range" id="sFE" min="0" max="6000" step="1" value="823"></div>
+    <div class="footnote">KEYE field elevation is 823 ft MSL (KMQJ is 862). AGL = MSL − field elevation. With no METAR the altimeter defaults to 29.92"; fetching one corrects it to local pressure, giving indicated altitude (close to MSL).</div>
 
     <details><summary>How the altitude math works</summary>
-      <p><b>Raw baro → MSL:</b> your phone's barometer reads station pressure. The standard formula converts pressure to a pressure-altitude; applying the local <b>altimeter setting</b> (from the METAR, in inHg) shifts it to true MSL — exactly the Kollsman window on a real altimeter.</p>
+      <p><b>Raw baro → indicated altitude:</b> your phone's barometer reads station pressure. The standard formula converts pressure to an altitude; applying the local <b>altimeter setting</b> (from the METAR, in inHg) gives <b>indicated altitude</b>, which is what the Kollsman window does on a real altimeter. It equals true altitude only in standard temperature: colder than standard and you are lower than it reads.</p>
       <p><b>MSL → AGL:</b> subtract the field/terrain elevation. We use a field-elevation slider since the phone has no terrain database.</p>
       <p><b>Honesty:</b> consumer barometers are noisy (a few feet to tens of feet) and drift. Trends are trustworthy; treat the absolute number as approximate.</p>
     </details>
@@ -262,11 +264,14 @@
 
   <details>
     <summary>Teaching notes — why the compass lies</summary>
-    <p><b>Cause:</b> the magnetized float card hangs from a pivot above its CG, and the field dips ~68° into the ground here. Fore/aft accel or bank tips that offset CG; the down-pulling field turns the tip into a heading swing.</p>
-    <p><b>ANDS:</b> on E/W, <b>A</b>ccel → shows <b>N</b>, <b>D</b>ecel → <b>S</b>. Worst E/W, zero N/S.</p>
-    <p><b>UNOS:</b> rolling out, <b>U</b>ndershoot <b>N</b>orth, <b>O</b>vershoot <b>S</b>outh. Worst near N/S.</p>
-    <p><b>Variation</b> ≈4–5° W near KEYE (true vs magnetic). <b>Deviation</b> = aircraft's own metal. Neither depends on motion — only dip does.</p>
+    <p><b>Cause (PHAK ch. 8):</b> the Earth's field dips steeply into the ground at this latitude (about 68°). The float is weighted to keep the card level against that pull, so its centre of gravity is not at the pivot. Accelerate, decelerate or bank, and inertia or the vertical part of the field swings the card off the true magnetic heading.</p>
+    <p><b>ANDS (acceleration error):</b> on an <b>east or west</b> heading, <b>A</b>ccelerate and the compass shows a turn toward <b>N</b>orth; <b>D</b>ecelerate and it shows a turn toward <b>S</b>outh. Largest on E/W, none on N/S.</p>
+    <p><b>UNOS (turning error):</b> turning from a northerly heading the compass <b>lags</b> and may first show a turn the wrong way; from a southerly heading it <b>leads</b>. So <i>you</i> <b>U</b>ndershoot <b>N</b>orth (roll out early) and <b>O</b>vershoot <b>S</b>outh (roll out late). The lead or lag is roughly your latitude, adjusted by your normal rollout lead. Largest near N/S, least near E/W.</p>
+    <p><b>Southern Hemisphere:</b> both errors reverse. Drag the dip slider below zero to see it.</p>
+    <p><b>The other errors:</b> <b>variation</b> (true vs magnetic north, about 5° W here), <b>deviation</b> (the aircraft's own magnetic fields, listed on the compass correction card) and <b>oscillation</b> (turbulence and rough control). Read the compass only in steady, wings-level, unaccelerated flight.</p>
+    <p>This is a teaching model: the directions and where the errors peak are right; the magnitudes are tuned for the classroom.</p>
   </details>
+  <div class="footnote" style="margin-top:18px;text-align:center">Build 2026-11-23T18:54:31Z · Training aid only: not for navigation, and no substitute for the POH, the FAA handbooks or your instructor · <a href="index.html" style="color:var(--amber)">All trainers</a></div>
 
 <script>
 const D2R=Math.PI/180,R2D=180/Math.PI;
@@ -281,7 +286,7 @@ const state={
   // track & weather
   trackActive:false, geoId:null, fixes:[], rawPressure:null,
   trackMode:'map', lmap:null, lpoly:null, lstart:null, lcur:null, lmapReady:false,
-  altSetting:29.92, metarAuto:false, metarTimer:null, fieldElev:810,
+  altSetting:29.92, metarAuto:false, metarTimer:null, fieldElev:823,
   msl:null, lastMetar:null,
   smoothErr:0,shown:0
 };
@@ -289,7 +294,7 @@ const state={
 /* ---------- compass error model (verified) ---------- */
 function computeError(hdg,accel,bank,dipDeg){
   const dipFactor=Math.tan(dipDeg*D2R);
-  const accErr=accel*dipFactor*Math.sin(hdg*D2R)*28;
+  const accErr=-accel*dipFactor*Math.sin(hdg*D2R)*28; // accelerate on E/W -> reads toward North (N. Hemisphere)
   const turnErr=-bank*dipFactor*Math.cos(hdg*D2R)*0.55*0.35;
   return accErr+turnErr;
 }
@@ -306,11 +311,44 @@ function banner(hdg,accel,bank){
   const b=$('banner'),k=classify(hdg,accel,bank),dir=dirName(hdg);
   b.className='err-'+(k==='acc'?'acc':k==='turn'?'turn':'none');
   if(k==='none')b.innerHTML=`Steady on <b>${dir}</b>. Card reads true. Accelerate (ANDS) or bank near N/S (UNOS).`;
-  else if(k==='acc'){const dec=accel<0;b.innerHTML=`<b>Acceleration error (ANDS).</b> ${dec?'Decelerating':'Accelerating'} on ${dir} — card swings toward <b>${dec?'South':'North'}</b>. Strongest E/W.`;}
-  else if(k==='turn')b.innerHTML=`<b>Turning error (UNOS).</b> Banking through ${dir} — card <b>${Math.cos(hdg*D2R)>0?'undershoots North':'overshoots South'}</b>. Worst near N/S.`;
+  else if(k==='acc'){const dec=accel<0;const toN=(dec!==(state.dip<0));b.innerHTML=`<b>Acceleration error (ANDS).</b> ${dec?'Decelerating':'Accelerating'} on ${dir}: the compass shows a turn toward <b>${toN?'North':'South'}</b>. Largest on E/W.${state.dip<0?' (Southern Hemisphere: reversed.)':''}`;}
+  else if(k==='turn'){const lag=Math.cos(hdg*D2R)*state.dip>0;b.innerHTML=`<b>Turning error (UNOS).</b> Turning through ${dir}: the compass <b>${lag?'lags':'leads'}</b> the airplane. ${lag?'Roll out EARLY: Undershoot North.':'Roll out LATE: Overshoot South.'}${state.dip<0?' (Southern Hemisphere: reversed.)':''}`;}
   else b.innerHTML=`Mixed input on <b>${dir}</b>. Isolate one: pure accel on E/W, or pure bank near N/S.`;
 }
 
+
+/* The round card above is a top-down teaching view. This strip shows the same
+   reading the way a real whiskey compass presents it: you read the BACK of the
+   card, so the numbers run the opposite way (larger headings to the LEFT). */
+function drawWindow(ctx,shown){
+  const CX=300,CY=300,w=300,h=78,x0=CX-w/2,y0=CY+84,ppd=3.3;
+  ctx.save();
+  ctx.fillStyle='#05070a';ctx.strokeStyle='#3a414c';ctx.lineWidth=2;
+  ctx.beginPath();ctx.rect(x0,y0,w,h);ctx.fill();ctx.stroke();ctx.clip();
+  ctx.textAlign='center';ctx.textBaseline='middle';
+  const half=Math.ceil(w/2/ppd)+2;
+  for(let d=-half;d<=half;d++){
+    const v=Math.round(shown)-d, hd=((v%360)+360)%360;if(hd%5!==0)continue;
+    const xx=CX+(d+(shown-Math.round(shown)))*ppd, maj=hd%10===0;
+    ctx.strokeStyle=maj?'#e7ecf2':'#5b6470';ctx.lineWidth=maj?2:1;
+    ctx.beginPath();ctx.moveTo(xx,y0+h);ctx.lineTo(xx,y0+h-(maj?16:9));ctx.stroke();
+    if(hd%30===0){const lbl=hd===0?'N':hd===90?'E':hd===180?'S':hd===270?'W':String(hd/10);
+      ctx.fillStyle=hd%90===0?(hd===0?'#ff6b5e':'#ffcf7a'):'#e7ecf2';ctx.font='600 26px Oswald, sans-serif';ctx.fillText(lbl,xx,y0+30);}
+  }
+  ctx.restore();
+  ctx.save();ctx.strokeStyle='#ffb347';ctx.lineWidth=2.5;ctx.beginPath();ctx.moveTo(CX,y0);ctx.lineTo(CX,y0+h);ctx.stroke();
+  ctx.fillStyle='#8a93a0';ctx.font='13px "Share Tech Mono", monospace';ctx.textAlign='center';ctx.textBaseline='alphabetic';
+  ctx.fillText('AS THE COMPASS WINDOW SHOWS IT',CX,y0-6);ctx.restore();
+}
+
+/* Fly the turn: with this on, bank actually turns the airplane (rate = 1091 tan(bank) / TAS). */
+let _turnT=performance.now();
+function flyTurn(){const now=performance.now(),dt=Math.min(0.1,(now-_turnT)/1000);_turnT=now;
+  const on=document.getElementById('turnChk');if(!on||!on.checked||state.bank===0)return;
+  const inSim=(state.mode?state.mode==='sim':state.view==='sim');if(!inSim)return;
+  state.hdg=(((state.hdg+1091*Math.tan(state.bank*D2R)/100*dt)%360)+360)%360;
+  const sl=document.getElementById('sHdg');sl.value=Math.round(state.hdg);
+  document.getElementById('vHdg').textContent=String(Math.round(state.hdg)%360).padStart(3,'0')+'\u00B0';fillRange(sl);}
 /* ---------- shared compass-card renderer ---------- */
 function drawCard(ctx,shown,bankTilt,showAmp){
   const CX=300,CY=300,R=250;
@@ -339,6 +377,7 @@ function drawCard(ctx,shown,bankTilt,showAmp){
   ctx.save();ctx.translate(CX,CY);ctx.strokeStyle='#ffb347';ctx.lineWidth=3;
   ctx.beginPath();ctx.moveTo(0,-R+2);ctx.lineTo(0,-R+38);ctx.stroke();
   ctx.fillStyle='#ffb347';ctx.beginPath();ctx.arc(0,0,5,0,7);ctx.fill();ctx.restore();
+  drawWindow(ctx,shown);
   if(showAmp){ctx.fillStyle='rgba(255,107,94,.92)';ctx.fillRect(CX-78,CY+R-30,156,26);
     ctx.fillStyle='#1a0604';ctx.font='600 16px "Share Tech Mono"';ctx.textAlign='center';ctx.textBaseline='middle';
     ctx.fillText('AMPLIFIED ×'+state.ampN,CX,CY+R-17);}
@@ -346,6 +385,7 @@ function drawCard(ctx,shown,bankTilt,showAmp){
 
 const cardCtx=$('card').getContext('2d');
 function loopCompass(){
+  flyTurn();
   let hdg,accel,bank;
   if(state.view==='live'&&state.liveActive){hdg=state.liveHdg;const g=state.amp?state.ampN:1;
     accel=state.liveAccel*g;bank=state.liveBank*(state.amp?Math.min(state.ampN,4):1);}
@@ -363,6 +403,16 @@ function loopCompass(){
 
 /* ====================== QUIZ ====================== */
 const quizState={i:0,score:0,total:0,q:null,answered:false};
+// Concept questions (PHAK ch. 8, Instrument Flying Handbook). Mixed in with the generated ANDS/UNOS items.
+const CONCEPT_Q=[
+ {q:'What actually causes the acceleration and turning errors?',a:'Magnetic dip',d:['Variation','Deviation','Gyroscopic precession'],e:'The field dips toward the ground; the float is weighted against it, and that offset is what inertia and bank act on. No dip (magnetic equator), no ANDS/UNOS.'},
+ {q:'Where do you find the correction for <b>deviation</b>?',a:'The compass correction card in the airplane',d:['The sectional chart isogonic lines','The Chart Supplement','The altimeter setting'],e:'Deviation is the airplane\u2019s own magnetic influence, swung and recorded on the compass card. Isogonic lines give <b>variation</b>.'},
+ {q:'You must reset the heading indicator to the compass. When is the compass reading valid?',a:'Straight-and-level, unaccelerated flight',d:['In a standard-rate turn','While accelerating in the climb','Any time, if you read it quickly'],e:'Any bank or speed change brings in turning or acceleration error. Reset the gyro about every 15 minutes because it precesses.'},
+ {q:'In the <b>Southern Hemisphere</b>, ANDS and UNOS:',a:'Reverse',d:['Stay the same','Disappear','Double'],e:'Dip points the other way, so the errors flip: accelerate shows South, and you overshoot North.'},
+ {q:'Turning from a heading of <b>North</b> toward East, the compass at first:',a:'Lags, and may briefly show a turn to the west',d:['Leads the turn','Reads correctly','Spins continuously'],e:'Northerly turning error: the card lags and can start the wrong way. From South it leads instead.',h:0},
+ {q:'Rolling out on <b>South</b> using only the magnetic compass, you should:',a:'Roll out after the compass passes South',d:['Roll out before it reaches South','Roll out exactly on South','Stop the turn and wait'],e:'<b>O</b>vershoot <b>S</b>outh. The compass leads on southerly headings, so it shows South before you get there.',h:180},
+ {q:'On which headings is <b>acceleration</b> error greatest?',a:'East and West',d:['North and South','Northeast and Southwest','It is the same on all headings'],e:'ANDS applies on E/W. On N/S the fore-aft force is in line with the card\u2019s north-south axis, so it does not swing.',h:90},
+ {q:'Converting true course to compass heading, the order is:',a:'True \u00B1 variation = magnetic; magnetic \u00B1 deviation = compass',d:['True \u00B1 deviation = magnetic; \u00B1 variation = compass','True = compass on a calm day','Add dip angle to true course'],e:'TVMDC. East is least (subtract easterly variation), west is best (add westerly).'}];
 function makeQuestion(){
   // Cardinal headings only — these have clean, unambiguous answers.
   // (Intercardinals have real but partial errors that don't fit a right/wrong format;
@@ -370,6 +420,9 @@ function makeQuestion(){
   const headings=[['North',0],['East',90],['South',180],['West',270]];
   const h=headings[Math.floor(Math.random()*headings.length)];
   const isNS=(h[1]===0||h[1]===180), isN=(h[1]===0), isE=(h[1]===90), isW=(h[1]===270);
+  if(Math.random()<0.34){const c=CONCEPT_Q[Math.floor(Math.random()*CONCEPT_Q.length)],o=[c.a].concat(c.d);
+    for(let i=o.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[o[i],o[j]]=[o[j],o[i]];}
+    return {scen:c.q,correct:c.a,opts:o,why:c.e,hdg:c.h||0};}
   const type=Math.random()<0.5?'acc':'turn';
   let scen,correct,opts,why;
   if(type==='acc'){
@@ -509,11 +562,12 @@ function drawALT(ctx){const R=130;ctx.clearRect(0,0,300,300);gaugeBezel(ctx,R);
 function drawVSI(ctx){const R=130;ctx.clearRect(0,0,300,300);gaugeBezel(ctx,R);
   ctx.save();ctx.translate(150,150);ctx.fillStyle='#11151b';ctx.beginPath();ctx.arc(0,0,R-2,0,7);ctx.fill();
   ctx.textAlign='center';ctx.textBaseline='middle';
-  // -2..+2 thousand fpm over 320deg, 0 at left(9 o'clock)? classic VSI 0 at 9 o'clock going clockwise. Simplify: 0 at left.
-  for(let v=-2;v<=2;v++){const frac=(v+2)/4;const a=(-160+frac*320)*D2R;const r1=R-20,r2=R-6;
-    ctx.strokeStyle='#e7ecf2';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(Math.sin(a)*r1,-Math.cos(a)*r1);ctx.lineTo(Math.sin(a)*r2,-Math.cos(a)*r2);ctx.stroke();
-    ctx.fillStyle='#cfd6df';ctx.font='15px Oswald';ctx.fillText(Math.abs(v),Math.sin(a)*(R-36),-Math.cos(a)*(R-36));}
-  const vv=Math.max(-2,Math.min(2,state.vsi/1000));const frac=(vv+2)/4;const a=(-160+frac*320)*D2R;
+  // Classic VSI: zero at 9 o'clock, climb reads clockwise (up), descent counter-clockwise (down).
+  for(let v=-2;v<=2;v+=0.5){const a=(-90+v*80)*D2R,whole=(v%1===0),r1=whole?R-20:R-13,r2=R-6;
+    ctx.strokeStyle=whole?'#e7ecf2':'#5b6470';ctx.lineWidth=whole?2:1;ctx.beginPath();ctx.moveTo(Math.sin(a)*r1,-Math.cos(a)*r1);ctx.lineTo(Math.sin(a)*r2,-Math.cos(a)*r2);ctx.stroke();
+    if(whole){ctx.fillStyle='#cfd6df';ctx.font='15px Oswald';ctx.fillText(Math.abs(v),Math.sin(a)*(R-36),-Math.cos(a)*(R-36));}}
+  ctx.fillStyle='#8a93a0';ctx.font='11px "Share Tech Mono"';ctx.fillText('UP',-52,-34);ctx.fillText('DN',-52,34);
+  const vv=Math.max(-2,Math.min(2,state.vsi/1000));const a=(-90+vv*80)*D2R;
   ctx.strokeStyle='#ffb347';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(Math.sin(a)*(R-26),-Math.cos(a)*(R-26));ctx.stroke();
   ctx.fillStyle='#ffb347';ctx.beginPath();ctx.arc(0,0,5,0,7);ctx.fill();
   ctx.fillStyle='#ffcf7a';ctx.font='600 14px Share Tech Mono';ctx.fillText((state.vsi>=0?'+':'')+Math.round(state.vsi)+' fpm',0,50);ctx.restore();}
@@ -780,8 +834,11 @@ async function enableSensors(statEl){
   function onMotion(ev){const a=ev.accelerationIncludingGravity||ev.acceleration;if(!a)return;gotM=true;
     const gmag=Math.sqrt((a.x||0)**2+(a.y||0)**2+(a.z||0)**2)/9.81;state.liveG=state.liveG*0.8+gmag*0.2;
     state.liveLat=state.liveLat*0.7+((a.x||0)/9.81)*0.3;
-    let foreAft=state.mount==='vert'?(a.y||0):(a.z||0);
-    state.liveAccel=state.liveAccel*0.7+((-foreAft/9.81)*0.3);
+    // Fore/aft acceleration with gravity removed (flat: forward = +y; vertical cradle: forward = -z).
+    const lin=ev.acceleration;let fore;
+    if(lin&&lin.y!=null)fore=state.mount==='vert'?-(lin.z||0):(lin.y||0);
+    else{const raw=state.mount==='vert'?-(a.z||0):(a.y||0);state._g0=state._g0==null?raw:state._g0*0.98+raw*0.02;fore=raw-state._g0;}
+    state.liveAccel=state.liveAccel*0.7+((fore/9.81)*0.3); // + = speeding up
     if(ev.rotationRate&&ev.rotationRate.alpha!=null)state.liveTurnRate=state.liveTurnRate*0.7+ev.rotationRate.alpha*0.3;
     refresh();}
   // Sensor API fallback (Chrome/Android): AbsoluteOrientationSensor → reliable magnetometer heading

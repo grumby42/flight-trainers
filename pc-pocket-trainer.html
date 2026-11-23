@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <!-- ============================================================
      P/C POCKET TRAINER
-     BUILD: 2026-11-23T13:56:31Z   (UTC, stamped at ship time)
+     BUILD: 2026-11-23T14:18:01Z   (UTC, stamped at ship time)
      Grep "BUILD:" to identify this version. ISO-8601 UTC sorts
      lexicographically = chronologically, so newest = highest.
      ============================================================ -->
@@ -125,7 +125,7 @@ canvas{display:block;image-rendering:pixelated;image-rendering:crisp-edges;backg
 <div class="joy-knob" id="joyKnob"></div>
 </div>
 <script>
-const BUILD='2026-11-23T13:56:31Z'; // UTC ship-time stamp — mirrored in top HTML comment + title screen
+const BUILD='2026-11-23T14:18:01Z'; // UTC ship-time stamp — mirrored in top HTML comment + title screen
 const cv=document.getElementById('scr'),cx=cv.getContext('2d');cx.scale(3,3);
 const P={bg:'#080c12',pn:'#0e1620',bar:'#121c28',bd:'#2a4458',bd2:'#1a2c3a',tx:'#d8ecd8',t2:'#7a9c8a',t3:'#3a5848',cy:'#00d4ff',am:'#ffb830',gn:'#40e840',rd:'#ff5050',ins:'#60c870',id:'#2a6838',sky:'#2858a8',gnd:'#4a3018',wh:'#e8f4e8'};
 const PALETTES=[
@@ -1435,11 +1435,12 @@ const S={TI:0,DI:1,ME:2,
   VIZ_RNG:465,// View Fig 5-31 range/45-min reserve chart w/ user trace
   ACN:490,ACNR:491,// ACS NUMBERS drill (Turn 16)
   DKS:492,DKF:493,DKR:494,DKQ:495,DKQR:496,// DUCK ON A POND (Turn 17)
+  BOXS:497,BOXF:498,BOXR:499,CPQ:500,CPQR:501,// STAY IN THE BOX + COMM PRIVILEGES (Turn 18)
   CMCR:248,  // Chandelle result / debrief (rubric + CFI notes)
   SE:240,ST:241,
   SBD:250};
 let st=S.TI,mi=0,si=0,ft=0,streak=0,best=0;
-let sc={dk:{c:0,t:0},dkq:{c:0,t:0},acn:{c:0,t:0},tm:{c:0,t:0},as:{c:0,t:0},ua:{c:0,t:0},co:{c:0,t:0},pi:{c:0,t:0},ps:{c:0,t:0},at:{c:0,t:0},wx:{c:0,t:0},vs:{c:0,t:0},wm:{c:0,t:0},am:{c:0,t:0},lg:{c:0,t:0},mc:{c:0,t:0},rs:{c:0,t:0},ss:{c:0,t:0},em:{c:0,t:0},wb:{c:0,t:0},cu:{c:0,t:0},nv:{c:0,t:0},cm:{c:0,t:0},xc:{c:0,t:0},ed:{c:0,t:0},eo:{c:0,t:0},slp:{c:0,t:0},cg:{c:0,t:0},cfe:{c:0,t:0},cfp:{c:0,t:0},ae:{c:0,t:0},ei:{c:0,t:0},sa:{c:0,t:0},cr:{c:0,t:0},sf:{c:0,t:0},wt:{c:0,t:0},atc:{c:0,t:0},cpa:{c:0,t:0}};
+let sc={box:{c:0,t:0},cp:{c:0,t:0},dk:{c:0,t:0},dkq:{c:0,t:0},acn:{c:0,t:0},tm:{c:0,t:0},as:{c:0,t:0},ua:{c:0,t:0},co:{c:0,t:0},pi:{c:0,t:0},ps:{c:0,t:0},at:{c:0,t:0},wx:{c:0,t:0},vs:{c:0,t:0},wm:{c:0,t:0},am:{c:0,t:0},lg:{c:0,t:0},mc:{c:0,t:0},rs:{c:0,t:0},ss:{c:0,t:0},em:{c:0,t:0},wb:{c:0,t:0},cu:{c:0,t:0},nv:{c:0,t:0},cm:{c:0,t:0},xc:{c:0,t:0},ed:{c:0,t:0},eo:{c:0,t:0},slp:{c:0,t:0},cg:{c:0,t:0},cfe:{c:0,t:0},cfp:{c:0,t:0},ae:{c:0,t:0},ei:{c:0,t:0},sa:{c:0,t:0},cr:{c:0,t:0},sf:{c:0,t:0},wt:{c:0,t:0},atc:{c:0,t:0},cpa:{c:0,t:0}};
 function tC(){let s=0;for(const k in sc)s+=sc[k].c;return s}function tT(){let s=0;for(const k in sc)s+=sc[k].t;return s}function hs(m,ok){m.t++;if(ok){m.c++;streak++;if(streak>best)best=streak;sO()}else{streak=0;sX()}}
 let asd={},ud={},cd={},pd={},psd={},atd={},wxd={},vsd={},wmd={},amd={},lgd={},rsd={},ssd={},emd={},wbd={},cmd={},xcd={},edd={},eod={},scd={},cgd={},cfd={},aed={},eid={},sad={},crd={},sfd={},wtd={},atcd={},cpad={};
 let fldt=0,fllt=0;
@@ -14147,7 +14148,7 @@ function updSandbox(){
     sbx.resetHoldTm+=d;
     if(sbx.resetHoldTm>=2){
       const ac=sbx.acProfile||getAC();
-      sbx.bnk=0;sbx.pit=0;sbx.alt=3000;sbx.spd=Math.round(ac.cruise);sbx.hdg=0;sbx.vsi=0;
+      sbx.bnk=0;sbx.pit=0;sbx.alt=3000;sbx.spd=Math.round(ac.cruise);sbx.hdg=0;sbx.vsi=0;sbx.fm=undefined;
       sbx.resetHoldTm=0;
     }
   }else{sbx.resetHoldTm=0;}
@@ -14174,18 +14175,17 @@ function updSandbox(){
   // the aircraft stall is fine pedagogically \u2014 sandbox is where a
   // student can safely feel what stall + recovery looks like.
   const ac=sbx.acProfile||getAC();
-  sbx.hdg=nH(sbx.hdg+sbx.bnk*0.07*d*5+(sbx.rud||0)*3*d);
+  // Shared flight model (Turn 18): turn rate, load factor and energy from fmStep.
+  if(sbx.fm===undefined){const tr=fmTrim(sbx.spd,0,0);sbx.fm={bnk:0,pit:0,hdg:sbx.hdg,alt:sbx.alt,V:sbx.spd*FM.KT,g:0,thr:tr.thr};sbx.pit=tr.pit;}
+  const fs=sbx.fm;fs.bnk=sbx.bnk;fs.pit=sbx.pit;fs.hdg=nH(sbx.hdg+(sbx.rud||0)*3*d);fs.alt=sbx.alt;
+  fmStep(fs,d);sbx.hdg=fs.hdg;
   if(d>0){const rr=(sbx.bnk-(sbx.prevBnk||0))/d;sbx.prevBnk=sbx.bnk;
     sbx.ball=sbx.rud===null?sbx.ball*(1-Math.min(1,4*d)):sbxBallStep(sbx.ball||0,rr,sbx.pit,sbx.spd,ac,sbx.rud,d);
     if(sbx.rud!==null){sbx.totT=(sbx.totT||0)+d;if(Math.abs(sbx.ball)<0.25)sbx.coordT=(sbx.coordT||0)+d;}}
-  const pitchBleed=sbx.pit>0?sbx.pit*0.13:sbx.pit*0.25;
-  const thrustAccel=sbx.pit<=0?(ac.cruise-sbx.spd)*0.15:(ac.cruise-sbx.spd)*0.03;
-  sbx.spd=Math.max(ac.Vs-8,Math.min(ac.Vne+5,sbx.spd+(thrustAccel-pitchBleed)*d));
-  const vsAdj=sbx.pit*1.8;
-  sbx.alt=Math.max(0,Math.min(12000,sbx.alt+vsAdj*d));
-  sbx.vsi=vsAdj*60;
-  // Warning flags (visual only)
-  sbx.stallWarning=sbx.spd<ac.Vs+3;
+  if(fs.alt<0){fs.alt=0;fs.g=0;}if(fs.alt>12000)fs.alt=12000;
+  sbx.spd=fs.V/FM.KT;sbx.alt=fs.alt;sbx.vsi=fs.V*Math.sin(fs.g)*60;
+  // Warning flags (visual only). Stall speed rises with bank (load factor).
+  sbx.stallWarning=sbx.spd<fmStallKt(sbx.bnk)*1.06;
   sbx.overspeedWarning=sbx.spd>ac.Vne-5;
 }
 
@@ -18925,6 +18925,8 @@ const menuItems=[
   {l:'TODAY\u2019S MISSION',d:'Setup: airfield, wx, load',s:null},
   {l:'ACS NUMBERS',d:'\u2605 Commercial tolerances, by code',s:'acn'},
   {l:'DUCK ON A POND',d:'\u2708 Spot landing: eyes, energy, float',s:'dk'},
+  {l:'STAY IN THE BOX',d:'\u2708 Hand-fly inside ACS tolerances',s:'box'},
+  {l:'COMM. PRIVILEGES',d:'\u2605 61.133, carriage, 100-hr, ELT',s:'cp'},
   {l:'POH CHARTS',d:'Chart-completion drills',s:null},
   {l:'AIRSPACE CLASSES',d:'A/B/C/D/E/G + SUA',s:'as'},
   {l:'VFR WX MINIMA',d:'Cloud clearance by class',s:'wm'},
@@ -18998,6 +19000,12 @@ function runSelfTest(srcText){const R=[];const ok=(c,n)=>R.push({ok:!!c,n});
   const rf=dkRun(0,6,0.02);ok(rf.miss>100&&rf.spd>150,'duck: 6 kt fast floats past short-field tolerance (+'+rf.miss+' ft)');
   ok(Math.abs(DK.CLMAX-2.188)<0.01&&DK.VAPP===AIRCRAFT_PRESETS.p100i.Vapp,'duck: Vs0 45 / Vapp 66 anchors');
   ok(DK_Q.every(q=>q.d.length===3&&new Set([q.a].concat(q.d)).size===4),'duck quiz: 4 unique options');
+  {const q=fmTrim(115,0,30),f={bnk:30,pit:q.pit,hdg:0,alt:3000,V:115*FM.KT,g:0,thr:q.thr};for(let i=0;i<500;i++)fmStep(f,0.02);
+   ok(Math.abs(f.hdg/10-5.48)<0.15&&Math.abs(f.alt-3000)<10,'flight model: 30\u00B0 bank at 115 kt turns 5.5\u00B0/s, level');
+   ok(Math.abs(fmStallKt(60)-70.7)<0.2&&Math.abs(fmTrim(105,0,50).pit-fmTrim(105,0,0).pit-2.6)<0.3,'flight model: stall speed and back pressure rise with bank');}
+  {boxSel=0;nwBOX();box.s.alt=3650;boxTrack(1);box.s.alt=3520;boxTrack(3);const m=box.m.alt;
+   ok(Math.abs(m.inT-3)<1e-6&&Math.abs(m.max-1)<1e-6&&m.worst===150,'box tracker: time in tolerance and longest excursion');}
+  ok(CP_Q.every(q=>q.d.length===3&&new Set([q.a].concat(q.d)).size===4&&q.e),'comm privileges: 4 unique options + source');
   if(srcText){const body=srcText.replace(/const SELFTEST_FORBID=.*\n/,'');const hit=SELFTEST_FORBID.filter(f=>body.includes(f));ok(hit.length===0,'no retired strings'+(hit.length?': '+hit.join(', '):''));}
   return R;}
 try{if(typeof location!=='undefined'&&/selftest/.test(location.search||'')){setTimeout(()=>{let src='';try{src=document.documentElement.outerHTML}catch(e){}
@@ -21319,6 +21327,146 @@ function drawVSR(){cls();
 
 function drawAM(){cls();const qL=wrap(amd.q,132,7);const qH=4+qL.length*9;bx(2,2,156,qH,P.bar,P.bd);qL.forEach((l,i)=>txn(l,5,4+i*9,P.wh,7));let cy=qH+6;for(let i=0;i<amd.o.length;i++){const lines=wrap(amd.o[i],138,6);const h=4+lines.length*7;const sel=si===i;bx(2,cy,156,h,sel?'#0c2028':P.pn,sel?P.cy:P.bd2);if(sel)txn('\u25B6',4,cy+2,P.cy,6);lines.forEach((l,j)=>txn(l,14,cy+2+j*7,sel?P.cy:P.t2,6));cy+=h+1}if(sc.am.t>0)tx(`${sc.am.c}/${sc.am.t}`,156,2,P.t3,5,'right')}
 function drawAMR(){drawQR(amd.ch===amd.c,amd.q,amd.o[amd.c],amd.o[amd.ch],amd.e)}
+
+// ── SHARED FLIGHT MODEL (Turn 18) ───────────────────────────────────
+// One point-mass model for free flight and the tolerance tracker (clean
+// P100i at 2,550 lb; POH anchors Vs 50 KIAS clean, Vy 76). Pitch attitude and
+// bank are the controls; everything else follows from lift, drag and thrust:
+// turn rate = g tan(bank)/V, load factor 1/cos(bank), stall speed rising with
+// load, speed traded against climb. Teaching MODEL, not certified data.
+const FM={W:2550,S:170,RHO:0.002377,CL0:0.30,CLA:0.085,CD0:0.030,K:0.0589,KT:1.6878,VS:50};
+FM.CLMAX=FM.W/(0.5*FM.RHO*Math.pow(FM.VS*FM.KT,2)*FM.S);FM.ASTALL=(FM.CLMAX-FM.CL0)/FM.CLA;
+function fmThrust(thr,V){return thr*0.8*Math.min(600,74250/Math.max(40,V));}
+// s:{bnk,pit(deg), hdg(deg), alt(ft), V(ft/s), g(rad), thr}
+function fmStep(s,dt){const m=FM.W/32.174,R=Math.PI/180;let t=dt;
+  while(t>1e-9){const d=Math.min(0.01,t);t-=d;
+    const al=s.pit-s.g/R;let CL=FM.CL0+FM.CLA*al;s.stalled=al>FM.ASTALL;
+    if(s.stalled)CL=Math.max(0.9,FM.CLMAX-0.12*(al-FM.ASTALL));
+    const q=0.5*FM.RHO*s.V*s.V,L=q*FM.S*CL,D=q*FM.S*(FM.CD0+(s.stalled?0.06:0)+FM.K*CL*CL),T=fmThrust(s.thr,s.V),b=s.bnk*R;
+    s.V=Math.max(30,s.V+((T-D)/m-32.174*Math.sin(s.g))*d);
+    s.g=Math.max(-1,Math.min(1,s.g+((L*Math.cos(b)-FM.W*Math.cos(s.g))/(m*s.V))*d));
+    s.hdg=(((s.hdg+(L*Math.sin(b))/(m*s.V*Math.cos(s.g))/R*d)%360)+360)%360;
+    s.alt+=s.V*Math.sin(s.g)*d;s.n=L/FM.W;s.al=al;}
+  return s;}
+// Trim: speed (kt), path angle (deg), bank (deg) -> {pit,thr}
+function fmTrim(Vkt,gamDeg,bankDeg){const R=Math.PI/180,V=Vkt*FM.KT,q=0.5*FM.RHO*V*V,g=(gamDeg||0)*R;
+  const CL=FM.W*Math.cos(g)/(Math.cos((bankDeg||0)*R)*q*FM.S),al=(CL-FM.CL0)/FM.CLA;
+  const T=q*FM.S*(FM.CD0+FM.K*CL*CL)+FM.W*Math.sin(g);return {pit:al+(gamDeg||0),thr:Math.max(0,Math.min(1,T/(0.8*Math.min(600,74250/V))))};}
+function fmStallKt(bankDeg){return FM.VS/Math.sqrt(Math.cos(bankDeg*Math.PI/180));}
+// ── STAY IN THE BOX: tolerance tracker (Turn 18) ────────────────────
+// Hand-fly a task while the ACS-7B box is drawn live. Scores time inside
+// each tolerance and the longest excursion, because the ACS lists both
+// "consistently exceeding tolerances" and "failure to take prompt
+// corrective action" as unsatisfactory (App 1). The SAT rule used here
+// (90% in the box, no excursion over 5 s) is a TRAINING rule, not the ACS.
+const BOX_TASKS=[
+ {k:'sl',n:'STRAIGHT & LEVEL',ref:'CA.VI.A.S7 / III.B.S5',dur:60,v:105,alt:3500,lim:{alt:[-100,100],hdg:[-10,10],spd:[-10,10]},brief:'Hold 3,500 ft, heading 090, 105 kt.'},
+ {k:'st',n:'STEEP TURNS',ref:'CA.V.A.S5',dur:0,v:105,alt:3500,lim:{alt:[-100,100],spd:[-10,10],bnk:[-5,5]},brief:'360° left at 50°, roll out on 090, then 360° right.'},
+ {k:'sf',n:'SLOW FLIGHT',ref:'CA.VII.A.S5',dur:45,v:105,alt:3500,lim:{alt:[-50,50],hdg:[-10,10],spd:[0,5]},brief:'Slow to 60 kt and hold it: +5/−0 kt, ±50 ft. No stall warning.'},
+ {k:'vy',n:'VY CLIMB',ref:'CA.IV.A.S13',dur:45,v:76,alt:1500,lim:{hdg:[-10,10],spd:[-5,5]},brief:'Full power climb. Hold 76 kt ±5, heading 090.'}];
+const BOX_SAT_PCT=90,BOX_SAT_EXC=5;
+let boxSel=0,box={};
+function boxDiff(a,b){let d=a-b;while(d>180)d-=360;while(d<-180)d+=360;return d;}
+function nwBOX(){const t=BOX_TASKS[boxSel],climb=t.k==='vy',tr=climb?{pit:fmTrim(76,5.6,0).pit,thr:1}:fmTrim(t.v,0,0);
+  box={t,s:{bnk:0,pit:tr.pit,hdg:90,alt:t.alt,V:t.v*FM.KT,g:climb?5.6*Math.PI/180:0,thr:tr.thr},tm:0,gt:0,ph:0,est:t.k==='sl'||climb,
+    tgt:{alt:t.alt,hdg:90,spd:t.k==='sf'?60:t.v,bnk:0},m:{},turned:0,lastHdg:90,roll:[],hornT:0,out:null,res:null,brief:2.5};
+  for(const k in t.lim)box.m[k]={inT:0,tot:0,cur:0,max:0,worst:0};
+  if(typeof tiltZero==='function')tiltZero();}
+function boxDev(k){const s=box.s,g=box.tgt;return k==='alt'?s.alt-g.alt:k==='hdg'?boxDiff(s.hdg,g.hdg):k==='spd'?s.V/FM.KT-g.spd:Math.abs(s.bnk)-Math.abs(g.bnk);}
+// Pure-ish tracker step (also driven by the self-test): d seconds of grading.
+function boxTrack(d){box.out=null;for(const k in box.t.lim){if(k==='bnk'&&!box.bankOn)continue;const m=box.m[k],L=box.t.lim[k],v=boxDev(k),inb=v>=L[0]&&v<=L[1];
+    m.tot+=d;if(inb){m.inT+=d;m.cur=0;}else{m.cur+=d;if(m.cur>m.max)m.max=m.cur;if(!box.out||m.cur>box.m[box.out].cur)box.out=k;}
+    if(Math.abs(v)>Math.abs(m.worst))m.worst=v;}box.gt+=d;}
+function boxFinish(why){const R={why,rows:[],sat:true,roll:box.roll.slice(),horn:box.hornT};
+  for(const k in box.t.lim){const m=box.m[k],pct=m.tot>0?Math.round(100*m.inT/m.tot):0;R.rows.push({k,pct,max:m.max,worst:m.worst});if(pct<BOX_SAT_PCT||m.max>BOX_SAT_EXC)R.sat=false;}
+  if(box.roll.some(e=>Math.abs(e)>10))R.sat=false;if(box.t.k==='sf'&&box.hornT>1)R.sat=false;if(why!=='done')R.sat=false;
+  box.res=R;hs(sc.box,R.sat);st=S.BOXR;}
+function updBOX(){if(box.res)return;const d=Math.min(0.05,fldt*SET.practiceSpeed);if(d<=0)return;const s=box.s,t=box.t;
+  if(box.brief>0){box.brief-=d;return;}
+  let pr=0,br=0;
+  if((SET.joystick||SET.tilt)&&joy.active){pr=(SET.joyInvert?-joy.y:joy.y)*7;br=joy.x*25;}
+  else{if(kd['ArrowDown'])pr=5;else if(kd['ArrowUp'])pr=-5;if(kd['ArrowRight'])br=15;else if(kd['ArrowLeft'])br=-15;}
+  const tb=Math.max(1,SET.turb||0);
+  s.pit=Math.max(-15,Math.min(22,s.pit+pr*d+(Math.random()-.5)*10*tb*d));
+  s.bnk=Math.max(-65,Math.min(65,s.bnk+br*d+(Math.random()-.5)*36*tb*d));
+  if(kd['x'])s.thr=Math.min(1,s.thr+0.5*d);if(kd['z'])s.thr=Math.max(0,s.thr-0.5*d);
+  fmStep(s,d);box.tm+=d;const kt=s.V/FM.KT;
+  const horn=kt<fmStallKt(s.bnk)*1.08;if(horn&&box.est)box.hornT+=d;box.horn=horn;
+  box.turned+=Math.abs(boxDiff(s.hdg,box.lastHdg));box.lastHdg=s.hdg;
+  if(t.k==='st'){// 0 roll in L, 1 turning L, 2 roll out, 3 roll in R, 4 turning R, 5 roll out
+    const dir=box.ph<3?-1:1;box.tgt.bnk=50;
+    if(box.ph===0||box.ph===3){box.bankOn=false;if(s.bnk*dir>=45){box.ph++;box.turned=0;}}
+    else if(box.ph===1||box.ph===4){box.bankOn=true;if(box.turned>=325){box.ph++;}/* bank grading stops for the rollout lead */}
+    else{box.bankOn=false;if(Math.abs(s.bnk)<5){box.roll.push(boxDiff(s.hdg,90));if(box.ph===2){box.ph=3;}else{boxTrack(d);return boxFinish('done');}}}
+    box.est=true;boxTrack(d);if(box.tm>150)return boxFinish('timeout');}
+  else{if(!box.est&&(kt<=65||box.tm>40))box.est=true;
+    if(box.est){boxTrack(d);if(box.gt>=t.dur)return boxFinish('done');}}
+  if(s.alt<500)return boxFinish('terrain');}
+function drawBOX(){cls();const s=box.s,t=box.t,kt=s.V/FM.KT;
+  const left=t.dur?Math.max(0,Math.ceil(t.dur-box.gt)):Math.round(box.tm);
+  drawPanelFPV({bnk:s.bnk,pit:s.pit,hdg:s.hdg,alt:s.alt,spd:kt,vsi:s.V*Math.sin(s.g)*60,vs:FM.VS},{hdgBug:90,bugAdjusting:false,stallWarning:box.horn,precisionMode:false,layout:'left'});
+  const rx=112,rw=46;bx(rx,0,rw,110,P.pn,P.bd);
+  const names={alt:'ALT',hdg:'HDG',spd:'IAS',bnk:'BANK'},keys=Object.keys(t.lim);
+  keys.forEach((k,i)=>{const y=3+i*26,L=t.lim[k],v=boxDev(k),on=box.est&&(k!=='bnk'||box.bankOn),inb=v>=L[0]&&v<=L[1],c=!on?P.t3:inb?P.gn:P.rd;
+    tx(names[k],rx+3,y,P.am,5);
+    const val=k==='alt'?Math.round(s.alt):k==='hdg'?String(Math.round(s.hdg)%360).padStart(3,'0'):k==='spd'?Math.round(kt):Math.round(Math.abs(s.bnk))+'°';
+    tx(String(val),rx+rw-3,y,c,6,'right');
+    // deviation bar: the green band is the ACS box
+    const bx0=rx+4,bw=rw-8,span=(L[1]-L[0])*1.6,mid=(L[0]+L[1])/2,X=u=>bx0+bw/2+(u-mid)/span*bw;
+    bx(bx0,y+9,bw,6,P.bg,P.bd2);cx.fillStyle=on?'#0f3a1a':'#14202a';cx.fillRect(X(L[0]),y+10,X(L[1])-X(L[0]),4);
+    const mx=Math.max(bx0+1,Math.min(bx0+bw-2,X(v)));cx.fillStyle=c;cx.fillRect(mx-1,y+8,2,8);
+    tx((L[0]===0?'+':'±')+L[1]+(L[0]===0?'/−0':''),rx+rw/2,y+17,P.t3,4,'center');});
+  tx((t.dur?'LEFT ':'TIME ')+left+'s',rx+rw/2,91,P.t2,4,'center');
+  tx('PWR',rx+3,100,P.t3,4);bx(rx+18,100,rw-22,5,P.bg,P.bd2);cx.fillStyle=P.gn;cx.fillRect(rx+19,101,Math.round((rw-24)*s.thr),3);
+  bx(0,113,160,10,P.bar,box.out?P.rd:P.bd2);let msg,mc=P.t2;
+  if(box.brief>0){msg=t.brief;mc=P.cy;}
+  else if(box.horn&&box.est){msg='STALL WARNING — lower the nose, add power';mc=P.rd;}
+  else if(box.out){const m=box.m[box.out],v=boxDev(box.out);msg='OUT: '+names[box.out]+' '+(v>0?'+':'')+Math.round(v)+' — correct now ('+m.cur.toFixed(1)+'s)';mc=P.rd;}
+  else if(t.k==='st')msg=['ROLL LEFT TO 50°','HOLD 50° · back pressure + power','ROLL OUT ON 090','ROLL RIGHT TO 50°','HOLD 50° · back pressure + power','ROLL OUT ON 090'][box.ph];
+  else if(!box.est)msg='SLOW TO 60: power back, hold altitude with pitch';
+  else msg='IN THE BOX';
+  tc(msg,115,mc,5);
+  bx(0,126,160,18,P.bar,P.bd);tx('A/B: power',4,129,P.t3,5);tx(t.ref,4,137,P.t3,4);tx('SEL: tasks',156,129,P.t3,5,'right');tx('STR: restart',156,137,P.t3,4,'right');}
+function drawBOXR(){cls();const r=box.res,t=box.t;hdr('BOX · '+t.n,t.ref);
+  bx(2,14,156,16,P.bar,r.sat?P.gn:P.rd);tc(r.sat?'SATISFACTORY':'NOT YET',17,r.sat?P.gn:P.rd,8);
+  tx('TOL',5,34,P.am,5);tx('IN BOX',78,34,P.am,5,'right');tx('LONGEST OUT',118,34,P.am,5,'right');tx('WORST',155,34,P.am,5,'right');
+  const nm={alt:'ALT',hdg:'HDG',spd:'IAS',bnk:'BANK'};
+  r.rows.forEach((x,i)=>{const y=42+i*9,bad=x.pct<BOX_SAT_PCT||x.max>BOX_SAT_EXC;tx(nm[x.k],5,y,P.t2,6);tx(x.pct+'%',78,y,x.pct<BOX_SAT_PCT?P.rd:P.gn,6,'right');tx(x.max.toFixed(1)+'s',118,y,x.max>BOX_SAT_EXC?P.rd:P.wh,6,'right');tx((x.worst>0?'+':'')+Math.round(x.worst),155,y,bad?P.rd:P.wh,6,'right');});
+  let y=44+r.rows.length*9;
+  if(r.roll.length){tx('ROLLOUT vs 090: '+r.roll.map(e=>(e>0?'+':'')+Math.round(e)+'°').join('  ')+'  (±10°)',5,y,r.roll.some(e=>Math.abs(e)>10)?P.rd:P.gn,5);y+=8;}
+  if(t.k==='sf'){tx('Stall warning: '+r.horn.toFixed(1)+' s',5,y,r.horn>1?P.rd:P.gn,5);y+=8;}
+  const worst=r.rows.slice().sort((a,b)=>a.pct-b.pct)[0];
+  const tip=r.roll.some(e=>Math.abs(e)>10)&&r.rows.every(x=>x.pct>=BOX_SAT_PCT&&x.max<=BOX_SAT_EXC)?'Rollout heading missed. Lead the rollout by about half the bank angle: start rolling out roughly 25\u00B0 before 090.':r.why==='terrain'?'Descended below 500 ft. Fly the airplane first.':r.why==='timeout'?'Ran out of time before both turns were complete.':r.sat?'Inside the box and correcting promptly. Raise the turbulence in Settings to make it harder.':worst.k==='alt'?'Altitude was the leak. Small pitch changes, early. In the steep turn, add back pressure as you pass 30° of bank.':worst.k==='spd'?'Airspeed was the leak. Pitch and power together: power for the speed you want, pitch for the altitude.':worst.k==='hdg'?'Heading wandered. Wings level is a heading hold: fix small bank first.':'Bank wandered. Pick the sight picture for 50° and hold it; correct altitude with pitch, not by shallowing the bank.';
+  wrap(tip,150,5).slice(0,5).forEach((l,i)=>tx(l,5,y+3+i*7,P.wh,5));
+  tx('Training rule: '+BOX_SAT_PCT+'% in the box, no excursion over '+BOX_SAT_EXC+' s.',5,122,P.t3,4);ftr('SEL:TASKS','A:AGAIN');}
+function drawBOXS(){cls();hdr('STAY IN THE BOX','ACS TRACKER');BOX_TASKS.forEach((t,i)=>sRow(t.n,4,15+i*15,152,boxSel===i));
+  const t=BOX_TASKS[boxSel];bx(2,78,156,40,P.pn,P.bd2);wrap(t.brief,150,5).forEach((l,i)=>tx(l,5,81+i*7,P.cy,5));
+  const nm={alt:'ALT',hdg:'HDG',spd:'IAS',bnk:'BANK'};tx(Object.keys(t.lim).map(k=>nm[k]+' '+(t.lim[k][0]===0?'+'+t.lim[k][1]+'/−0':'±'+t.lim[k][1])).join('  '),5,97,P.wh,5);
+  tx(t.ref+' · turbulence: '+['LIGHT','LIGHT','MODERATE'][SET.turb||0],5,106,P.t3,4);
+  tc('Pitch/bank: d-pad, stick or tilt · A/B: power',122,P.t3,4);ftr('SEL:MENU','A:FLY');}
+// ── COMMERCIAL PRIVILEGES oral pack (Turn 18) ───────────────────────
+// Sources: 14 CFR 61.23, 61.133, 91.147, 91.207, 91.213, 91.409, 119.1(e); AC 120-12A.
+const CP_Q=[
+ {q:'What does a commercial certificate let you do that a private does not?',a:'Act as PIC for compensation or hire, if the operation itself is legal',d:['Carry paying passengers anywhere, any time','Run your own charter flights','Fly for an airline as captain'],e:'61.133(a). The certificate covers you as a pilot. The OPERATION must also be legal: most carrying of people or property for hire needs a part 119 operating certificate unless a 119.1(e) exception applies.'},
+ {q:'Commercial pilot, airplane, NO instrument rating. What limitation applies?',a:'No passengers for hire on cross-countries over 50 NM, or at night',d:['No passengers for hire at all','No flights for hire over 25 NM','No limitation; instrument rating is separate'],e:'61.133(b)(1). The limitation is placed on the certificate.'},
+ {q:'Which medical do you need to exercise commercial privileges, and for how long?',a:'Second class; through the end of the 12th calendar month',d:['Third class; 60 or 24 calendar months','First class; 6 calendar months','BasicMed; 48 months'],e:'61.23(a)(2), (d). After 12 calendar months it still works for private privileges. BasicMed cannot be used for compensation or hire.'},
+ {q:'The four elements of COMMON CARRIAGE are:',a:'Holding out; willingness to carry persons or property; place to place; for compensation',d:['Advertising; profit; passengers; cross-country','Contract; one customer; cargo; night','Holding out; IFR; turbine; scheduled'],e:'AC 120-12A. Common carriage for hire needs an operating certificate. "Holding out" can be advertising, an agent, or simply a reputation for flying anyone who asks.'},
+ {q:'A friend owns an airplane and pays you to fly him to a meeting in it. Legal with just a commercial certificate?',a:'Yes. He provides the airplane; you provide only pilot services',d:['No. Any pay for carrying a passenger needs part 135','Only within 25 SM','Only if he is also a pilot'],e:'He has operational control of his own airplane under part 91, and you are a hired pilot. You are not providing air transportation.'},
+ {q:'Same friend, but YOU rent the airplane and charge him for the trip. Legal?',a:'No. You are providing both airplane and pilot for hire; that needs an operating certificate',d:['Yes, with a commercial certificate','Yes, if you split the cost','Yes, if under 50 NM'],e:'Supplying the airplane and the pilot to carry someone for compensation is air transportation (part 119/135), not a pilot-for-hire arrangement.'},
+ {q:'Which of these can a commercial pilot do for hire WITHOUT an operating certificate?',a:'Banner towing, aerial photography, pipeline patrol, flight instruction',d:['On-demand passenger charter','Scheduled cargo runs between two cities','Air ambulance'],e:'119.1(e) lists the exceptions: student instruction, ferry and training flights, aerial work (crop dusting, banner towing, photography or survey, fire fighting, powerline or pipeline patrol), nonstop air tours within 25 SM, and others. Banner towing also needs a 91.311 waiver.'},
+ {q:'Nonstop sightseeing flights for hire that begin and end at the same airport: what is required?',a:'Stay within 25 SM, hold a Letter of Authorization, and have a drug and alcohol testing program',d:['Nothing beyond a commercial certificate','A part 135 certificate in every case','Stay within 50 NM and file a flight plan'],e:'119.1(e)(2) and 91.147: LOA from the Flight Standards office, part 136 subpart A safety rules, and a part 120 drug and alcohol program.'},
+ {q:'When is a 100-hour inspection required?',a:'Carrying a person for hire, or giving flight instruction for hire in an airplane you provide',d:['Every airplane, every 100 hours','Only on part 135 airplanes','Whenever the annual is over 6 months old'],e:'91.409(b). An annual can stand in for a 100-hour; a 100-hour cannot stand in for an annual.'},
+ {q:'The 100-hour is due, and the shop is at another airport. Can you fly there?',a:'Yes, up to 10 hours over, and the overage counts toward the next 100',d:['No, never','Yes, up to 25 hours over','Yes, with no limit if no passengers'],e:'91.409(b). The annual has no such allowance: an out-of-annual airplane needs a special flight permit.'},
+ {q:'ELT: inspection interval and battery replacement?',a:'Inspect every 12 calendar months; replace battery after 1 hour cumulative use or 50% of useful life',d:['Inspect every 24 months; battery every 5 years','Inspect at each 100-hour; battery when it fails the test','Inspect every 12 months; battery after 30 minutes use'],e:'91.207(c), (d). Training flights within 50 NM of the departure airport are among the 91.207(f) exceptions.'},
+ {q:'No MEL. A landing light is inoperative for a day VFR flight not for hire. What makes the flight legal?',a:'Not required by type certificate, KOEL, 91.205 or an AD; then deactivated or removed and placarded INOPERATIVE',d:['Nothing; all installed equipment must work','A logbook entry by the pilot only','A special flight permit'],e:'91.213(d). You (or a mechanic) must also decide the item is not a hazard. Note 91.205(c): a landing light IS required at night when operating for hire.'},
+ {q:'Which documents must be aboard (ARROW)?',a:'Airworthiness cert., Registration, Radio licence (international), Operating limitations, Weight and balance',d:['Annual sign-off, Registration, Receipts, Owner manual, Waivers','Airworthiness cert., Route log, Radio check, Oil record, W&B','Airframe log, Registration, Radio licence, Operating handbook, Weather'],e:'91.203 and 91.9. Maintenance logbooks do not have to be in the airplane.'},
+ {q:'Which inspections make an airplane airworthy for a VFR flight for hire?',a:'Annual, 100-hour, transponder (24 mo), ELT (12 mo), and ADs complied with',d:['Annual only','Annual and pitot-static only','100-hour and VOR check only'],e:'91.409, 91.413, 91.207, 91.417 and part 39. Pitot-static/altimeter (91.411) and the VOR check (91.171) are IFR requirements.'}];
+let cpqd={},cpqRecent=[];
+function nwCPQ(){const pool=CP_Q.length,recent=cpqRecent.slice(-Math.floor(pool/2));let i,n=0;do{i=ri(0,pool-1);n++}while(recent.includes(i)&&n<30);
+  cpqRecent.push(i);if(cpqRecent.length>Math.floor(pool/2))cpqRecent.shift();const src=CP_Q[i],o=shuf([src.a].concat(src.d));cpqd={q:src.q,o,c:o.indexOf(src.a),ch:null,e:src.e};si=0;}
+function drawMCQ(d,s){cls();const qL=wrap(d.q,132,6);const qH=4+qL.length*8;bx(2,2,156,qH,P.bar,P.bd);qL.forEach((l,i)=>txn(l,5,4+i*8,P.wh,6));let cy=qH+5;for(let i=0;i<d.o.length;i++){const lines=wrap(d.o[i],138,5);const h=4+lines.length*6;const sel=si===i;bx(2,cy,156,h,sel?'#0c2028':P.pn,sel?P.cy:P.bd2);if(sel)txn('▶',4,cy+2,P.cy,5);lines.forEach((l,j)=>txn(l,13,cy+2+j*6,sel?P.cy:P.t2,5));cy+=h+1}if(s&&s.t>0)tx(`${s.c}/${s.t}`,156,2,P.t3,5,'right')}
+function drawCPQ(){drawMCQ(cpqd,sc.cp)}
+function drawCPQR(){drawQR(cpqd.ch===cpqd.c,cpqd.q,cpqd.o[cpqd.c],cpqd.o[cpqd.ch],cpqd.e)}
 
 // ── DUCK ON A POND core (pure functions; MODEL, anchored to POH VB-2960) ──
 // Longitudinal point-mass: P100i at 2,550 lb, flaps 40. Anchors (POH):
@@ -26871,7 +27019,7 @@ function drawSBD(){cls();
   tx('\u2726 you found it \u2726',80,135,P.am,5,'center');
   if(sbdFlashT>0)sbdFlashT--;
 }
-function drawST(){cls();hdr('SESSION STATS');const t=tT(),c=tC(),pc=t>0?Math.round(c/t*100):0;bx(2,14,156,18,P.bar,P.bd);tx('OVERALL',6,15,P.am,7);tx(`${c}/${t} ${pc}%`,148,15,P.wh,7,'right');bx(6,24,146,5,P.bg,P.bd2);if(t>0){cx.fillStyle=pc>=80?P.gn:pc>=60?P.am:P.rd;cx.fillRect(7,25,Math.round(144*c/t),3)}const ms=[{l:'ASPC',s:sc.as},{l:'WXMIN',s:sc.wm},{l:'SECT',s:sc.ss},{l:'VSPD',s:sc.vs},{l:'AERO',s:sc.am},{l:'RADIO',s:sc.at},{l:'LGUN',s:sc.lg},{l:'RWY',s:sc.rs},{l:'UA',s:sc.ua},{l:'COMP',s:sc.co},{l:'PRIM',s:sc.pi},{l:'P/S',s:sc.ps},{l:'W&B',s:sc.wb},{l:'EMRG',s:sc.em},{l:'DUCK',s:sc.dk},{l:'ACS#',s:sc.acn},{l:'WX',s:sc.wx},{l:'TAF',s:sc.tm},{l:'MORSE',s:sc.mc},{l:'CURR',s:sc.cu},{l:'NAV',s:sc.nv},{l:'MNVR',s:sc.cm}];ms.forEach((m,i)=>{const y=32+i*5;if(y>135)return;bx(2,y,156,5,P.pn,P.bd2);tx(m.l,6,y,P.t2,4);if(m.s.t>0){const mp=Math.round(m.s.c/m.s.t*100);tx(`${m.s.c}/${m.s.t}`,90,y,P.tx,4,'right');tx(`${mp}%`,148,y,mp>=80?P.gn:mp>=60?P.am:P.rd,4,'right')}else tx('--',148,y,P.t3,4,'right')})}
+function drawST(){cls();hdr('SESSION STATS');const t=tT(),c=tC(),pc=t>0?Math.round(c/t*100):0;bx(2,14,156,18,P.bar,P.bd);tx('OVERALL',6,15,P.am,7);tx(`${c}/${t} ${pc}%`,148,15,P.wh,7,'right');bx(6,24,146,5,P.bg,P.bd2);if(t>0){cx.fillStyle=pc>=80?P.gn:pc>=60?P.am:P.rd;cx.fillRect(7,25,Math.round(144*c/t),3)}const ms=[{l:'ASPC',s:sc.as},{l:'WXMIN',s:sc.wm},{l:'SECT',s:sc.ss},{l:'VSPD',s:sc.vs},{l:'AERO',s:sc.am},{l:'RADIO',s:sc.at},{l:'LGUN',s:sc.lg},{l:'RWY',s:sc.rs},{l:'UA',s:sc.ua},{l:'COMP',s:sc.co},{l:'PRIM',s:sc.pi},{l:'P/S',s:sc.ps},{l:'W&B',s:sc.wb},{l:'EMRG',s:sc.em},{l:'BOX',s:sc.box},{l:'COMM',s:sc.cp},{l:'DUCK',s:sc.dk},{l:'ACS#',s:sc.acn},{l:'WX',s:sc.wx},{l:'TAF',s:sc.tm},{l:'MORSE',s:sc.mc},{l:'CURR',s:sc.cu},{l:'NAV',s:sc.nv},{l:'MNVR',s:sc.cm}];ms.forEach((m,i)=>{const y=32+i*5;if(y>135)return;bx(2,y,156,5,P.pn,P.bd2);tx(m.l,6,y,P.t2,4);if(m.s.t>0){const mp=Math.round(m.s.c/m.s.t*100);tx(`${m.s.c}/${m.s.t}`,90,y,P.tx,4,'right');tx(`${mp}%`,148,y,mp>=80?P.gn:mp>=60?P.am:P.rd,4,'right')}else tx('--',148,y,P.t3,4,'right')})}
 
 // Track state transitions to release haptic vibration when leaving any
 // flying state mid-session (Shift exits, etc.). Without this, a vibration
@@ -26911,7 +27059,9 @@ case S.DI:
 case S.ME:if(J('ArrowUp')){mi=(mi-1+menuItems.length)%menuItems.length;sN();if(mi<mTop)mTop=mi;if(mi>=mTop+MVIS)mTop=mi-MVIS+1;if(mi===menuItems.length-1)mTop=Math.max(0,menuItems.length-MVIS)}if(J('ArrowDown')){mi=(mi+1)%menuItems.length;sN();if(mi>=mTop+MVIS)mTop=mi-MVIS+1;if(mi<mTop)mTop=mi;if(mi===0)mTop=0}if(J('z')){setI=1;st=S.SE;sN()}if(J('x')||J('Enter')){sS();[
   ()=>{nwMIS();st=S.MIS},          // 0 TODAY'S MISSION
   ()=>{nwACN();st=S.ACN},          // 0b ACS NUMBERS (Turn 16)
-  ()=>{nwDKS();st=S.DKS},          // 0c DUCK ON A POND (Turn 17; indices below shift +2)
+  ()=>{nwDKS();st=S.DKS},          // 0c DUCK ON A POND (Turn 17)
+  ()=>{st=S.BOXS},                 // 0d STAY IN THE BOX (Turn 18)
+  ()=>{nwCPQ();st=S.CPQ},          // 0e COMM. PRIVILEGES (Turn 18; indices below shift +4)
   ()=>{nwPCH();st=S.PCH},          // 1 POH CHARTS
   ()=>{nwAS();st=S.AS},            // 2 AIRSPACE
   ()=>{nwWM();st=S.WM},             // 3 VFR WX MINIMA
@@ -27091,6 +27241,11 @@ case S.SSR:if(J('x')||J('Enter')){nwSS();st=S.SS;sS()}if(J('Shift')){st=S.ME;sN(
 case S.VS:if(J('ArrowUp')){si=(si-1+vsd.o.length)%vsd.o.length;sN()}if(J('ArrowDown')){si=(si+1)%vsd.o.length;sN()}if(J('x')){vsd.ch=si;hs(sc.vs,vsd.ch===vsd.c);st=S.VSR}if(J('Shift')){st=S.ME;sN()}break;
 case S.VSR:if(J('x')||J('Enter')){nwVS();st=S.VS;sS()}if(J('Shift')){st=S.ME;sN()}break;
 case S.AM:if(J('ArrowUp')){si=(si-1+amd.o.length)%amd.o.length;sN()}if(J('ArrowDown')){si=(si+1)%amd.o.length;sN()}if(J('x')){amd.ch=si;hs(sc.am,amd.ch===amd.c);st=S.AMR}if(J('Shift')){st=S.ME;sN()}break;
+case S.BOXS:if(J('ArrowUp')){boxSel=(boxSel+BOX_TASKS.length-1)%BOX_TASKS.length;sN()}if(J('ArrowDown')){boxSel=(boxSel+1)%BOX_TASKS.length;sN()}if(J('x')){nwBOX();st=S.BOXF;sS()}if(J('Shift')){st=S.ME;sN()}break;
+case S.BOXF:updBOX();if(st===S.BOXF){if(J('Enter'))nwBOX();if(J('Shift')){st=S.BOXS;sN()}}break;
+case S.BOXR:if(J('x')||J('Enter')){nwBOX();st=S.BOXF;sS()}if(J('Shift')){st=S.BOXS;sN()}break;
+case S.CPQ:if(J('ArrowUp')){si=(si-1+cpqd.o.length)%cpqd.o.length;sN()}if(J('ArrowDown')){si=(si+1)%cpqd.o.length;sN()}if(J('x')){cpqd.ch=si;hs(sc.cp,cpqd.ch===cpqd.c);st=S.CPQR}if(J('Shift')){st=S.ME;sN()}break;
+case S.CPQR:if(J('x')||J('Enter')){nwCPQ();st=S.CPQ;sS()}if(J('Shift')){st=S.ME;sN()}break;
 case S.DKS:if(J('ArrowUp')){dkSet.row=(dkSet.row+2)%3;sN()}if(J('ArrowDown')){dkSet.row=(dkSet.row+1)%3;sN()}
   if(J('ArrowLeft')||J('ArrowRight')){const dd=J('ArrowLeft')?-1:1;if(dkSet.row===0)dkSet.type=(dkSet.type+dd+3)%3;else if(dkSet.row===1)dkSet.mode=1-dkSet.mode;else dkSet.wind=(dkSet.wind+dd+3)%3;sN()}
   if(J('x')){nwDK(false);st=S.DKF;sS()}else if(J('z')){nwDK(true);st=S.DKF;sS()}else if(J('Enter')){nwDKQ();st=S.DKQ;sS()}if(J('Shift')){st=S.ME;sN()}break;
@@ -28996,7 +29151,7 @@ function draw(){({[S.TI]:drawTitle,[S.DI]:drawDisc,[S.ME]:drawMenu,
   [S.WM]:drawWM,[S.WMR]:drawWMR,
   [S.SS]:drawSS,[S.SSR]:drawSSR,
   [S.VS]:drawVS,[S.VSR]:drawVSR,
-  [S.AM]:drawAM,[S.AMR]:drawAMR,[S.ACN]:drawACN,[S.ACNR]:drawACNR,[S.DKS]:drawDKS,[S.DKF]:drawDK,[S.DKR]:drawDKR,[S.DKQ]:drawDKQ,[S.DKQR]:drawDKQR,
+  [S.AM]:drawAM,[S.AMR]:drawAMR,[S.ACN]:drawACN,[S.ACNR]:drawACNR,[S.BOXS]:drawBOXS,[S.BOXF]:drawBOX,[S.BOXR]:drawBOXR,[S.CPQ]:drawCPQ,[S.CPQR]:drawCPQR,[S.DKS]:drawDKS,[S.DKF]:drawDK,[S.DKR]:drawDKR,[S.DKQ]:drawDKQ,[S.DKQR]:drawDKQR,
   [S.UA]:drawUA,[S.UR]:drawUR,
   [S.CO]:drawCO,[S.CR]:drawCR,
   [S.PI]:drawPI,[S.PR]:drawPR,

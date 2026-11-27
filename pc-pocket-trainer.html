@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <!-- ============================================================
      P/C POCKET TRAINER
-     BUILD: 2026-11-23T14:18:01Z   (UTC, stamped at ship time)
+     BUILD: 2026-11-27T03:51:08Z   (UTC, stamped at ship time)
      Grep "BUILD:" to identify this version. ISO-8601 UTC sorts
      lexicographically = chronologically, so newest = highest.
      ============================================================ -->
@@ -125,7 +125,7 @@ canvas{display:block;image-rendering:pixelated;image-rendering:crisp-edges;backg
 <div class="joy-knob" id="joyKnob"></div>
 </div>
 <script>
-const BUILD='2026-11-23T14:18:01Z'; // UTC ship-time stamp — mirrored in top HTML comment + title screen
+const BUILD='2026-11-27T03:51:08Z'; // UTC ship-time stamp — mirrored in top HTML comment + title screen
 const cv=document.getElementById('scr'),cx=cv.getContext('2d');cx.scale(3,3);
 const P={bg:'#080c12',pn:'#0e1620',bar:'#121c28',bd:'#2a4458',bd2:'#1a2c3a',tx:'#d8ecd8',t2:'#7a9c8a',t3:'#3a5848',cy:'#00d4ff',am:'#ffb830',gn:'#40e840',rd:'#ff5050',ins:'#60c870',id:'#2a6838',sky:'#2858a8',gnd:'#4a3018',wh:'#e8f4e8'};
 const PALETTES=[
@@ -1436,11 +1436,12 @@ const S={TI:0,DI:1,ME:2,
   ACN:490,ACNR:491,// ACS NUMBERS drill (Turn 16)
   DKS:492,DKF:493,DKR:494,DKQ:495,DKQR:496,// DUCK ON A POND (Turn 17)
   BOXS:497,BOXF:498,BOXR:499,CPQ:500,CPQR:501,// STAY IN THE BOX + COMM PRIVILEGES (Turn 18)
+  POS:502,POD:503,PODR:504,POC:505,POCR:506,// POWER-OFF 180 LAB (Turn 19)
   CMCR:248,  // Chandelle result / debrief (rubric + CFI notes)
   SE:240,ST:241,
   SBD:250};
 let st=S.TI,mi=0,si=0,ft=0,streak=0,best=0;
-let sc={box:{c:0,t:0},cp:{c:0,t:0},dk:{c:0,t:0},dkq:{c:0,t:0},acn:{c:0,t:0},tm:{c:0,t:0},as:{c:0,t:0},ua:{c:0,t:0},co:{c:0,t:0},pi:{c:0,t:0},ps:{c:0,t:0},at:{c:0,t:0},wx:{c:0,t:0},vs:{c:0,t:0},wm:{c:0,t:0},am:{c:0,t:0},lg:{c:0,t:0},mc:{c:0,t:0},rs:{c:0,t:0},ss:{c:0,t:0},em:{c:0,t:0},wb:{c:0,t:0},cu:{c:0,t:0},nv:{c:0,t:0},cm:{c:0,t:0},xc:{c:0,t:0},ed:{c:0,t:0},eo:{c:0,t:0},slp:{c:0,t:0},cg:{c:0,t:0},cfe:{c:0,t:0},cfp:{c:0,t:0},ae:{c:0,t:0},ei:{c:0,t:0},sa:{c:0,t:0},cr:{c:0,t:0},sf:{c:0,t:0},wt:{c:0,t:0},atc:{c:0,t:0},cpa:{c:0,t:0}};
+let sc={pod:{c:0,t:0},poc:{c:0,t:0},box:{c:0,t:0},cp:{c:0,t:0},dk:{c:0,t:0},dkq:{c:0,t:0},acn:{c:0,t:0},tm:{c:0,t:0},as:{c:0,t:0},ua:{c:0,t:0},co:{c:0,t:0},pi:{c:0,t:0},ps:{c:0,t:0},at:{c:0,t:0},wx:{c:0,t:0},vs:{c:0,t:0},wm:{c:0,t:0},am:{c:0,t:0},lg:{c:0,t:0},mc:{c:0,t:0},rs:{c:0,t:0},ss:{c:0,t:0},em:{c:0,t:0},wb:{c:0,t:0},cu:{c:0,t:0},nv:{c:0,t:0},cm:{c:0,t:0},xc:{c:0,t:0},ed:{c:0,t:0},eo:{c:0,t:0},slp:{c:0,t:0},cg:{c:0,t:0},cfe:{c:0,t:0},cfp:{c:0,t:0},ae:{c:0,t:0},ei:{c:0,t:0},sa:{c:0,t:0},cr:{c:0,t:0},sf:{c:0,t:0},wt:{c:0,t:0},atc:{c:0,t:0},cpa:{c:0,t:0}};
 function tC(){let s=0;for(const k in sc)s+=sc[k].c;return s}function tT(){let s=0;for(const k in sc)s+=sc[k].t;return s}function hs(m,ok){m.t++;if(ok){m.c++;streak++;if(streak>best)best=streak;sO()}else{streak=0;sX()}}
 let asd={},ud={},cd={},pd={},psd={},atd={},wxd={},vsd={},wmd={},amd={},lgd={},rsd={},ssd={},emd={},wbd={},cmd={},xcd={},edd={},eod={},scd={},cgd={},cfd={},aed={},eid={},sad={},crd={},sfd={},wtd={},atcd={},cpad={};
 let fldt=0,fllt=0;
@@ -18924,6 +18925,7 @@ function navToFrom(){const brg=nH(Math.atan2(nvd.x,-nvd.y)/D);let d2=nH(brg-nvd.
 const menuItems=[
   {l:'TODAY\u2019S MISSION',d:'Setup: airfield, wx, load',s:null},
   {l:'ACS NUMBERS',d:'\u2605 Commercial tolerances, by code',s:'acn'},
+  {l:'POWER-OFF 180 LAB',d:'\u2708 High/low, fast/slow: call it',s:'poc'},
   {l:'DUCK ON A POND',d:'\u2708 Spot landing: eyes, energy, float',s:'dk'},
   {l:'STAY IN THE BOX',d:'\u2708 Hand-fly inside ACS tolerances',s:'box'},
   {l:'COMM. PRIVILEGES',d:'\u2605 61.133, carriage, 100-hr, ELT',s:'cp'},
@@ -19006,6 +19008,13 @@ function runSelfTest(srcText){const R=[];const ok=(c,n)=>R.push({ok:!!c,n});
   {boxSel=0;nwBOX();box.s.alt=3650;boxTrack(1);box.s.alt=3520;boxTrack(3);const m=box.m.alt;
    ok(Math.abs(m.inT-3)<1e-6&&Math.abs(m.max-1)<1e-6&&m.worst===150,'box tracker: time in tolerance and longest excursion');}
   ok(CP_Q.every(q=>q.d.length===3&&new Set([q.a].concat(q.d)).size===4&&q.e),'comm privileges: 4 unique options + source');
+  {let okD=true;for(const c of['HIGH','LOW','ON'])for(let l=0;l<3;l++)for(let i=0;i<20;i++){const tr=podTrial(l,c);const y0=podY(tr.h,tr.d);for(let k=0;k<60&&tr.h>4&&tr.d>420;k++)podStep(tr,0.05);
+      const dy=podY(tr.h,tr.d)-y0;if(c==='HIGH'&&!(dy>0.8))okD=false;if(c==='LOW'&&!(dy<-0.8))okD=false;if(c==='ON'&&Math.abs(dy)>0.05)okD=false;}
+   ok(okD,'PO180 drift: high sinks in the windscreen, low rises, on-glide holds (180 trials, with wind)');
+   const n=poNeed({pos:3,x:-2260,y:0,Dd:2260,W:2500,hw:0});ok(Math.abs(n.need-200)<0.5,'PO180: 2,260 ft of final at 11.3:1 needs 200 ft');
+   const nw=poNeed({pos:3,x:-2260,y:0,Dd:2260,W:2500,hw:15});ok(nw.need>n.need*1.2,'PO180: a 15 kt headwind raises the height needed on final');
+   let okC=true;for(const h of['HIGH','ON','LOW'])for(const sp of['SLOW','ON','FAST'])for(let i=0;i<30;i++){const q=pocMake(h,sp),t=pocClass(q);if(t.s!==sp||(q.alt>=60&&Math.abs(q.m)>0.02&&h!=='ON'&&t.h!==h)||(h==='ON'&&q.need>300&&t.h!=='ON'))okC=false;}
+   ok(okC,'PO180 call-it: generated scenarios classify as intended (270)');}
   if(srcText){const body=srcText.replace(/const SELFTEST_FORBID=.*\n/,'');const hit=SELFTEST_FORBID.filter(f=>body.includes(f));ok(hit.length===0,'no retired strings'+(hit.length?': '+hit.join(', '):''));}
   return R;}
 try{if(typeof location!=='undefined'&&/selftest/.test(location.search||'')){setTimeout(()=>{let src='';try{src=document.documentElement.outerHTML}catch(e){}
@@ -21327,6 +21336,125 @@ function drawVSR(){cls();
 
 function drawAM(){cls();const qL=wrap(amd.q,132,7);const qH=4+qL.length*9;bx(2,2,156,qH,P.bar,P.bd);qL.forEach((l,i)=>txn(l,5,4+i*9,P.wh,7));let cy=qH+6;for(let i=0;i<amd.o.length;i++){const lines=wrap(amd.o[i],138,6);const h=4+lines.length*7;const sel=si===i;bx(2,cy,156,h,sel?'#0c2028':P.pn,sel?P.cy:P.bd2);if(sel)txn('\u25B6',4,cy+2,P.cy,6);lines.forEach((l,j)=>txn(l,14,cy+2+j*7,sel?P.cy:P.t2,6));cy+=h+1}if(sc.am.t>0)tx(`${sc.am.c}/${sc.am.t}`,156,2,P.t3,5,'right')}
 function drawAMR(){drawQR(amd.ch===amd.c,amd.q,amd.o[amd.c],amd.o[amd.ch],amd.e)}
+
+// ── POWER-OFF 180 LAB (Turn 19) ─────────────────────────────────────
+// Judgment drills for "too high or too low, too fast or too slow?".
+// Procedure modelled (as briefed by the CFI): power to idle abeam the spot,
+// CLEAN glide, slip on final as needed down to the aim point, then flaps fed in
+// slowly in ground effect to carry to the touchdown point. Arriving fast means
+// more float: slip sooner and put the aim point further back.
+// Numbers: POH best glide 76 KIAS, 11.3:1 clean (Fig 5-39); 66 KIAS once
+// committed (3.5b). Turn loss and the ON bands are a training MODEL.
+const PO={GR:11.3,VG:76,VC:66,TURN:40,BAND:0.10,SPD:5,KT:1.6878};
+function poRatio(hw){return PO.GR*(PO.VG-hw)/PO.VG;}          // ground glide ratio, hw + = headwind
+let poSet={row:0,lvl:0};
+// ---------- 1. WINDSCREEN DRIFT ----------
+// The aim point holds still in the windscreen only if you will hit it.
+// Sinking in the windscreen = you pass over it (HIGH). Rising = you fall short (LOW).
+const POD_HY=26,POD_K=400,POD_N=8;
+let pod={};
+function podY(h,d){return POD_HY+POD_K*h/Math.max(60,d);}
+function podTrial(lvl,cls){const hw=lvl>=2?[0,5,10,15][ri(0,3)]:0,ratio=poRatio(hw),e=[0.30,0.18,0.12][lvl];
+  cls=cls||['HIGH','LOW','ON'][ri(0,2)];const d=ri(1700,2400),h=d/ratio*(1+(cls==='HIGH'?e:cls==='LOW'?-e:0));
+  return {cls,hw,ratio,d,h,gs:(PO.VG-hw)*PO.KT,y0:podY(h,d),t:0,ans:null,rt:0};}
+function podStep(tr,dt){const k=1.4;tr.d-=tr.gs*dt*k;tr.h-=tr.gs*dt*k/tr.ratio;tr.t+=dt;return tr.h>4&&tr.d>420&&tr.t<8;}
+function nwPOD(){pod={lvl:poSet.lvl,i:0,right:0,rts:[],tr:podTrial(poSet.lvl),done:false};}
+function podAnswer(a){const tr=pod.tr;tr.ans=a;tr.rt=tr.t;const ok=a===tr.cls;if(ok){pod.right++;pod.rts.push(tr.rt);}hs(sc.pod,ok);st=S.PODR;}
+function updPOD(){const tr=pod.tr;if(J('ArrowDown'))return podAnswer('HIGH');if(J('ArrowUp'))return podAnswer('LOW');if(J('x'))return podAnswer('ON');
+  if(!podStep(tr,Math.min(0.05,fldt)))podAnswer('TIME');}
+function drawPODview(tr){// forward view
+  bx(0,11,160,92,P.bg,P.bd2);cx.save();cx.beginPath();cx.rect(1,12,158,90);cx.clip();
+  cx.fillStyle='#0d1a12';cx.fillRect(1,POD_HY,158,104-POD_HY);cx.fillStyle=P.t3;cx.fillRect(1,POD_HY,158,.6);
+  const pt=(D,x)=>{const dd=Math.max(60,D);return [80+POD_K*x/dd,POD_HY+POD_K*tr.h/dd];};
+  const n=pt(tr.d-600,0),a=pt(tr.d-600,-37),b=pt(tr.d-600,37),c=pt(tr.d+3500,37),e=pt(tr.d+3500,-37);
+  cx.fillStyle='#2a3138';cx.beginPath();cx.moveTo(a[0],a[1]);cx.lineTo(b[0],b[1]);cx.lineTo(c[0],c[1]);cx.lineTo(e[0],e[1]);cx.closePath();cx.fill();
+  const l=pt(tr.d,-37),r=pt(tr.d,37);cx.fillStyle=P.am;cx.fillRect(l[0],l[1]-.8,r[0]-l[0],1.6);
+  const s1=pt(tr.d+450,-37),s2=pt(tr.d+450,37);cx.fillStyle=P.cy;cx.fillRect(s1[0],s1[1]-.5,s2[0]-s1[0],1);
+  tx('AIM',r[0]+3,l[1]-2.5,P.am,4);void n;cx.restore();
+  // a fixed mark on the windscreen where the aim point started
+  cx.fillStyle=P.wh;[[3,1],[157,-1]].forEach(([x,s])=>{cx.beginPath();cx.moveTo(x,tr.y0);cx.lineTo(x-4*s*-1,tr.y0-2.5);cx.lineTo(x-4*s*-1,tr.y0+2.5);cx.fill();});
+  cx.fillStyle='rgba(255,255,255,.18)';cx.fillRect(8,tr.y0-.3,144,.6);}
+function drawPOD(){cls();const tr=pod.tr;hdr('WINDSCREEN DRIFT',`${pod.i+1}/${POD_N} · L${pod.lvl+1}`);drawPODview(tr);
+  tx(tr.hw?`HEADWIND ${tr.hw} KT`:'CALM',4,14,P.t3,4);tx('IDLE · 76 KIAS · CLEAN',156,14,P.t3,4,'right');
+  bx(0,105,160,24,P.bar,P.bd);tx('▲ RISING  = LOW (short)',5,107,P.wh,5);tx('▼ SINKING = HIGH (long)',5,114,P.wh,5);tx('A  STEADY  = ON GLIDE',5,121,P.wh,5);
+  bx(120,107,36,5,P.bg,P.bd2);cx.fillStyle=P.am;cx.fillRect(121,108,34*Math.max(0,1-tr.t/8),3);ftr('SEL:BACK','');}
+const POD_FIX={HIGH:'HIGH: it slid DOWN the windscreen, so you would pass over it. Fix: slip now. Still sinking in the glass? Slip harder, sooner.',
+  LOW:'LOW: it climbed UP the windscreen, so you would land short. Fix: no slip, hold 76, point straight at the runway. Pitching up will not stretch it.',
+  ON:'ON GLIDE: it held still against the mark. Hold what you have and keep asking.'};
+function drawPODR(){cls();const tr=pod.tr,ok=tr.ans===tr.cls;hdr('WINDSCREEN DRIFT',`${pod.i+1}/${POD_N}`);
+  bx(2,14,156,16,P.bar,ok?P.gn:P.rd);tc(tr.ans==='TIME'?'TOO SLOW — IT WAS '+tr.cls:ok?'CORRECT · '+tr.rt.toFixed(1)+' s':'NO — IT WAS '+tr.cls,18,ok?P.gn:P.rd,7);
+  wrap(POD_FIX[tr.cls],150,5).forEach((l,i)=>tx(l,5,36+i*7,P.wh,5));
+  const off=Math.round((tr.cls==='HIGH'?1:tr.cls==='LOW'?-1:0)*[30,18,12][pod.lvl]);
+  tx(`Truth: ${off>0?'+':''}${off}% height for the glide`+(tr.hw?`, ${tr.hw} kt headwind`:''),5,78,P.t2,5);
+  tx('The rule works in any wind: watch the spot, not the numbers.',5,86,P.t3,4);
+  if(pod.i+1>=POD_N){const avg=pod.rts.length?(pod.rts.reduce((a,b)=>a+b,0)/pod.rts.length).toFixed(1):'—';
+    bx(2,96,156,24,P.pn,P.cy);tc(`ROUND: ${pod.right}/${POD_N} · avg ${avg} s`,100,P.cy,7);tc(pod.right>=7?'Try the next level.':'Run it again.',111,P.t2,5);}
+  ftr('SEL:BACK',pod.i+1>=POD_N?'A:NEW ROUND':'A:NEXT');}
+// ---------- 2. CALL IT ----------
+// A frozen moment in the pattern. Call height AND speed, then see the glide played out.
+const POC_POS=['PAST ABEAM, DOWNWIND','MID-BASE','TURNING FINAL','ON FINAL'];
+let poc={};
+// Height needed from a position to reach the aim point along the planned path (pure).
+function poNeed(q){const tail=poRatio(-q.hw),cross=PO.GR*Math.sqrt(Math.max(1,PO.VG*PO.VG-q.hw*q.hw))/PO.VG,head=poRatio(q.hw);
+  let dw=0,base=0,fin=0,turns=0;
+  if(q.pos===0){dw=q.x+q.Dd;base=q.W;fin=q.Dd;turns=2;}else if(q.pos===1){base=q.y;fin=q.Dd;turns=1;}
+  else if(q.pos===2){base=q.y;fin=q.Dd;turns=1;}else{fin=-q.x;}
+  return {path:dw+base+fin,need:dw/tail+base/cross+fin/head+turns*PO.TURN};}
+function pocMake(hc,sp){const pos=ri(0,3),Dd=ri(15,32)*100,W=ri(22,30)*100,hw=[0,0,5,10,15][ri(0,4)];
+  const q={pos,Dd,W,hw,x:-Dd,y:0};
+  if(pos===0){q.x=-ri(3,Math.max(4,Dd/100-4))*100;q.y=W;}else if(pos===1){q.y=Math.round(W*ri(35,75)/100);}
+  else if(pos===2){q.y=150;}else{q.x=-ri(9,Math.max(10,Dd/100))*100;}
+  const n=poNeed(q);q.path=n.path;q.need=n.need;
+  q.hc=hc||['HIGH','ON','LOW'][ri(0,2)];q.sc=sp||['SLOW','ON','FAST'][ri(0,2)];
+  const m=q.hc==='HIGH'?ri(18,45)/100:q.hc==='LOW'?-ri(14,30)/100:ri(-5,5)/100;q.alt=Math.round(q.need*(1+m)/10)*10;q.m=(q.alt-q.need)/q.need;
+  q.tgt=pos>=2?PO.VC:PO.VG;q.ias=q.tgt+(q.sc==='FAST'?ri(7,14):q.sc==='SLOW'?-ri(7,12):ri(-3,3));return q;}
+function pocClass(q){return {h:q.m>PO.BAND?'HIGH':q.m<-PO.BAND?'LOW':'ON',s:q.ias-q.tgt>PO.SPD?'FAST':q.ias-q.tgt<-PO.SPD?'SLOW':'ON'};}
+function nwPOC(){let q;do{q=pocMake();}while(q.alt>1150||q.alt<60);poc={q,cr:1,cc:1,t:0,ans:null};}
+function updPOC(){poc.t+=Math.min(0.05,fldt);if(J('ArrowUp'))poc.cr=Math.max(0,poc.cr-1);if(J('ArrowDown'))poc.cr=Math.min(2,poc.cr+1);
+  if(J('ArrowLeft'))poc.cc=Math.max(0,poc.cc-1);if(J('ArrowRight'))poc.cc=Math.min(2,poc.cc+1);
+  if(J('x')||poc.t>10){const t=pocClass(poc.q);poc.ans={h:['HIGH','ON','LOW'][poc.cr],s:['SLOW','ON','FAST'][poc.cc],late:poc.t>10};
+    poc.okH=!poc.ans.late&&poc.ans.h===t.h;poc.okS=!poc.ans.late&&poc.ans.s===t.s;hs(sc.poc,poc.okH&&poc.okS);st=S.POCR;}}
+function drawPOCmap(q,y0,hgt){const sc2=Math.min(150/5000,hgt/3700),ox=5+3700*sc2,oy=y0+hgt-450*sc2;const X=x=>ox+x*sc2,Y=y=>oy-y*sc2;
+  bx(2,y0,156,hgt,P.bg,P.bd2);cx.strokeStyle='rgba(255,255,255,.06)';cx.lineWidth=.4;
+  for(let g=-3000;g<=1000;g+=1000){cx.beginPath();cx.moveTo(X(g),y0+1);cx.lineTo(X(g),y0+hgt-1);cx.stroke();}
+  for(let g=0;g<=3000;g+=1000){cx.beginPath();cx.moveTo(3,Y(g));cx.lineTo(157,Y(g));cx.stroke();}
+  cx.fillStyle='#39424c';cx.fillRect(X(-600),Y(0)-1.5,(1900)*sc2,3);cx.fillStyle=P.am;cx.fillRect(X(0)-.6,Y(0)-3,1.2,6);cx.fillStyle=P.cy;cx.fillRect(X(450)-.5,Y(0)-2.5,1,5);
+  tx('AIM',X(0),Y(0)+4,P.am,3,'center');
+  // planned path
+  cx.strokeStyle=P.t2;cx.lineWidth=.5;cx.setLineDash([2,2]);cx.beginPath();cx.moveTo(X(q.x),Y(q.y));
+  if(q.pos===0){cx.lineTo(X(-q.Dd),Y(q.W));cx.lineTo(X(-q.Dd),Y(0));}else if(q.pos<3){cx.lineTo(X(-q.Dd),Y(0));}
+  cx.lineTo(X(0),Y(0));cx.stroke();cx.setLineDash([]);
+  const hd=q.pos===0?Math.PI:q.pos===1?Math.PI/2:q.pos===2?Math.PI/4:0;// screen heading: 0 = +x
+  cx.save();cx.translate(X(q.x),Y(q.y));cx.rotate(hd);cx.fillStyle=P.wh;cx.beginPath();cx.moveTo(4,0);cx.lineTo(-3,-2.6);cx.lineTo(-3,2.6);cx.fill();cx.restore();
+  tx('1000 ft grid',155,y0+2,P.t3,3,'right');
+  if(q.hw){tx('WIND '+q.hw+' KT ◄',155,y0+hgt-6,P.cy,4,'right');}else tx('CALM',155,y0+hgt-6,P.t3,4,'right');}
+function drawPOCgrid(y0,sel,truth,ans){const rows=['HIGH','ON','LOW'],cols=['SLOW','ON','FAST'];
+  cols.forEach((c,j)=>tx(c,48+j*36+17,y0,P.t3,4,'center'));
+  rows.forEach((r,i)=>{tx(r,44,y0+7+i*9,P.t3,4,'right');cols.forEach((c,j)=>{const x=48+j*36,y=y0+5+i*9;
+    const isSel=sel&&sel[0]===i&&sel[1]===j,isT=truth&&truth.h===r&&truth.s===c,isA=ans&&ans.h===r&&ans.s===c;
+    bx(x,y,34,8,isT?'#0f3a1a':isSel?'#0c2028':P.pn,isT?P.gn:isA?P.rd:isSel?P.cy:P.bd2);
+    if(isT)tx('TRUTH',x+17,y+1.5,P.gn,4,'center');else if(isA)tx('YOU',x+17,y+1.5,P.rd,4,'center');else if(isSel)tx('●',x+17,y+1,P.cy,5,'center');});});}
+function drawPOC(){cls();const q=poc.q;hdr('CALL IT',POC_POS[q.pos]);drawPOCmap(q,12,62);
+  bx(2,76,156,12,P.bar,P.bd);tx('ALT '+q.alt+' AGL',5,79,P.wh,6);tx('IAS '+q.ias,84,79,P.wh,6);tx('tgt '+q.tgt,156,80,P.t3,4,'right');
+  drawPOCgrid(90,[poc.cr,poc.cc]);bx(4,124,152,3,P.bg,P.bd2);cx.fillStyle=P.am;cx.fillRect(5,125,150*Math.max(0,1-poc.t/10),1);ftr('SEL:BACK','A:CALL IT');}
+function pocFix(t){const a=[];
+  if(t.h==='HIGH')a.push('High: slip, and start it sooner. Still high on final? Aim point further back.');
+  if(t.h==='LOW')a.push('Low: turn for the runway now, no slip, hold best glide. You cannot stretch it.');
+  if(t.s==='FAST')a.push('Fast: ease the nose up to target. Extra speed is extra float, so slip sooner and aim further back.');
+  if(t.s==='SLOW')a.push('Slow: lower the nose to target. Below best glide you lose distance, and margin over the stall.');
+  if(!a.length)a.push('On height, on speed. Hold it and ask again in five seconds.');return a.join(' ');}
+function drawPOCR(){cls();const q=poc.q,t=pocClass(q),ok=poc.okH&&poc.okS;hdr('CALL IT',ok?'CORRECT':poc.ans.late?'TOO SLOW':(poc.okH||poc.okS)?'HALF RIGHT':'MISSED');
+  drawPOCgrid(14,null,t,ok?null:poc.ans);
+  bx(2,48,156,25,P.pn,P.bd2);tx(`Path to aim: ${q.path.toLocaleString()} ft`,5,51,P.t2,5);tx(`Need ${Math.round(q.need)} ft · have ${q.alt} (${q.m>=0?'+':''}${Math.round(q.m*100)}%)`,5,58,t.h==='ON'?P.gn:P.am,5);
+  tx(`IAS ${q.ias} vs ${q.tgt} (${q.ias-q.tgt>=0?'+':''}${q.ias-q.tgt})`+(q.hw?` · wind ${q.hw} kt`:''),5,65,t.s==='ON'?P.gn:P.am,5);
+  wrap(pocFix(t),150,5).slice(0,6).forEach((l,i)=>tx(l,5,77+i*7,P.wh,5));
+  tx('ON = within 10% of height needed, 5 kt of target. (MODEL)',5,122,P.t3,4);ftr('SEL:BACK','A:NEXT');}
+function drawPOS(){cls();hdr('POWER-OFF 180 LAB','HIGH/LOW · FAST/SLOW');
+  sRow('WINDSCREEN DRIFT  ◄ L'+(poSet.lvl+1)+' ►',4,15,152,poSet.row===0);sRow('CALL IT  (height + speed)',4,30,152,poSet.row===1);
+  bx(2,47,156,72,P.pn,P.bd2);
+  ['Idle abeam the spot. Clean glide, 76 KIAS.','Slip on final as needed, down to the AIM point.','Then flaps in slowly to carry to the SPOT.','Fast? Slip sooner, aim further back.','','Every few seconds: high or low? fast or slow?',poSet.row===0?['L1: big errors, calm','L2: smaller errors','L3: small errors + wind'][poSet.lvl]:'Read the map, call both, see the glide.']
+   .forEach((l,i)=>tx(l,5,50+i*8,i===5?P.cy:i===6?P.am:P.t2,5));
+  tx('Go-around for missed tolerances = unsat (ACS App 3).',5,110,P.t3,4);ftr('SEL:MENU','A:START');}
 
 // ── SHARED FLIGHT MODEL (Turn 18) ───────────────────────────────────
 // One point-mass model for free flight and the tolerance tracker (clean
@@ -27019,7 +27147,7 @@ function drawSBD(){cls();
   tx('\u2726 you found it \u2726',80,135,P.am,5,'center');
   if(sbdFlashT>0)sbdFlashT--;
 }
-function drawST(){cls();hdr('SESSION STATS');const t=tT(),c=tC(),pc=t>0?Math.round(c/t*100):0;bx(2,14,156,18,P.bar,P.bd);tx('OVERALL',6,15,P.am,7);tx(`${c}/${t} ${pc}%`,148,15,P.wh,7,'right');bx(6,24,146,5,P.bg,P.bd2);if(t>0){cx.fillStyle=pc>=80?P.gn:pc>=60?P.am:P.rd;cx.fillRect(7,25,Math.round(144*c/t),3)}const ms=[{l:'ASPC',s:sc.as},{l:'WXMIN',s:sc.wm},{l:'SECT',s:sc.ss},{l:'VSPD',s:sc.vs},{l:'AERO',s:sc.am},{l:'RADIO',s:sc.at},{l:'LGUN',s:sc.lg},{l:'RWY',s:sc.rs},{l:'UA',s:sc.ua},{l:'COMP',s:sc.co},{l:'PRIM',s:sc.pi},{l:'P/S',s:sc.ps},{l:'W&B',s:sc.wb},{l:'EMRG',s:sc.em},{l:'BOX',s:sc.box},{l:'COMM',s:sc.cp},{l:'DUCK',s:sc.dk},{l:'ACS#',s:sc.acn},{l:'WX',s:sc.wx},{l:'TAF',s:sc.tm},{l:'MORSE',s:sc.mc},{l:'CURR',s:sc.cu},{l:'NAV',s:sc.nv},{l:'MNVR',s:sc.cm}];ms.forEach((m,i)=>{const y=32+i*5;if(y>135)return;bx(2,y,156,5,P.pn,P.bd2);tx(m.l,6,y,P.t2,4);if(m.s.t>0){const mp=Math.round(m.s.c/m.s.t*100);tx(`${m.s.c}/${m.s.t}`,90,y,P.tx,4,'right');tx(`${mp}%`,148,y,mp>=80?P.gn:mp>=60?P.am:P.rd,4,'right')}else tx('--',148,y,P.t3,4,'right')})}
+function drawST(){cls();hdr('SESSION STATS');const t=tT(),c=tC(),pc=t>0?Math.round(c/t*100):0;bx(2,14,156,18,P.bar,P.bd);tx('OVERALL',6,15,P.am,7);tx(`${c}/${t} ${pc}%`,148,15,P.wh,7,'right');bx(6,24,146,5,P.bg,P.bd2);if(t>0){cx.fillStyle=pc>=80?P.gn:pc>=60?P.am:P.rd;cx.fillRect(7,25,Math.round(144*c/t),3)}const ms=[{l:'ASPC',s:sc.as},{l:'WXMIN',s:sc.wm},{l:'SECT',s:sc.ss},{l:'VSPD',s:sc.vs},{l:'AERO',s:sc.am},{l:'RADIO',s:sc.at},{l:'LGUN',s:sc.lg},{l:'RWY',s:sc.rs},{l:'UA',s:sc.ua},{l:'COMP',s:sc.co},{l:'PRIM',s:sc.pi},{l:'P/S',s:sc.ps},{l:'W&B',s:sc.wb},{l:'EMRG',s:sc.em},{l:'PO180',s:sc.poc},{l:'DRIFT',s:sc.pod},{l:'BOX',s:sc.box},{l:'COMM',s:sc.cp},{l:'DUCK',s:sc.dk},{l:'ACS#',s:sc.acn},{l:'WX',s:sc.wx},{l:'TAF',s:sc.tm},{l:'MORSE',s:sc.mc},{l:'CURR',s:sc.cu},{l:'NAV',s:sc.nv},{l:'MNVR',s:sc.cm}];ms.forEach((m,i)=>{const y=32+i*5;if(y>135)return;bx(2,y,156,5,P.pn,P.bd2);tx(m.l,6,y,P.t2,4);if(m.s.t>0){const mp=Math.round(m.s.c/m.s.t*100);tx(`${m.s.c}/${m.s.t}`,90,y,P.tx,4,'right');tx(`${mp}%`,148,y,mp>=80?P.gn:mp>=60?P.am:P.rd,4,'right')}else tx('--',148,y,P.t3,4,'right')})}
 
 // Track state transitions to release haptic vibration when leaving any
 // flying state mid-session (Shift exits, etc.). Without this, a vibration
@@ -27059,6 +27187,7 @@ case S.DI:
 case S.ME:if(J('ArrowUp')){mi=(mi-1+menuItems.length)%menuItems.length;sN();if(mi<mTop)mTop=mi;if(mi>=mTop+MVIS)mTop=mi-MVIS+1;if(mi===menuItems.length-1)mTop=Math.max(0,menuItems.length-MVIS)}if(J('ArrowDown')){mi=(mi+1)%menuItems.length;sN();if(mi>=mTop+MVIS)mTop=mi-MVIS+1;if(mi<mTop)mTop=mi;if(mi===0)mTop=0}if(J('z')){setI=1;st=S.SE;sN()}if(J('x')||J('Enter')){sS();[
   ()=>{nwMIS();st=S.MIS},          // 0 TODAY'S MISSION
   ()=>{nwACN();st=S.ACN},          // 0b ACS NUMBERS (Turn 16)
+  ()=>{poSet.row=0;st=S.POS},      // 0b2 POWER-OFF 180 LAB (Turn 19)
   ()=>{nwDKS();st=S.DKS},          // 0c DUCK ON A POND (Turn 17)
   ()=>{st=S.BOXS},                 // 0d STAY IN THE BOX (Turn 18)
   ()=>{nwCPQ();st=S.CPQ},          // 0e COMM. PRIVILEGES (Turn 18; indices below shift +4)
@@ -27241,6 +27370,12 @@ case S.SSR:if(J('x')||J('Enter')){nwSS();st=S.SS;sS()}if(J('Shift')){st=S.ME;sN(
 case S.VS:if(J('ArrowUp')){si=(si-1+vsd.o.length)%vsd.o.length;sN()}if(J('ArrowDown')){si=(si+1)%vsd.o.length;sN()}if(J('x')){vsd.ch=si;hs(sc.vs,vsd.ch===vsd.c);st=S.VSR}if(J('Shift')){st=S.ME;sN()}break;
 case S.VSR:if(J('x')||J('Enter')){nwVS();st=S.VS;sS()}if(J('Shift')){st=S.ME;sN()}break;
 case S.AM:if(J('ArrowUp')){si=(si-1+amd.o.length)%amd.o.length;sN()}if(J('ArrowDown')){si=(si+1)%amd.o.length;sN()}if(J('x')){amd.ch=si;hs(sc.am,amd.ch===amd.c);st=S.AMR}if(J('Shift')){st=S.ME;sN()}break;
+case S.POS:if(J('ArrowUp')||J('ArrowDown')){poSet.row=1-poSet.row;sN()}if(poSet.row===0&&(J('ArrowLeft')||J('ArrowRight'))){poSet.lvl=(poSet.lvl+(J('ArrowLeft')?2:1))%3;sN()}
+  if(J('x')){if(poSet.row===0){nwPOD();st=S.POD}else{nwPOC();st=S.POC}sS()}if(J('Shift')){st=S.ME;sN()}break;
+case S.POD:if(J('Shift')){st=S.POS;sN();break}updPOD();break;
+case S.PODR:if(J('x')||J('Enter')){if(pod.i+1>=POD_N)nwPOD();else{pod.i++;pod.tr=podTrial(pod.lvl)}st=S.POD;sS()}if(J('Shift')){st=S.POS;sN()}break;
+case S.POC:if(J('Shift')){st=S.POS;sN();break}updPOC();break;
+case S.POCR:if(J('x')||J('Enter')){nwPOC();st=S.POC;sS()}if(J('Shift')){st=S.POS;sN()}break;
 case S.BOXS:if(J('ArrowUp')){boxSel=(boxSel+BOX_TASKS.length-1)%BOX_TASKS.length;sN()}if(J('ArrowDown')){boxSel=(boxSel+1)%BOX_TASKS.length;sN()}if(J('x')){nwBOX();st=S.BOXF;sS()}if(J('Shift')){st=S.ME;sN()}break;
 case S.BOXF:updBOX();if(st===S.BOXF){if(J('Enter'))nwBOX();if(J('Shift')){st=S.BOXS;sN()}}break;
 case S.BOXR:if(J('x')||J('Enter')){nwBOX();st=S.BOXF;sS()}if(J('Shift')){st=S.BOXS;sN()}break;
@@ -29151,7 +29286,7 @@ function draw(){({[S.TI]:drawTitle,[S.DI]:drawDisc,[S.ME]:drawMenu,
   [S.WM]:drawWM,[S.WMR]:drawWMR,
   [S.SS]:drawSS,[S.SSR]:drawSSR,
   [S.VS]:drawVS,[S.VSR]:drawVSR,
-  [S.AM]:drawAM,[S.AMR]:drawAMR,[S.ACN]:drawACN,[S.ACNR]:drawACNR,[S.BOXS]:drawBOXS,[S.BOXF]:drawBOX,[S.BOXR]:drawBOXR,[S.CPQ]:drawCPQ,[S.CPQR]:drawCPQR,[S.DKS]:drawDKS,[S.DKF]:drawDK,[S.DKR]:drawDKR,[S.DKQ]:drawDKQ,[S.DKQR]:drawDKQR,
+  [S.AM]:drawAM,[S.AMR]:drawAMR,[S.ACN]:drawACN,[S.ACNR]:drawACNR,[S.POS]:drawPOS,[S.POD]:drawPOD,[S.PODR]:drawPODR,[S.POC]:drawPOC,[S.POCR]:drawPOCR,[S.BOXS]:drawBOXS,[S.BOXF]:drawBOX,[S.BOXR]:drawBOXR,[S.CPQ]:drawCPQ,[S.CPQR]:drawCPQR,[S.DKS]:drawDKS,[S.DKF]:drawDK,[S.DKR]:drawDKR,[S.DKQ]:drawDKQ,[S.DKQR]:drawDKQR,
   [S.UA]:drawUA,[S.UR]:drawUR,
   [S.CO]:drawCO,[S.CR]:drawCR,
   [S.PI]:drawPI,[S.PR]:drawPR,

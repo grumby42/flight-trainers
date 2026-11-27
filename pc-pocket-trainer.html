@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <!-- ============================================================
      P/C POCKET TRAINER
-     BUILD: 2026-11-27T03:51:08Z   (UTC, stamped at ship time)
+     BUILD: 2026-11-27T11:28:30Z   (UTC, stamped at ship time)
      Grep "BUILD:" to identify this version. ISO-8601 UTC sorts
      lexicographically = chronologically, so newest = highest.
      ============================================================ -->
@@ -125,7 +125,7 @@ canvas{display:block;image-rendering:pixelated;image-rendering:crisp-edges;backg
 <div class="joy-knob" id="joyKnob"></div>
 </div>
 <script>
-const BUILD='2026-11-27T03:51:08Z'; // UTC ship-time stamp — mirrored in top HTML comment + title screen
+const BUILD='2026-11-27T11:28:30Z'; // UTC ship-time stamp — mirrored in top HTML comment + title screen
 const cv=document.getElementById('scr'),cx=cv.getContext('2d');cx.scale(3,3);
 const P={bg:'#080c12',pn:'#0e1620',bar:'#121c28',bd:'#2a4458',bd2:'#1a2c3a',tx:'#d8ecd8',t2:'#7a9c8a',t3:'#3a5848',cy:'#00d4ff',am:'#ffb830',gn:'#40e840',rd:'#ff5050',ins:'#60c870',id:'#2a6838',sky:'#2858a8',gnd:'#4a3018',wh:'#e8f4e8'};
 const PALETTES=[
@@ -1437,11 +1437,12 @@ const S={TI:0,DI:1,ME:2,
   DKS:492,DKF:493,DKR:494,DKQ:495,DKQR:496,// DUCK ON A POND (Turn 17)
   BOXS:497,BOXF:498,BOXR:499,CPQ:500,CPQR:501,// STAY IN THE BOX + COMM PRIVILEGES (Turn 18)
   POS:502,POD:503,PODR:504,POC:505,POCR:506,// POWER-OFF 180 LAB (Turn 19)
+  PT:507,PTR:508,P8S:509,P8:510,P8R:511,SRC:512,// TOOLBOX, FLY THE 180, SOURCES (Turn 20)
   CMCR:248,  // Chandelle result / debrief (rubric + CFI notes)
   SE:240,ST:241,
   SBD:250};
 let st=S.TI,mi=0,si=0,ft=0,streak=0,best=0;
-let sc={pod:{c:0,t:0},poc:{c:0,t:0},box:{c:0,t:0},cp:{c:0,t:0},dk:{c:0,t:0},dkq:{c:0,t:0},acn:{c:0,t:0},tm:{c:0,t:0},as:{c:0,t:0},ua:{c:0,t:0},co:{c:0,t:0},pi:{c:0,t:0},ps:{c:0,t:0},at:{c:0,t:0},wx:{c:0,t:0},vs:{c:0,t:0},wm:{c:0,t:0},am:{c:0,t:0},lg:{c:0,t:0},mc:{c:0,t:0},rs:{c:0,t:0},ss:{c:0,t:0},em:{c:0,t:0},wb:{c:0,t:0},cu:{c:0,t:0},nv:{c:0,t:0},cm:{c:0,t:0},xc:{c:0,t:0},ed:{c:0,t:0},eo:{c:0,t:0},slp:{c:0,t:0},cg:{c:0,t:0},cfe:{c:0,t:0},cfp:{c:0,t:0},ae:{c:0,t:0},ei:{c:0,t:0},sa:{c:0,t:0},cr:{c:0,t:0},sf:{c:0,t:0},wt:{c:0,t:0},atc:{c:0,t:0},cpa:{c:0,t:0}};
+let sc={pt:{c:0,t:0},p8:{c:0,t:0},pod:{c:0,t:0},poc:{c:0,t:0},box:{c:0,t:0},cp:{c:0,t:0},dk:{c:0,t:0},dkq:{c:0,t:0},acn:{c:0,t:0},tm:{c:0,t:0},as:{c:0,t:0},ua:{c:0,t:0},co:{c:0,t:0},pi:{c:0,t:0},ps:{c:0,t:0},at:{c:0,t:0},wx:{c:0,t:0},vs:{c:0,t:0},wm:{c:0,t:0},am:{c:0,t:0},lg:{c:0,t:0},mc:{c:0,t:0},rs:{c:0,t:0},ss:{c:0,t:0},em:{c:0,t:0},wb:{c:0,t:0},cu:{c:0,t:0},nv:{c:0,t:0},cm:{c:0,t:0},xc:{c:0,t:0},ed:{c:0,t:0},eo:{c:0,t:0},slp:{c:0,t:0},cg:{c:0,t:0},cfe:{c:0,t:0},cfp:{c:0,t:0},ae:{c:0,t:0},ei:{c:0,t:0},sa:{c:0,t:0},cr:{c:0,t:0},sf:{c:0,t:0},wt:{c:0,t:0},atc:{c:0,t:0},cpa:{c:0,t:0}};
 function tC(){let s=0;for(const k in sc)s+=sc[k].c;return s}function tT(){let s=0;for(const k in sc)s+=sc[k].t;return s}function hs(m,ok){m.t++;if(ok){m.c++;streak++;if(streak>best)best=streak;sO()}else{streak=0;sX()}}
 let asd={},ud={},cd={},pd={},psd={},atd={},wxd={},vsd={},wmd={},amd={},lgd={},rsd={},ssd={},emd={},wbd={},cmd={},xcd={},edd={},eod={},scd={},cgd={},cfd={},aed={},eid={},sad={},crd={},sfd={},wtd={},atcd={},cpad={};
 let fldt=0,fllt=0;
@@ -18925,10 +18926,11 @@ function navToFrom(){const brg=nH(Math.atan2(nvd.x,-nvd.y)/D);let d2=nH(brg-nvd.
 const menuItems=[
   {l:'TODAY\u2019S MISSION',d:'Setup: airfield, wx, load',s:null},
   {l:'ACS NUMBERS',d:'\u2605 Commercial tolerances, by code',s:'acn'},
-  {l:'POWER-OFF 180 LAB',d:'\u2708 High/low, fast/slow: call it',s:'poc'},
+  {l:'POWER-OFF 180 LAB',d:'\u2708 High/low, fast/slow: call it, fly it',s:'poc'},
   {l:'DUCK ON A POND',d:'\u2708 Spot landing: eyes, energy, float',s:'dk'},
   {l:'STAY IN THE BOX',d:'\u2708 Hand-fly inside ACS tolerances',s:'box'},
   {l:'COMM. PRIVILEGES',d:'\u2605 61.133, carriage, 100-hr, ELT',s:'cp'},
+  {l:'SOURCES & LIMITS',d:'What this is built on, and is not',s:null},
   {l:'POH CHARTS',d:'Chart-completion drills',s:null},
   {l:'AIRSPACE CLASSES',d:'A/B/C/D/E/G + SUA',s:'as'},
   {l:'VFR WX MINIMA',d:'Cloud clearance by class',s:'wm'},
@@ -19015,6 +19017,14 @@ function runSelfTest(srcText){const R=[];const ok=(c,n)=>R.push({ok:!!c,n});
    const nw=poNeed({pos:3,x:-2260,y:0,Dd:2260,W:2500,hw:15});ok(nw.need>n.need*1.2,'PO180: a 15 kt headwind raises the height needed on final');
    let okC=true;for(const h of['HIGH','ON','LOW'])for(const sp of['SLOW','ON','FAST'])for(let i=0;i<30;i++){const q=pocMake(h,sp),t=pocClass(q);if(t.s!==sp||(q.alt>=60&&Math.abs(q.m)>0.02&&h!=='ON'&&t.h!==h)||(h==='ON'&&q.need>300&&t.h!=='ON'))okC=false;}
    ok(okC,'PO180 call-it: generated scenarios classify as intended (270)');}
+  {const g=(slip)=>{const t=p8New(76);t.ph=4;t.th=2*Math.PI;t.y=0;let a=null;const c={slip,hw:0};for(let i=0;i<4000&&t.h>100;i++){t.pit+=1.5*(p8Trim(76,0,slip)+0.5*(t.V/P8.KT-76)-t.pit)*0.05;p8Step(t,c,0.05);if(i===200)a=[t.x,t.h];}return (t.x-a[0])/(a[1]-t.h);};
+   const gc=g(false),gs=g(true);ok(Math.abs(gc-11.3)<0.2,'FLY180: clean glide at 76 KIAS is 11.3:1 (POH Fig 5-39); model '+gc.toFixed(2));ok(gs<gc*0.7,'FLY180: a slip steepens the glide ('+gs.toFixed(1)+':1)');
+   let okE=true,okD=true,dm=[];for(const hw of[0,5,10,15]){const aim=-1000;const r=p8Fly(hw,aim,{pilot:(t)=>{const n=p8Need(t,hw,aim);if(t.ph===0&&n.fin>300&&n.m<=0)p8TurnBase(t);const tu=t.ph===1||t.ph===3;t.pit+=1.5*(p8Trim(76,0,false,tu?30:0)+0.5*(t.V/P8.KT-76)-t.pit)*0.05;}});if(Math.abs(r.x-aim)>60)okE=false;
+     const d=p8Fly(hw,p8AutoAim(hw));dm.push(Math.round(d.x));if(!(d.x>=0&&d.x<=P8.TOL&&d.sink<300&&d.pit>=3&&d.ph===4))okD=false;}
+   ok(okE,'FLY180: height-needed estimate matches the flown glide within 60 ft (0 to 15 kt)');ok(okD,'FLY180: reference pilot lands 0/+200 in 0, 5, 10, 15 kt ('+dm.join(', ')+' ft)');
+   const f60=p8Flare(60,'late',0).fl,f66=p8Flare(66,'late',0).fl,f72=p8Flare(72,'late',0).fl;ok(f60<f66&&f66<f72&&Math.abs(f66-p8Float(66,0))<60,'FLY180: faster arrival floats further ('+Math.round(f60)+' / '+Math.round(f66)+' / '+Math.round(f72)+' ft at 60/66/72)');
+   ok(p8Flare(63,'late',0).fl>p8Flare(63,'none',0).fl,'FLY180: flaps fed in late carry it further than no flaps');
+   ok(PT_Q.every(e=>e.d.length===3&&new Set([e.a].concat(e.d)).size===4&&e.e),'TOOLBOX: 4 unique options + explanation');}
   if(srcText){const body=srcText.replace(/const SELFTEST_FORBID=.*\n/,'');const hit=SELFTEST_FORBID.filter(f=>body.includes(f));ok(hit.length===0,'no retired strings'+(hit.length?': '+hit.join(', '):''));}
   return R;}
 try{if(typeof location!=='undefined'&&/selftest/.test(location.search||'')){setTimeout(()=>{let src='';try{src=document.documentElement.outerHTML}catch(e){}
@@ -21450,11 +21460,229 @@ function drawPOCR(){cls();const q=poc.q,t=pocClass(q),ok=poc.okH&&poc.okS;hdr('C
   wrap(pocFix(t),150,5).slice(0,6).forEach((l,i)=>tx(l,5,77+i*7,P.wh,5));
   tx('ON = within 10% of height needed, 5 kt of target. (MODEL)',5,122,P.t3,4);ftr('SEL:BACK','A:NEXT');}
 function drawPOS(){cls();hdr('POWER-OFF 180 LAB','HIGH/LOW · FAST/SLOW');
-  sRow('WINDSCREEN DRIFT  ◄ L'+(poSet.lvl+1)+' ►',4,15,152,poSet.row===0);sRow('CALL IT  (height + speed)',4,30,152,poSet.row===1);
-  bx(2,47,156,72,P.pn,P.bd2);
-  ['Idle abeam the spot. Clean glide, 76 KIAS.','Slip on final as needed, down to the AIM point.','Then flaps in slowly to carry to the SPOT.','Fast? Slip sooner, aim further back.','','Every few seconds: high or low? fast or slow?',poSet.row===0?['L1: big errors, calm','L2: smaller errors','L3: small errors + wind'][poSet.lvl]:'Read the map, call both, see the glide.']
-   .forEach((l,i)=>tx(l,5,50+i*8,i===5?P.cy:i===6?P.am:P.t2,5));
-  tx('Go-around for missed tolerances = unsat (ACS App 3).',5,110,P.t3,4);ftr('SEL:MENU','A:START');}
+  ['1 WINDSCREEN DRIFT  ◄ L'+(poSet.lvl+1)+' ►','2 CALL IT  (height + speed)','3 TOOLBOX  (pick the fix)','4 FLY THE 180  (abeam to spot)'].forEach((l,i)=>sRow(l,4,14+i*15,152,poSet.row===i));
+  bx(2,75,156,45,P.pn,P.bd2);
+  ['Idle abeam. Clean glide, 76 KIAS.','Slip on final as needed, down to the AIM point.','Then flaps in slowly to carry to the SPOT.','Fast? Slip sooner, aim further back.',
+   ['See it: does the aim point rise or sink?','Read it: call height and speed from the map.','Fix it: which tool, and when?','Fly it: the whole maneuver, your decisions.'][poSet.row]]
+   .forEach((l,i)=>tx(l,5,78+i*7,i===4?P.am:P.t2,5));
+  tx('Go-around for missed tolerances = unsat (ACS App 3).',5,114,P.t3,4);ftr('SEL:MENU','A:START');}
+
+// ── FLY THE 180 core (Turn 20; pure functions) ──────────────────────
+// Whole power-off 180 from abeam the spot to touchdown, flown the way the CFI
+// briefs it: idle abeam, CLEAN glide, slip on final down to the aim point, then
+// flaps fed in slowly in ground effect to carry to the spot.
+// POH anchors (VB-2960): best glide 76 KIAS and 11.3:1 clean (3.5b, Fig 5-39),
+// Vs 50 / Vs0 45 KIAS, flaps 0/10/25/40, Vfe 102. ACS: CA.IV.M.S8 0/+200 ft.
+// Everything else (flap and slip drag, turn at 30 deg bank, ground effect,
+// pattern width, target speeds on final) is a teaching MODEL.
+const P8={W:2550,S:170,RHO:0.002377,B:35,WINGH:3,K:0.0589,CLA:0.09,KT:1.6878,BANK:30,TPA:1000,WID:2500,
+  THR:-1500,TOL:200,VG:76,VF:66,GR:11.3,FLAPS:[0,10,25,40],FRATE:4,RTURN:885,GRTURN:9.66,FLT_V:[60,66,72,76],FLT:[404,810,1065,1273],AUTO:[947,739,522,448]};
+function p8Cfg(f){const u=f/40,VS=50-5*u,CL0=0.30+0.25*u,CLM=P8.W/(0.5*P8.RHO*Math.pow(VS*P8.KT,2)*P8.S);
+  return {CL0,CD0:0.0332+0.0368*u,VS,CLM,AST:(CLM-CL0)/P8.CLA};}
+function p8Aero(V,al,h,slip,f){const c=p8Cfg(f);let CL=c.CL0+P8.CLA*al,stalled=false;
+  if(al>c.AST){CL=Math.max(1.0,c.CLM-0.12*(al-c.AST));stalled=true;}
+  const r=16*(Math.max(0,h)+P8.WINGH)/P8.B,phi=r*r/(1+r*r),q=0.5*P8.RHO*V*V;
+  return {L:q*P8.S*CL,D:q*P8.S*(c.CD0+(slip?0.06:0)+(stalled?0.08:0)+P8.K*phi*CL*CL),stalled,ast:c.AST};}
+// st:{x,y,th(track, rad: PI downwind, 1.5PI base, 2PI final),h,V(ft/s),g(rad),pit(deg),f,ft,ph}
+// ph: 0 downwind, 1 base turn, 2 base, 3 final turn, 4 final, 5 cut-in turn, 6 cut-in leg
+function p8Step(st,ctl,dt){const m=P8.W/32.174,R=Math.PI/180;let t=dt;
+  while(t>1e-9&&st.h>0){const d=Math.min(0.01,t);t-=d;
+    const turning=st.ph===1||st.ph===3||st.ph===5,b=turning?P8.BANK*R:0;
+    st.f+=Math.max(-P8.FRATE*d,Math.min(P8.FRATE*d,st.ft-st.f));
+    const al=st.pit-st.g/R,a=p8Aero(st.V,al,st.h,ctl.slip,st.f);
+    st.V=Math.max(30,st.V+(-a.D/m-32.174*Math.sin(st.g))*d);
+    st.g=Math.max(-1,Math.min(0.6,st.g+((a.L*Math.cos(b)-P8.W*Math.cos(st.g))/(m*st.V))*d));
+    if(turning)st.th+=a.L*Math.sin(b)/(m*st.V*Math.cos(st.g))*d;
+    const vh=st.V*Math.cos(st.g);
+    st.x+=(vh*Math.cos(st.th)-(ctl.hw||0)*P8.KT)*d;st.y+=vh*Math.sin(st.th)*d;st.h+=st.V*Math.sin(st.g)*d;
+    st.stalled=a.stalled;st.al=al;st.ast=a.ast;st.dist+=vh*d;
+    // guidance: lateral path is flown for you; you fly pitch, slip, flaps and the decisions
+    const rad=vh*vh/(32.174*Math.tan(P8.BANK*R));
+    if(st.ph===1&&st.th>=1.5*Math.PI){st.th=1.5*Math.PI;st.ph=2;}
+    if(st.ph===2&&st.y<=rad){st.ph=3;}
+    if(st.ph===5&&st.th>=1.75*Math.PI){st.th=1.75*Math.PI;st.ph=6;}
+    if(st.ph===6&&st.y<=rad*0.293){st.ph=3;}
+    if(st.ph===3&&st.th>=2*Math.PI){st.th=2*Math.PI;st.ph=4;}
+    if(st.ph===4)st.y*=Math.exp(-d/1.5);}
+  if(st.h<0)st.h=0;return st;}
+function p8TurnBase(st){if(st.ph===0){st.ph=1;return true;}return false;}
+function p8CutIn(st){if(st.ph===2&&st.y>P8.RTURN*0.6){st.ph=5;return true;}return false;}
+function p8New(v0kt){const V=(v0kt||85)*P8.KT,q=0.5*P8.RHO*V*V,c=p8Cfg(0);
+  return {x:0,y:P8.WID,th:Math.PI,h:P8.TPA,V,g:0,pit:(P8.W/(q*P8.S)-c.CL0)/P8.CLA,f:0,ft:0,ph:0,al:0,ast:c.AST,dist:0,stalled:false};}
+// Height needed to glide clean at 76 from here to the aim point along the path you are
+// on (downwind: as if you turned base now). Pure; MODEL built on the POH 11.3:1.
+function p8Need(st,hw,aimX){hw=hw||0;const tail=P8.GR*(P8.VG+hw)/P8.VG,head=P8.GR*(P8.VG-hw)/P8.VG,
+    cross=P8.GR*Math.sqrt(Math.max(1,P8.VG*P8.VG-hw*hw))/P8.VG,R=P8.RTURN,arc=Math.PI/2*R,vk=P8.VG*P8.KT,dr=hw*P8.KT/vk;
+  let need=0,fx=st.x,path=0;const seg=(len,ratio,drift)=>{need+=len/ratio;path+=len;if(drift)fx-=len*dr;};
+  if(st.ph===0){seg(arc,P8.GRTURN,1);fx-=R;seg(Math.max(0,st.y-2*R),cross,1);seg(arc,P8.GRTURN,1);fx+=R;}
+  else if(st.ph===1){const fr=Math.max(0,(1.5*Math.PI-st.th)/(Math.PI/2));seg(arc*fr,P8.GRTURN,1);fx-=R*fr;seg(Math.max(0,st.y-R*fr-R),cross,1);seg(arc,P8.GRTURN,1);fx+=R;}
+  else if(st.ph===2){seg(Math.max(0,st.y-R),cross,1);seg(arc,P8.GRTURN,1);fx+=R;}
+  else if(st.ph===3){const fr=Math.max(0,(2*Math.PI-st.th)/(Math.PI/2));seg(arc*fr,P8.GRTURN,1);fx+=R*Math.sin(fr*Math.PI/2);}
+  else if(st.ph===5||st.ph===6){const leg=Math.max(0,(st.y-0.293*R)*1.414);seg(leg,(cross+head)/2,1);fx+=leg*0.707;seg(arc/2,P8.GRTURN,1);fx+=R*0.707;}
+  const fin=aimX-fx;if(fin>0)seg(fin,head,0);else need+=1e-6;
+  return {need,path,fin,m:(st.h-need)/Math.max(40,need)};}
+// Pitch attitude (deg) for a steady idle glide at a speed, flap, slip and bank.
+function p8Trim(vkt,f,slip,bank){const c=p8Cfg(f),V=vkt*P8.KT,q=0.5*P8.RHO*V*V,CL=P8.W/(Math.cos((bank||0)*Math.PI/180)*q*P8.S),
+    CD=c.CD0+(slip?0.06:0)+P8.K*CL*CL;return (CL-c.CL0)/P8.CLA-Math.atan(CD/CL)*180/Math.PI;}
+// Reference pilot (self-test, calibration, DEMO). Flies the briefed technique.
+function p8Auto(st,ctl,hw,aimX,d){const kt=st.V/P8.KT,vs=st.V*Math.sin(st.g),n=p8Need(st,hw,aimX);let rate,slip=false;
+  const vt=st.ph===4?P8.VF:P8.VG,turning=st.ph===1||st.ph===3||st.ph===5;
+  if(st.ph===0&&n.fin>300&&n.m<=0.22)p8TurnBase(st);
+  if(st.ph===2&&n.m<0.02)p8CutIn(st);
+  const c=p8Cfg(st.f),vtd=c.VS+3,hold=kt>vtd&&st.al<st.ast-1.5;
+  const law=hold?-(0.5*Math.max(0,st.h-1.5)+(st.h>4?1.0:0)):-1.5;
+  if(st.ph===4&&(st.h<60&&vs<law+0.3||st.h<4)){rate=Math.max(-8,Math.min(8,2.2*(law-vs)));
+    if(st.h<5){if(kt<58)st.ft=Math.max(st.ft,10);if(kt<54)st.ft=Math.max(st.ft,25);if(kt<51)st.ft=40;}}
+  else{if(st.ph===4&&st.h>25)slip=ctl.slip?n.m>0.0:n.m>0.06;
+    const tgt=p8Trim(vt,st.f,slip,turning?P8.BANK:0)+0.5*(kt-vt);rate=Math.max(-5,Math.min(5,1.5*(tgt-st.pit)));}
+  ctl.slip=slip;st.pit=Math.max(-12,Math.min(18,st.pit+rate*d));}
+// Feet from aim point (where the glide path meets the ground) to touchdown, held off in
+// ground effect with flaps fed in late. Table from p8Flare (MODEL); self-test checks it.
+function p8Float(kt,hw){const V=P8.FLT_V,F=P8.FLT;let i=kt<V[1]?0:kt<V[2]?1:2;const f=F[i]+(F[i+1]-F[i])*(kt-V[i])/(V[i+1]-V[i]);
+  return Math.max(200,f)*(1-(hw||0)/58);}
+// The last 100 ft flown by the reference pilot from a steady clean glide. flapMode: 'none'|'late'|'early'.
+function p8Flare(vkt,flapMode,hw){hw=hw||0;const st=p8New(vkt);st.ph=4;st.th=2*Math.PI;st.y=0;st.h=100;st.x=-100*10.6*(vkt-hw)/vkt;st.g=-Math.atan(1/10.6);st.pit=p8Trim(vkt,0,false);
+  const ctl={slip:false,hw};let t=0;while(st.h>0&&t<200){const kt=st.V/P8.KT,vs=st.V*Math.sin(st.g),c=p8Cfg(st.f),hold=kt>c.VS+3&&st.al<st.ast-1.5,law=hold?-(0.5*Math.max(0,st.h-1.5)+(st.h>4?1:0)):-1.5;let rate;
+    if(st.h<60&&vs<law+0.3||st.h<4){rate=Math.max(-8,Math.min(8,2.2*(law-vs)));
+      if(flapMode==='late'&&st.h<5){if(kt<56)st.ft=Math.max(st.ft,10);if(kt<54)st.ft=Math.max(st.ft,25);if(kt<52)st.ft=40;}
+      if(flapMode==='early'&&st.h<50)st.ft=40;}
+    else rate=Math.max(-5,Math.min(5,1.5*(p8Trim(vkt,st.f,false)+0.5*(kt-vkt)-st.pit)));
+    st.pit=Math.max(-12,Math.min(18,st.pit+rate*0.05));p8Step(st,ctl,0.05);t+=0.05;}
+  return {fl:st.x,vtd:st.V/P8.KT,sink:-st.V*Math.sin(st.g)*60,f:st.f};}
+// Aim point the reference pilot uses for the whole procedure, by headwind (calibrated, MODEL).
+function p8AutoAim(hw){const T=P8.AUTO;const i=Math.min(2,Math.floor(hw/5)),u=hw/5-i;return -(T[i]+(T[i+1]-T[i])*u);}
+function p8Fly(hw,aimX,opt){opt=opt||{};const st=p8New(opt.v0),ctl={slip:false,hw:hw||0};let t=0,slipT=0;
+  while(st.h>0&&t<400){if(opt.pilot)opt.pilot(st,ctl,t);else p8Auto(st,ctl,hw,aimX,0.05);p8Step(st,ctl,0.05);t+=0.05;if(ctl.slip)slipT+=0.05;}
+  return {x:st.x,y:st.y,t,sink:-st.V*Math.sin(st.g)*60,vtd:st.V/P8.KT,pit:st.pit,f:st.f,slipT,ph:st.ph};}
+// ── POWER-OFF 180 LAB, part 2 (Turn 20): TOOLBOX, FLY THE 180, SOURCES ──
+// ---------- 3. TOOLBOX: pick the fix ----------
+// Sources: the CFI's briefed technique (idle abeam, clean, slip on final to the aim
+// point, flaps late and slowly), POH 3.5b (76 KIAS best glide), ACS-7B Appendix 3.
+const PT_Q=[
+ {q:'On final, clean, on speed. The aim point is sliding DOWN the windscreen.',a:'Forward slip now, and hold it until the aim point stops moving',d:['Lower the nose to get down','Wait and see if it fixes itself','Pull the nose up to slow down'],e:'Sinking in the windscreen = you would pass over it = HIGH. The slip adds drag without adding speed. Diving trades height for speed, and speed is float.'},
+ {q:'On base. The aim point is climbing UP the windscreen.',a:'Turn for the runway now. No slip. Hold 76.',d:['Raise the nose to stretch the glide','Add flaps for more lift','Slip to lose the extra speed'],e:'Rising in the windscreen = LOW. The only fix with no power is a shorter path. Best glide is 76 KIAS (POH 3.5b); slower or faster both cover less ground.'},
+ {q:'On final, on glide path, but 10 kt fast.',a:'Ease the nose up to target, expect more float, and slip so the aim point moves back',d:['Hold the speed; it will bleed off in the flare','Push the nose down onto the aim point','Put in full flaps at once'],e:'Every knot fast is more float past the spot. As briefed by the CFI: when fast, slip sooner and put the aim point further back from the touchdown point.'},
+ {q:'Abeam the spot, power to idle. Stronger headwind on final than you planned for.',a:'Turn base sooner',d:['Fly the normal pattern and slip less','Extend downwind for a longer final','Slow to 66 to stay aloft longer'],e:'A headwind on final steepens the glide over the ground, and the tailwind on downwind carries you away from the runway faster. Keep it close.'},
+ {q:'Level in ground effect over the aim point, clean. It is starting to settle short of the spot.',a:'Feed the flaps in slowly, one notch at a time',d:['Pull back hard to hold it off','Leave it; touching down short is fine','Push forward to gain speed'],e:'The CFI technique: flaps only now, and slowly, to carry it to the touchdown point. Each notch lowers the stall speed. Flaps added early add drag and shorten the float instead.'},
+ {q:'Just past abeam, idle. Airspeed is 66 and decaying.',a:'Lower the nose to 76',d:['Hold 66; slower means more time to plan','Raise the nose to hold altitude','Start the slip'],e:'Below best glide you cover less ground per foot lost and you give away margin over the stall, with two turns still to fly.'},
+ {q:'On final, HIGH and FAST.',a:'Slip, and hold the nose where the speed comes back to target',d:['Dive for the aim point, then flare','Add all the flaps and push','Circle once on final to lose the height'],e:'One tool for height (slip), one for speed (pitch). Fix both at once; do not trade one for the other.'},
+ {q:'Full slip on short final and the aim point is still sinking in the windscreen.',a:'Go around',d:['Force it on and brake hard','Hold the slip into the flare and land long','Push the nose down'],e:'On the checkride a go-around for missed tolerances on the power-off 180 is unsatisfactory (ACS Appendix 3). It is still the right decision. The fix was earlier: turn base later or slip sooner.'},
+ {q:'On final, LOW and SLOW. The runway is made, the spot is not.',a:'Lower the nose to best glide, land on the runway, do not stretch it',d:['Raise the nose to reach the spot','Add flaps to float further','Slip to keep the speed down'],e:'Pulling back when low and slow is how a stall on short final happens. Short of the spot is unsatisfactory; a stall at 100 ft is far worse.'},
+ {q:'When should you ask "high or low, fast or slow"?',a:'Every few seconds from abeam to touchdown',d:['Once, when turning final','Only if something looks wrong','At each 100 ft of altitude'],e:'Small corrections early beat big ones late. A slip started on base-to-final costs seconds; the same error found at 100 ft cannot be fixed.'}];
+let ptd={},ptRecent=[];
+function nwPT(){const pool=PT_Q.length;let i,n=0;do{i=ri(0,pool-1);n++}while(ptRecent.includes(i)&&n<30);ptRecent.push(i);if(ptRecent.length>5)ptRecent.shift();
+  const src=PT_Q[i],o=shuf([src.a].concat(src.d));ptd={q:src.q,o,c:o.indexOf(src.a),ch:null,e:src.e};si=0;}
+function drawPT(){drawMCQ(ptd,sc.pt)}
+function drawPTR(){drawQR(ptd.ch===ptd.c,ptd.q,ptd.o[ptd.c],ptd.o[ptd.ch],ptd.e)}
+// ---------- 4. FLY THE 180 ----------
+const P8_PH=['DOWNWIND','BASE TURN','BASE','FINAL TURN','FINAL','CUT IN','CUT IN'];
+const P8_MET=['OFF','TICK','VOICE'];
+let p8Set={row:0,mode:0,wind:0,met:1},p8={};
+function nwP8(demo){const hw=[0,5,10,15][p8Set.wind],chk=p8Set.mode===1&&!demo;
+  p8={st:p8New(chk?ri(80,92):85),ctl:{slip:false,hw},hw,chk,demo:!!demo,autoAim:p8AutoAim(hw),aimX:0,m:0,tm:0,trail:[],trT:0,gate:null,res:null,aLock:false,
+    metT:0,flash:0,stallHi:false,q:{tot:0,offS:0,hi:0,lo:0,exc:[],excT:0,slipT:0}};
+  si=0;if(typeof tiltZero==='function')tiltZero();}
+function p8Vt(s){return s.ph===4?P8.VF:P8.VG;}
+// speed call: 76 +/-5 until final; on final 66, with 61 to 76 accepted (MODEL band)
+function p8SpdCls(s){const kt=s.V/P8.KT;if(s.ph===4)return kt>P8.VG?'FAST':kt<P8.VF-5?'SLOW':'ON';return kt>P8.VG+5?'FAST':kt<P8.VG-5?'SLOW':'ON';}
+function p8HgtCls(m){return m>0.30?'HIGH':m<-0.03?'LOW':'ON';}
+function updP8(){if(p8.res)return;const d=Math.min(0.05,fldt*SET.practiceSpeed);if(d<=0)return;const s=p8.st,c=p8.ctl,kt=s.V/P8.KT,q=p8.q;
+  p8.aimX=80-p8Float(s.ph===4?Math.max(58,Math.min(80,kt)):P8.VF,p8.hw);// before final: aim for a 66 kt arrival; on final it moves back as you run fast
+  if(p8.demo)p8Auto(s,c,p8.hw,p8.autoAim,d);
+  else{let r=0;
+    if((SET.joystick||SET.tilt)&&joy.active)r=(SET.joyInvert?-joy.y:joy.y)*7;else if(kd['ArrowDown'])r=4.5;else if(kd['ArrowUp'])r=-4.5;
+    s.pit=Math.max(-12,Math.min(18,s.pit+r*d));
+    if(J('x')&&s.ph===0){p8TurnBase(s);p8.aLock=true;sS();}
+    if(!kd['x'])p8.aLock=false;
+    c.slip=!!kd['x']&&!p8.aLock&&s.ph>0&&s.h>0;
+    if(J('ArrowLeft')&&p8CutIn(s))sS();
+    if(J('z')){const i=P8.FLAPS.indexOf(s.ft);if(i<3){s.ft=P8.FLAPS[i+1];sN();}}
+    if(s.ph===0&&s.x<-7100)p8TurnBase(s);}
+  p8Step(s,c,d);p8.tm+=d;p8.m=p8Need(s,p8.hw,p8.aimX).m;
+  p8.trT+=d;if(p8.trT>0.5){p8.trT=0;p8.trail.push([s.x,s.y]);}
+  if(s.h>30){q.tot+=d;const sp=p8SpdCls(s),hc=p8HgtCls(p8.m);if(c.slip)q.slipT+=d;
+    if(sp!=='ON'){q.offS+=d;q.excT+=d;}else if(q.excT>0){q.exc.push(q.excT);q.excT=0;}
+    if(hc==='HIGH')q.hi+=d;if(hc==='LOW')q.lo+=d;}
+  if(p8Set.met&&!p8.demo&&s.h>30){p8.metT+=d;if(p8.metT>=6){p8.metT=0;p8.flash=1.6;sN();if(p8Set.met===2&&typeof cfvSpeak==='function')cfvSpeak('High or low? Fast or slow?');}}
+  if(p8.flash>0)p8.flash-=d;
+  if(s.stalled&&s.h>20)p8.stallHi=true;
+  if(!p8.gate&&s.ph===4&&s.h<=20){const vh=s.V*Math.cos(s.g);p8.gate={V:kt,aim:s.g<-0.002?s.x+s.h/Math.tan(-s.g)*(vh-p8.hw*P8.KT)/vh:s.x+9999};}
+  if(!p8.demo&&J('Enter')&&s.h>0)p8.res=p8Grade('ga');
+  else if(s.h<=0)p8.res=p8Grade('td');
+  else if(s.x>3400||p8.tm>400)p8.res=p8Grade('ga');
+  if(p8.res){if(q.excT>0)q.exc.push(q.excT);if(!p8.demo)hs(sc.p8,p8.res.pass);st=S.P8R;}}
+// Pure grader (also used by the self-test). ACS CA.IV.M.S8: on or within 200 ft beyond the point.
+function p8Grade(kind){const s=p8.st,hw=p8.hw,g=p8.gate||{V:s.V/P8.KT,aim:s.x},miss=Math.round(s.x),sink=Math.round(-s.V*Math.sin(s.g)*60);
+  const f66=p8Float(P8.VF,hw),spd=Math.round(p8Float(Math.max(56,Math.min(84,g.V)),hw)-f66),aim=Math.round(g.aim-(80-f66)),tech=miss-80-spd-aim;
+  const R={kind,miss,sink,vtd:s.V/P8.KT,pit:s.pit,f:Math.round(s.f),spd,aim,tech,gV:g.V,pass:false,msg:'',onRwy:s.ph===4&&miss>=P8.THR};
+  if(kind==='ga'){R.msg='Go-around. The right call when it is not working, but on the power-off 180 a go-around for missed tolerances is unsatisfactory (ACS App 3).';return R;}
+  const hard=sink>600,flat=s.pit<3;
+  R.pass=R.onRwy&&miss>=0&&miss<=P8.TOL&&!hard&&!flat;
+  if(s.ph!==4)R.msg='Touched down before reaching final. Turn base sooner; with no power the only way to fix LOW is a shorter path.';
+  else if(miss<P8.THR)R.msg='SHORT OF THE RUNWAY. Too low, too late. Turn base sooner, cut in on base, never slip when the aim point is rising.';
+  else if(hard)R.msg='Hard touchdown ('+sink+' fpm). '+(p8.stallHi?'It stalled above the runway.':'Round out earlier: eyes to the far end and ease back as the ground comes up.');
+  else if(flat)R.msg='Flat touchdown. Hold it off in ground effect until the nose is up and the mains touch first.';
+  else if(miss<0)R.msg='Short of the spot by '+(-miss)+' ft: unsatisfactory. '+(R.f<1?'Flaps were never used: feed them in slowly as it settles.':'Release the slip a little sooner, or move the aim point closer.');
+  else if(miss>P8.TOL)R.msg='Long by '+(miss-P8.TOL)+' ft past the limit. '+(spd>aim&&spd>80?'Mostly speed: '+g.V.toFixed(0)+' kt at 20 ft. Slip sooner and aim further back.':aim>80?'Aim point was too close to the spot for a clean airplane. Move it back.':'Held off too long or flaps too early. Let it settle on the spot.');
+  else R.msg='On the spot. '+(Math.abs(g.V-P8.VF)<=4?'Speed and aim point both where they belonged.':'It worked, but '+g.V.toFixed(0)+' kt at 20 ft made it harder than it had to be.');
+  return R;}
+function drawP8map(){const s=p8.st,k=0.0155,X=x=>5+(x+7300)*k,Y=y=>60-(y+150)*k;bx(0,13,160,52,P.bg,P.bd2);cx.save();cx.beginPath();cx.rect(1,14,158,50);cx.clip();
+  cx.fillStyle='#39424c';cx.fillRect(X(P8.THR),Y(0)-1.5,(1500-P8.THR)*k,3);cx.fillStyle=P.cy;cx.fillRect(X(0)-.6,Y(0)-3,1.2,6);cx.fillStyle=P.gn;cx.fillRect(X(0),Y(0)+2,P8.TOL*k,1);
+  if(!p8.chk){cx.fillStyle=P.am;cx.fillRect(X(p8.aimX)-.5,Y(0)-2.5,1,5);tx('AIM',X(p8.aimX),Y(0)+3,P.am,3,'center');}
+  tx('SPOT',X(0)+8,Y(0)-7,P.cy,3,'center');
+  cx.fillStyle='rgba(255,255,255,.35)';p8.trail.forEach(p=>cx.fillRect(X(p[0])-.3,Y(p[1])-.3,.7,.7));
+  cx.save();cx.translate(X(s.x),Y(s.y));cx.rotate(-s.th);cx.fillStyle=p8.ctl.slip?P.am:P.wh;cx.beginPath();cx.moveTo(4,0);cx.lineTo(-3,-2.6);cx.lineTo(-3,2.6);cx.fill();cx.restore();
+  cx.restore();tx(p8.hw?'WIND '+p8.hw+' KT ◄':'CALM',156,15,p8.hw?P.cy:P.t3,4,'right');cx.fillStyle=P.t3;cx.fillRect(X(0)-.3,Y(P8.WID)-5,.6,3);}
+function drawP8prof(){const s=p8.st,span=Math.max(700,Math.min(5600,(250-s.x)*1.15+100)),left=s.x-span*0.1,hmax=Math.max(16,s.h*1.5+8);
+  const X=x=>2+(x-left)/span*156,Y=h=>61-h/hmax*45;bx(0,13,160,52,P.bg,P.bd2);cx.save();cx.beginPath();cx.rect(1,14,158,50);cx.clip();
+  cx.fillStyle='#0d1a12';cx.fillRect(1,61,158,3);cx.fillStyle='#39424c';cx.fillRect(X(P8.THR),61,Math.max(0,X(3500)-X(P8.THR)),3);
+  cx.fillStyle=P.gn;cx.fillRect(X(0),62,X(P8.TOL)-X(0),2);cx.fillStyle=P.cy;cx.fillRect(X(0)-.6,54,1.2,8);tx('SPOT',X(0),48,P.cy,4,'center');
+  if(!p8.chk){cx.fillStyle=P.am;cx.beginPath();cx.moveTo(X(p8.aimX),60);cx.lineTo(X(p8.aimX)-2.5,55);cx.lineTo(X(p8.aimX)+2.5,55);cx.fill();tx('AIM',X(p8.aimX),49,P.am,4,'center');
+    if(s.g<-0.002&&s.h>3){const vh=s.V*Math.cos(s.g),ix=s.x+s.h/Math.tan(-s.g)*(vh-p8.hw*P8.KT)/vh;cx.strokeStyle='rgba(255,255,255,.4)';cx.lineWidth=.5;cx.setLineDash([2,2]);cx.beginPath();cx.moveTo(X(s.x),Y(s.h));cx.lineTo(X(ix),Y(0));cx.stroke();cx.setLineDash([]);}}
+  cx.save();cx.translate(X(s.x),Y(s.h));cx.rotate(-s.pit*Math.PI/180);cx.fillStyle=p8.ctl.slip?P.am:P.wh;cx.fillRect(-5,-1,10,1.6);cx.fillRect(-5,-3,1.4,2.4);cx.restore();
+  cx.restore();tx(p8.hw?'WIND '+p8.hw+' KT ◄':'CALM',156,15,p8.hw?P.cy:P.t3,4,'right');}
+function p8Cue(s){if(p8.demo){return s.ph===0?'DEMO: holds 76, waits to turn base':s.ph<4?'DEMO: clean, 76, a little high on purpose':s.h>25?(p8.ctl.slip?'DEMO: SLIP: aim point was sinking':'DEMO: on glide to the aim point'):s.f>1?'DEMO: flaps in slowly to carry it':'DEMO: level in ground effect';}
+  if(s.ph===0)return 'Pitch for 76.  A = TURN BASE';if(s.ph<4)return 'Hold A = SLIP   ◄ = CUT IN (if low)';
+  return s.h>30?'EYES: AIM POINT ⇄ AIRSPEED':s.h>12?'EYES: SPOT. ROUND OUT, RELEASE SLIP':'EYES: FAR END. HOLD OFF, FLAPS SLOWLY';}
+function drawP8(){cls();const s=p8.st,kt=s.V/P8.KT,sp=p8SpdCls(s),hc=p8HgtCls(p8.m);hdr((p8.demo?'DEMO · ':'')+'FLY THE 180',P8_PH[s.ph]);
+  if(s.ph===4)drawP8prof();else drawP8map();
+  bx(0,66,160,22,P.bar,P.bd);tx('IAS',4,68,P.t3,4);tx(kt.toFixed(0),4,74,sp==='ON'?P.gn:P.am,10);tx('tgt '+p8Vt(s),30,80,P.t3,4);
+  tx('AGL',56,68,P.t3,4);tx(String(Math.round(s.h/(s.h>100?10:1))*(s.h>100?10:1)),56,74,P.wh,10);
+  tx('FLAPS',100,68,P.t3,4);tx(Math.round(s.f)+'°'+(s.ft>s.f+0.5?'→'+s.ft:''),100,74,s.f>0.5?P.cy:P.t2,8);
+  bx(134,69,24,16,p8.ctl.slip?'#3a2a00':P.pn,p8.ctl.slip?P.am:P.bd2);tx('SLIP',146,74,p8.ctl.slip?P.am:P.t3,5,'center');
+  if(!p8.chk&&s.h>30){const x0=30,w=120,f=v=>x0+Math.max(0,Math.min(1,(v+0.2)/0.9))*w;bx(x0,91,w,6,P.bg,P.bd2);cx.fillStyle='#3a1010';cx.fillRect(x0+1,92,f(-0.03)-x0-1,4);
+    cx.fillStyle='#0f3a1a';cx.fillRect(f(-0.03),92,f(0.30)-f(-0.03),4);cx.fillStyle='#3a2a00';cx.fillRect(f(0.30),92,x0+w-1-f(0.30),4);cx.fillStyle=P.wh;cx.fillRect(f(p8.m)-.8,90,1.6,8);
+    tx('LOW',27,91.5,hc==='LOW'?P.rd:P.t3,4,'right');tx('HI',152,91.5,hc==='HIGH'?P.am:P.t3,4);tx('height in hand vs. clean glide to the aim point',80,99,P.t3,3.5,'center');}
+  else if(p8.chk&&s.h>30)tx('CHECK: no aids. Watch the aim point in the windscreen.',80,93,P.t3,4,'center');
+  tx(p8Cue(s),80,106,s.h<=30&&s.ph===4?P.cy:P.wh,5,'center');
+  if(p8.flash>0){bx(8,114,144,11,'#0c2028',P.cy);tx('HIGH or LOW?   FAST or SLOW?',80,117,P.cy,6,'center');}
+  else tx('▲▼ pitch · A slip · B flaps + · START go around',80,118,P.t3,4,'center');
+  if(s.stalled)tx('STALL',80,30,P.rd,9,'center');ftr('SEL:BACK',p8.demo?'DEMO':'START:GO AROUND');}
+function drawP8R(){cls();const r=p8.res,q=p8.q;hdr('FLY THE 180',p8.demo?'DEMO':p8.chk?'CHECK':'TRAIN');const td=r.kind==='td';
+  const head=!td?'GO-AROUND':!r.onRwy?'OFF THE RUNWAY':r.pass?'ON THE SPOT  +'+r.miss+' FT':r.miss<0?'SHORT  '+r.miss+' FT':r.miss>P8.TOL?'LONG  +'+r.miss+' FT':'UNSAT  +'+r.miss+' FT';
+  bx(2,14,156,13,P.bar,r.pass?P.gn:P.rd);tc(head,17,r.pass?P.gn:P.rd,7);
+  tx('Standard: 0/+200 ft, CA.IV.M.S8',5,30,P.t3,4);
+  if(td){tx(`Touchdown ${r.vtd.toFixed(0)} kt · ${r.sink} fpm · flaps ${r.f}°`,5,36,P.t2,5);
+    if(r.onRwy){tx('WHY (model):',5,44,P.t3,4);tx(`speed ${r.spd>=0?'+':''}${r.spd}`,42,43,Math.abs(r.spd)>80?P.am:P.t2,5);tx(`aim ${r.aim>=0?'+':''}${r.aim}`,82,43,Math.abs(r.aim)>80?P.am:P.t2,5);tx(`hands ${r.tech>=0?'+':''}${r.tech}`,116,43,Math.abs(r.tech)>80?P.am:P.t2,5);
+      tx(`${r.gV.toFixed(0)} kt at 20 ft (target ${P8.VF})`,5,50,P.t3,4);}}
+  const pct=v=>q.tot>0?Math.round(100*v/q.tot):0,avg=q.exc.length?(q.exc.reduce((a,b)=>a+b,0)/q.exc.length).toFixed(1):'0.0';
+  bx(2,57,156,21,P.pn,P.bd2);tx('ABEAM TO 30 FT',5,59,P.t3,4);tx(`Off speed ${pct(q.offS)}% · ${avg} s to fix`,5,64,pct(q.offS)>25?P.am:P.gn,5);
+  tx(`High ${pct(q.hi)}% · Low ${pct(q.lo)}% · Slip ${Math.round(q.slipT)} s`,5,71,pct(q.lo)>5?P.rd:P.t2,5);
+  wrap(r.msg,150,5).slice(0,6).forEach((l,i)=>tx(l,5,82+i*7,P.wh,5));
+  tx('Model, not the airplane. Confirm technique with your CFI.',80,125,P.t3,3.5,'center');ftr('SEL:BACK','A:AGAIN');}
+function drawP8S(){cls();hdr('FLY THE 180','ABEAM TO TOUCHDOWN');
+  ['MODE: '+(p8Set.mode?'CHECK (no aids)':'TRAIN (aids on)'),'HEADWIND ON FINAL: '+[0,5,10,15][p8Set.wind]+' KT','METRONOME: '+P8_MET[p8Set.met]].forEach((l,i)=>sRow(l,4,15+i*15,152,p8Set.row===i));
+  bx(2,62,156,58,P.pn,P.bd2);
+  ['Idle abeam the spot at 1,000 AGL. The turns are','flown for you. You fly pitch and the decisions.','A: turn base. Then HOLD A to slip.','◄ on base: cut in toward the runway (if low).','B: next notch of flaps (10, 25, 40).','▲▼ or tilt: pitch. 76 clean, 66 on final.','Slip to the AIM point, level off, flaps slowly.','Touch down 0 to +200 ft past the SPOT.']
+   .forEach((l,i)=>tx(l,5,64+i*7,i>=6?P.cy:P.t2,i<2?4.5:5));
+  ftr('SEL:BACK','A:FLY  B:DEMO');}
+// ---------- SOURCES & LIMITS ----------
+let srcPg=0;
+const SRC_PG=[['AUTHORITY',['STANDARDS: FAA-S-ACS-7B, Commercial Pilot Airplane. Tolerances are quoted with their element codes.','AIRPLANE: Piper Pilot 100i POH/AFM, report VB-2960. The POH in the airplane governs.','RULES: 14 CFR parts 61, 91 and 119, and the AIM.','TECHNIQUE: FAA-H-8083-3 (Airplane Flying Handbook) and FAA-H-8083-25 (PHAK).','Every constant in the code is tagged POH, ACS, AFH or MODEL.']],
+ ['LIMITS',['A study aid. Not an FAA-approved training device. No loggable time.','Flight models are simplified teaching MODELS. Never use them for performance planning.','Pass rules that are not in the ACS are labelled "training target".','Where a drill follows the owner\'s instructor\'s technique, it says so. Your instructor and the POH come first.','Reviewer comments shown in project notes are simulated, not from real people.']],
+ ['CHECK IT',['Add ?selftest to the address to run the built-in checks on this device.','Regulation questions were last compared with the eCFR on 2026-11-27: 61.133, 91.147, 91.207, 91.409. Rules change: check the current text.','Found an error? The POH, ACS and CFR are right and this file is wrong.','BUILD '+(typeof BUILD!=='undefined'?BUILD:'')]]];
+function drawSRC(){cls();const p=SRC_PG[srcPg];hdr('SOURCES & LIMITS',(srcPg+1)+'/'+SRC_PG.length+' '+p[0]);let y=16;
+  p[1].forEach(t=>{const L=wrap(t,150,5);L.forEach((l,i)=>tx(l,5,y+i*7,i===0?P.wh:P.t2,5));y+=L.length*7+4;});ftr('SEL:MENU','A:NEXT');}
 
 // ── SHARED FLIGHT MODEL (Turn 18) ───────────────────────────────────
 // One point-mass model for free flight and the tolerance tracker (clean
@@ -21757,6 +21985,7 @@ function drawDKS(){cls();hdr('DUCK ON A POND','SPOT LANDING');const t=DK_TYPES[d
   bx(2,62,156,56,P.pn,P.bd2);
   ['Standard: 0/+'+t.tol+' ft ('+t.ref+')','POH final approach, flaps 40: '+DK.VAPP+' KIAS','At '+DK.VAPP+' the airplane needs ~'+dkD0(t,hw)+' ft','past the AIM point to quit flying.','Each knot fast adds ~'+DK_KFT+' ft. (MODEL)','Eyes: aim point → spot → far end.']
    .forEach((l,i)=>tx(l,5,65+i*8,i===2||i===3?P.cy:P.t2,5));
+  if(t.k==='po180')tx('Full-flap model. Clean/slip/late-flap: PO-180 LAB 4.',5,112,P.am,4);
   tc('◄► change   B: watch demo   STR: why I float',122,P.t3,4);ftr('SEL:MENU','A:FLY');}
 // "Why I float" bank. src: AFH = Airplane Flying Handbook (approaches and landings); MODEL = this trainer.
 const DK_Q=[
@@ -27147,7 +27376,7 @@ function drawSBD(){cls();
   tx('\u2726 you found it \u2726',80,135,P.am,5,'center');
   if(sbdFlashT>0)sbdFlashT--;
 }
-function drawST(){cls();hdr('SESSION STATS');const t=tT(),c=tC(),pc=t>0?Math.round(c/t*100):0;bx(2,14,156,18,P.bar,P.bd);tx('OVERALL',6,15,P.am,7);tx(`${c}/${t} ${pc}%`,148,15,P.wh,7,'right');bx(6,24,146,5,P.bg,P.bd2);if(t>0){cx.fillStyle=pc>=80?P.gn:pc>=60?P.am:P.rd;cx.fillRect(7,25,Math.round(144*c/t),3)}const ms=[{l:'ASPC',s:sc.as},{l:'WXMIN',s:sc.wm},{l:'SECT',s:sc.ss},{l:'VSPD',s:sc.vs},{l:'AERO',s:sc.am},{l:'RADIO',s:sc.at},{l:'LGUN',s:sc.lg},{l:'RWY',s:sc.rs},{l:'UA',s:sc.ua},{l:'COMP',s:sc.co},{l:'PRIM',s:sc.pi},{l:'P/S',s:sc.ps},{l:'W&B',s:sc.wb},{l:'EMRG',s:sc.em},{l:'PO180',s:sc.poc},{l:'DRIFT',s:sc.pod},{l:'BOX',s:sc.box},{l:'COMM',s:sc.cp},{l:'DUCK',s:sc.dk},{l:'ACS#',s:sc.acn},{l:'WX',s:sc.wx},{l:'TAF',s:sc.tm},{l:'MORSE',s:sc.mc},{l:'CURR',s:sc.cu},{l:'NAV',s:sc.nv},{l:'MNVR',s:sc.cm}];ms.forEach((m,i)=>{const y=32+i*5;if(y>135)return;bx(2,y,156,5,P.pn,P.bd2);tx(m.l,6,y,P.t2,4);if(m.s.t>0){const mp=Math.round(m.s.c/m.s.t*100);tx(`${m.s.c}/${m.s.t}`,90,y,P.tx,4,'right');tx(`${mp}%`,148,y,mp>=80?P.gn:mp>=60?P.am:P.rd,4,'right')}else tx('--',148,y,P.t3,4,'right')})}
+function drawST(){cls();hdr('SESSION STATS');const t=tT(),c=tC(),pc=t>0?Math.round(c/t*100):0;bx(2,14,156,18,P.bar,P.bd);tx('OVERALL',6,15,P.am,7);tx(`${c}/${t} ${pc}%`,148,15,P.wh,7,'right');bx(6,24,146,5,P.bg,P.bd2);if(t>0){cx.fillStyle=pc>=80?P.gn:pc>=60?P.am:P.rd;cx.fillRect(7,25,Math.round(144*c/t),3)}const ms=[{l:'ASPC',s:sc.as},{l:'WXMIN',s:sc.wm},{l:'SECT',s:sc.ss},{l:'VSPD',s:sc.vs},{l:'AERO',s:sc.am},{l:'RADIO',s:sc.at},{l:'LGUN',s:sc.lg},{l:'RWY',s:sc.rs},{l:'UA',s:sc.ua},{l:'COMP',s:sc.co},{l:'PRIM',s:sc.pi},{l:'P/S',s:sc.ps},{l:'W&B',s:sc.wb},{l:'EMRG',s:sc.em},{l:'FLY180',s:sc.p8},{l:'TOOLS',s:sc.pt},{l:'PO180',s:sc.poc},{l:'DRIFT',s:sc.pod},{l:'BOX',s:sc.box},{l:'COMM',s:sc.cp},{l:'DUCK',s:sc.dk},{l:'ACS#',s:sc.acn},{l:'WX',s:sc.wx},{l:'TAF',s:sc.tm},{l:'MORSE',s:sc.mc},{l:'CURR',s:sc.cu},{l:'NAV',s:sc.nv},{l:'MNVR',s:sc.cm}];ms.slice().sort((a,b)=>(b.s.t>0)-(a.s.t>0)).forEach((m,i)=>{const y=32+i*5;if(y>135)return;bx(2,y,156,5,P.pn,P.bd2);tx(m.l,6,y,P.t2,4);if(m.s.t>0){const mp=Math.round(m.s.c/m.s.t*100);tx(`${m.s.c}/${m.s.t}`,90,y,P.tx,4,'right');tx(`${mp}%`,148,y,mp>=80?P.gn:mp>=60?P.am:P.rd,4,'right')}else tx('--',148,y,P.t3,4,'right')})}
 
 // Track state transitions to release haptic vibration when leaving any
 // flying state mid-session (Shift exits, etc.). Without this, a vibration
@@ -27191,6 +27420,7 @@ case S.ME:if(J('ArrowUp')){mi=(mi-1+menuItems.length)%menuItems.length;sN();if(m
   ()=>{nwDKS();st=S.DKS},          // 0c DUCK ON A POND (Turn 17)
   ()=>{st=S.BOXS},                 // 0d STAY IN THE BOX (Turn 18)
   ()=>{nwCPQ();st=S.CPQ},          // 0e COMM. PRIVILEGES (Turn 18; indices below shift +4)
+  ()=>{srcPg=0;st=S.SRC},          // 0f SOURCES & LIMITS (Turn 20)
   ()=>{nwPCH();st=S.PCH},          // 1 POH CHARTS
   ()=>{nwAS();st=S.AS},            // 2 AIRSPACE
   ()=>{nwWM();st=S.WM},             // 3 VFR WX MINIMA
@@ -27370,8 +27600,16 @@ case S.SSR:if(J('x')||J('Enter')){nwSS();st=S.SS;sS()}if(J('Shift')){st=S.ME;sN(
 case S.VS:if(J('ArrowUp')){si=(si-1+vsd.o.length)%vsd.o.length;sN()}if(J('ArrowDown')){si=(si+1)%vsd.o.length;sN()}if(J('x')){vsd.ch=si;hs(sc.vs,vsd.ch===vsd.c);st=S.VSR}if(J('Shift')){st=S.ME;sN()}break;
 case S.VSR:if(J('x')||J('Enter')){nwVS();st=S.VS;sS()}if(J('Shift')){st=S.ME;sN()}break;
 case S.AM:if(J('ArrowUp')){si=(si-1+amd.o.length)%amd.o.length;sN()}if(J('ArrowDown')){si=(si+1)%amd.o.length;sN()}if(J('x')){amd.ch=si;hs(sc.am,amd.ch===amd.c);st=S.AMR}if(J('Shift')){st=S.ME;sN()}break;
-case S.POS:if(J('ArrowUp')||J('ArrowDown')){poSet.row=1-poSet.row;sN()}if(poSet.row===0&&(J('ArrowLeft')||J('ArrowRight'))){poSet.lvl=(poSet.lvl+(J('ArrowLeft')?2:1))%3;sN()}
-  if(J('x')){if(poSet.row===0){nwPOD();st=S.POD}else{nwPOC();st=S.POC}sS()}if(J('Shift')){st=S.ME;sN()}break;
+case S.POS:if(J('ArrowUp')){poSet.row=(poSet.row+3)%4;sN()}if(J('ArrowDown')){poSet.row=(poSet.row+1)%4;sN()}if(poSet.row===0&&(J('ArrowLeft')||J('ArrowRight'))){poSet.lvl=(poSet.lvl+(J('ArrowLeft')?2:1))%3;sN()}
+  if(J('x')){if(poSet.row===0){nwPOD();st=S.POD}else if(poSet.row===1){nwPOC();st=S.POC}else if(poSet.row===2){nwPT();st=S.PT}else{p8Set.row=0;st=S.P8S}sS()}if(J('Shift')){st=S.ME;sN()}break;
+case S.PT:if(J('ArrowUp')){si=(si-1+ptd.o.length)%ptd.o.length;sN()}if(J('ArrowDown')){si=(si+1)%ptd.o.length;sN()}if(J('x')){ptd.ch=si;hs(sc.pt,ptd.ch===ptd.c);st=S.PTR}if(J('Shift')){st=S.POS;sN()}break;
+case S.PTR:if(J('x')||J('Enter')){nwPT();st=S.PT;sS()}if(J('Shift')){st=S.POS;sN()}break;
+case S.P8S:if(J('ArrowUp')){p8Set.row=(p8Set.row+2)%3;sN()}if(J('ArrowDown')){p8Set.row=(p8Set.row+1)%3;sN()}
+  if(J('ArrowLeft')||J('ArrowRight')){const dd=J('ArrowLeft')?-1:1;if(p8Set.row===0)p8Set.mode=1-p8Set.mode;else if(p8Set.row===1)p8Set.wind=(p8Set.wind+dd+4)%4;else p8Set.met=(p8Set.met+dd+3)%3;sN()}
+  if(J('x')){nwP8(false);st=S.P8;sS()}else if(J('z')){nwP8(true);st=S.P8;sS()}if(J('Shift')){st=S.POS;sN()}break;
+case S.P8:if(J('Shift')){if(typeof cfvShush==='function')cfvShush();st=S.P8S;sN();break}updP8();break;
+case S.P8R:if(J('x')||J('Enter')){nwP8(p8.demo);st=S.P8;sS()}if(J('Shift')){st=S.P8S;sN()}break;
+case S.SRC:if(J('x')||J('Enter')||J('ArrowRight')){srcPg=(srcPg+1)%SRC_PG.length;sN()}if(J('ArrowLeft')){srcPg=(srcPg+SRC_PG.length-1)%SRC_PG.length;sN()}if(J('Shift')||J('z')){st=S.ME;sN()}break;
 case S.POD:if(J('Shift')){st=S.POS;sN();break}updPOD();break;
 case S.PODR:if(J('x')||J('Enter')){if(pod.i+1>=POD_N)nwPOD();else{pod.i++;pod.tr=podTrial(pod.lvl)}st=S.POD;sS()}if(J('Shift')){st=S.POS;sN()}break;
 case S.POC:if(J('Shift')){st=S.POS;sN();break}updPOC();break;
@@ -29286,7 +29524,7 @@ function draw(){({[S.TI]:drawTitle,[S.DI]:drawDisc,[S.ME]:drawMenu,
   [S.WM]:drawWM,[S.WMR]:drawWMR,
   [S.SS]:drawSS,[S.SSR]:drawSSR,
   [S.VS]:drawVS,[S.VSR]:drawVSR,
-  [S.AM]:drawAM,[S.AMR]:drawAMR,[S.ACN]:drawACN,[S.ACNR]:drawACNR,[S.POS]:drawPOS,[S.POD]:drawPOD,[S.PODR]:drawPODR,[S.POC]:drawPOC,[S.POCR]:drawPOCR,[S.BOXS]:drawBOXS,[S.BOXF]:drawBOX,[S.BOXR]:drawBOXR,[S.CPQ]:drawCPQ,[S.CPQR]:drawCPQR,[S.DKS]:drawDKS,[S.DKF]:drawDK,[S.DKR]:drawDKR,[S.DKQ]:drawDKQ,[S.DKQR]:drawDKQR,
+  [S.AM]:drawAM,[S.AMR]:drawAMR,[S.ACN]:drawACN,[S.ACNR]:drawACNR,[S.PT]:drawPT,[S.PTR]:drawPTR,[S.P8S]:drawP8S,[S.P8]:drawP8,[S.P8R]:drawP8R,[S.SRC]:drawSRC,[S.POS]:drawPOS,[S.POD]:drawPOD,[S.PODR]:drawPODR,[S.POC]:drawPOC,[S.POCR]:drawPOCR,[S.BOXS]:drawBOXS,[S.BOXF]:drawBOX,[S.BOXR]:drawBOXR,[S.CPQ]:drawCPQ,[S.CPQR]:drawCPQR,[S.DKS]:drawDKS,[S.DKF]:drawDK,[S.DKR]:drawDKR,[S.DKQ]:drawDKQ,[S.DKQR]:drawDKQR,
   [S.UA]:drawUA,[S.UR]:drawUR,
   [S.CO]:drawCO,[S.CR]:drawCR,
   [S.PI]:drawPI,[S.PR]:drawPR,

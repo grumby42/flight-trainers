@@ -6,10 +6,10 @@
 <meta name="theme-color" content="#049cd8">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="build-id" content="DUCK-20261127-1545Z">
-<meta name="built-utc" content="2026-11-27T15:45:24Z">
+<meta name="build-id" content="DUCK-20261127-2209Z">
+<meta name="built-utc" content="2026-11-27T22:09:18Z">
 <title>Duck Glide — Fly Good, Land Gooder</title>
-<!-- Build DUCK-20261127-1545Z · shipped 2026-11-27T15:45:24Z · Three.js r128 (MIT) from vendor/ · fully offline -->
+<!-- Build DUCK-20261127-2209Z · shipped 2026-11-27T22:09:18Z · Three.js r128 (MIT) from vendor/ · fully offline -->
 <style>
 :root{--red:#e52521;--yel:#fbd000;--blu:#049cd8;--grn:#43b047;--ink:#1b1b2f;--card:#fffdf4}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none}
@@ -51,13 +51,14 @@ canvas#c{position:fixed;inset:0;width:100%;height:100%;display:block}
 #stick{position:fixed;width:120px;height:120px;border-radius:50%;border:3px solid rgba(255,255,255,.6);background:rgba(255,255,255,.12);pointer-events:none;transform:translate(-50%,-50%)}
 #stick i{position:absolute;left:50%;top:50%;width:46px;height:46px;margin:-23px;border-radius:50%;background:rgba(255,255,255,.75)}
 /* overlays */
-.ov{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:linear-gradient(#4aa8ffdd,#bfe8ffdd);overflow:auto;padding:14px;touch-action:pan-y}
+.ov{position:fixed;inset:0;display:flex;align-items:flex-start;justify-content:center;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;background:linear-gradient(#4aa8ffdd,#bfe8ffdd);overflow:auto;padding:14px;touch-action:pan-y}
 .ov.dim{background:rgba(10,14,40,.55)}
-.card{background:var(--card);border-radius:22px;padding:16px 18px;max-width:900px;width:100%;box-shadow:0 8px 0 rgba(0,0,0,.18),0 0 0 5px #fff inset;user-select:text;-webkit-user-select:text}
+.card{margin:auto;background:var(--card);border-radius:22px;padding:16px 18px;max-width:900px;width:100%;box-shadow:0 8px 0 rgba(0,0,0,.18),0 0 0 5px #fff inset;user-select:text;-webkit-user-select:text}
 h1{margin:0;font-size:clamp(26px,5vw,44px);color:var(--red);text-shadow:3px 3px 0 var(--yel),5px 5px 0 #0002;letter-spacing:.02em}
 h2{margin:6px 0 8px;font-size:20px;color:var(--blu)}
 .sub{font-weight:700;color:#555;margin:2px 0 10px}
 #worlds{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px}
+@media (max-width:560px){#worlds{grid-template-columns:1fr 1fr;gap:8px}.wc{padding:8px 9px}.wc b{font-size:14px}.wc small{font-size:11px}.stars{font-size:13px}h2{font-size:17px;margin:4px 0 6px}.seg button{padding:8px 7px;font-size:12px}}
 .wc{border-radius:16px;padding:10px 12px;color:#fff;cursor:pointer;box-shadow:0 4px 0 rgba(0,0,0,.25);text-shadow:0 1px 0 #0008;border:3px solid transparent}
 .wc.sel{border-color:#fff;outline:3px solid var(--yel)}
 .wc b{font-size:16px;display:block}.wc small{display:block;font-size:12px;opacity:.95;margin-top:3px}
@@ -227,7 +228,7 @@ label.ck{display:flex;align-items:center;gap:6px;font-weight:700;font-size:13px}
 <script>
 (function(){
 'use strict';
-const BUILD_ID='DUCK-20261127-1545Z', BUILT_UTC='2026-11-27T15:45:24Z';
+const BUILD_ID='DUCK-20261127-2209Z', BUILT_UTC='2026-11-27T22:09:18Z';
 const KT=1.943844, FT=3.28084, FPM=196.8504, D2R=Math.PI/180, R2D=180/Math.PI, G=9.80665, RHO0=1.225;
 const clamp=(v,a,b)=>v<a?a:v>b?b:v, lerp=(a,b,t)=>a+(b-a)*t;
 const smooth=(a,b,x)=>{const t=clamp((x-a)/(b-a),0,1);return t*t*(3-2*t);};

@@ -6,10 +6,10 @@
 <meta name="theme-color" content="#049cd8">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="build-id" content="DUCK-20261128-0009Z">
-<meta name="built-utc" content="2026-11-28T00:09:52Z">
+<meta name="build-id" content="DUCK-20261128-0016Z">
+<meta name="built-utc" content="2026-11-28T00:16:54Z">
 <title>Duck Glide — Fly Good, Land Gooder</title>
-<!-- Build DUCK-20261128-0009Z · shipped 2026-11-28T00:09:52Z · Three.js r128 (MIT) from vendor/ · fully offline -->
+<!-- Build DUCK-20261128-0016Z · shipped 2026-11-28T00:16:54Z · Three.js r128 (MIT) from vendor/ · fully offline -->
 <style>
 :root{--red:#e52521;--yel:#fbd000;--blu:#049cd8;--grn:#43b047;--ink:#1b1b2f;--card:#fffdf4}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none}
@@ -29,7 +29,7 @@ canvas#c{position:fixed;inset:0;width:100%;height:100%;display:block}
 #pathdev{font-size:13px}
 #stall{background:var(--red);font-size:18px;animation:blink .35s infinite alternate}
 @keyframes blink{from{opacity:1}to{opacity:.35}}
-#mini{position:absolute;right:max(10px,env(safe-area-inset-right));top:10px;width:160px;height:160px;border-radius:16px;background:rgba(20,24,48,.55)}
+#mini{pointer-events:auto;cursor:pointer;position:absolute;right:max(10px,env(safe-area-inset-right));top:10px;width:160px;height:160px;border-radius:16px;background:rgba(20,24,48,.55)}
 #fpv,#tgt{position:absolute;left:0;top:0;pointer-events:none;transform:translate(-50%,-50%)}
 #fpv{width:56px;height:30px}
 #tgt{font:700 11px system-ui;color:#fff;text-shadow:0 0 3px #000;text-align:center}
@@ -40,6 +40,11 @@ canvas#c{position:fixed;inset:0;width:100%;height:100%;display:block}
 #cfiMsg b{color:#2a6cff;white-space:nowrap}
 #toast{position:fixed;left:50%;top:38%;transform:translate(-50%,-50%);font-size:26px;font-weight:900;color:#fff;text-shadow:0 3px 0 #000,0 0 12px rgba(0,0,0,.5);pointer-events:none;transition:opacity .4s;opacity:0;text-align:center}
 #crumbs{position:absolute;left:max(10px,env(safe-area-inset-left));bottom:92px;font-size:15px}
+.tape{--tt:200px;--tb:110px;display:none;position:absolute;top:var(--tt);height:calc(100% - var(--tt) - var(--tb));border-radius:12px;background:rgba(20,24,48,.5)}
+#spdTape{left:max(10px,env(safe-area-inset-left));width:84px}
+#altTape{right:max(10px,env(safe-area-inset-right));width:100px;--tt:300px}
+body.tapes .tape{display:block}body.tapes .th{display:none!important}
+body.tapes #crumbs{left:104px}
 /* controls */
 #ctl{position:fixed;inset:auto 0 0 0;display:flex;justify-content:space-between;align-items:flex-end;padding:0 max(10px,env(safe-area-inset-right)) max(10px,env(safe-area-inset-bottom)) max(10px,env(safe-area-inset-left));pointer-events:none}
 #ctl .grp{display:flex;gap:8px;pointer-events:auto}
@@ -95,6 +100,11 @@ label.ck{display:flex;align-items:center;gap:6px;font-weight:700;font-size:13px}
   #mini{width:150px;height:150px}
   #crumbs{bottom:78px}
   #cfiMsg{bottom:74px;max-width:52vw;font-size:12px}
+  body.tapes #rpanel{left:268px;top:10px}
+  body.tapes #tpanel{max-width:220px}
+  body.tapes .tape{--tt:96px;--tb:78px}
+  body.tapes #altTape{right:172px;--tt:86px}
+  body.tapes #crumbs{left:104px;bottom:78px}
 }
 @media (max-width:600px) and (orientation:portrait){
   #lpanel .pill,#rpanel .pill{min-width:104px;padding:4px 8px}
@@ -108,6 +118,9 @@ label.ck{display:flex;align-items:center;gap:6px;font-weight:700;font-size:13px}
   #topbtns{left:auto;right:max(10px,env(safe-area-inset-right));bottom:calc(76px + env(safe-area-inset-bottom));transform:none;flex-direction:column;align-items:stretch}
   #cfiMsg{left:10px;right:96px;transform:none;max-width:none;bottom:calc(76px + env(safe-area-inset-bottom));font-size:13px}
   #crumbs{bottom:calc(200px + env(safe-area-inset-bottom))}
+  body.tapes .tape{--tt:178px;--tb:300px}
+  body.tapes #altTape{--tt:250px;--tb:310px}
+  body.tapes #crumbs{left:10px;bottom:calc(240px + env(safe-area-inset-bottom))}
 }
 </style>
 </head>
@@ -116,7 +129,7 @@ label.ck{display:flex;align-items:center;gap:6px;font-weight:700;font-size:13px}
 
 <div id="hud" class="hide">
   <div id="lpanel">
-    <div class="pill"><div class="lab">Airspeed KIAS</div><div class="big" id="ias">--</div>
+    <div class="pill"><div class="lab th">Airspeed KIAS</div><div class="big th" id="ias">--</div>
       <div class="row"><span>Tgt</span><span id="vg">--</span></div>
       <div class="row"><span>Vs</span><span id="vs">--</span></div>
       <div class="row"><span>GS</span><span id="gs">--</span></div></div>
@@ -131,7 +144,7 @@ label.ck{display:flex;align-items:center;gap:6px;font-weight:700;font-size:13px}
   </div>
   <canvas id="mini" width="320" height="320"></canvas>
   <div id="rpanel">
-    <div class="pill"><div class="lab">Height above target ft</div><div class="big" id="alt">--</div>
+    <div class="pill th"><div class="lab">Height above target ft</div><div class="big" id="alt">--</div>
       <div class="row"><span>AGL</span><span id="agl">--</span></div>
       <div class="row"><span>VSI</span><span id="vsi">--</span></div></div>
     <div class="pill"><div class="row"><span>To tgt</span><span id="dist">--</span></div>
@@ -140,6 +153,7 @@ label.ck{display:flex;align-items:center;gap:6px;font-weight:700;font-size:13px}
       <div class="row"><span>Wind</span><span id="wnd">--</span></div></div>
   </div>
   <div id="crumbs" class="pill">🍞 0/0</div>
+  <canvas id="spdTape" class="tape"></canvas><canvas id="altTape" class="tape"></canvas>
   <svg id="fpv" viewBox="-2 -2 48 26"><g stroke="#1a0020" stroke-width="5.5" fill="none" stroke-linecap="round"><circle cx="22" cy="11" r="6"/><line x1="2" y1="11" x2="16" y2="11"/><line x1="28" y1="11" x2="42" y2="11"/><line x1="22" y1="5" x2="22" y2="0"/></g><g stroke="#ff2bd6" stroke-width="2.8" fill="none" stroke-linecap="round"><circle cx="22" cy="11" r="6"/><line x1="2" y1="11" x2="16" y2="11"/><line x1="28" y1="11" x2="42" y2="11"/><line x1="22" y1="5" x2="22" y2="0"/></g></svg>
   <div id="tgt"><b></b><span id="tgtd"></span></div>
 </div>
@@ -190,6 +204,7 @@ label.ck{display:flex;align-items:center;gap:6px;font-weight:700;font-size:13px}
       <label class="ck"><input type="checkbox" id="snd" checked> 🔊 Sound</label>
       <label class="ck"><input type="checkbox" id="cfi"> 🎓 CFI duck wingman + callouts</label>
       <label class="ck"><input type="checkbox" id="voice"> 🗣️ CFI voice</label>
+      <label class="ck"><input type="checkbox" id="tapes"> 📟 PFD tapes (G1000-style)</label>
       <label class="ck"><input type="checkbox" id="atrim"> 🎚️ Auto-trim when flaps move</label>
     </div>
     <button class="btn r" id="bGo" style="width:100%;height:60px;font-size:20px">BRIEFING ▶</button>
@@ -201,6 +216,7 @@ label.ck{display:flex;align-items:center;gap:6px;font-weight:700;font-size:13px}
         <b>Trim</b><span>Trim sets the speed the duck holds with the phone at your LEVEL position (or keys released). It starts trimmed for best glide (Vg). Tilt = temporary change; trim = new "hands-off" speed. If you're holding the phone tilted to keep a speed, trim it out. Flaps change the trimmed speed (more lift at the same attitude), so re-trim after each notch — or leave Auto-trim on.</span>
         <b>Landing</b><span>Flaps only once the pond is made; full flaps on final at the "Tgt" speed; round out ~25 ft, hold it off ~10 ft, touch near stall speed (~44 kt in the Mallard with full flaps).</span>
         <b>Bread trail</b><span>🍞 Coins mark a glide path with margin. Collect them = right place, right energy. The PATH readout tells you high/low.</span>
+        <b>Profile view</b><span>Tap the minimap to flip between the top-down map and an approach-plate-style side profile: the bread-trail glidepath (dashed), terrain along the route, your duck, and your glide-reach line to the target.</span>
         <b>Green ring</b><span>Minimap glide reach at best glide in the current configuration, shifted by wind. Target inside ring = you can make it.</span>
         <b>Flight-path marker</b><span>The magenta ⊖ is where you're actually going. Put it just short of the bullseye on final — that's your aim point.</span>
         <b>Physics</b><span>Point-mass 3-DOF: real lift/drag polar (CD0 + k·CL²), stall at CLmax, ISA air density by altitude, ground effect, flaps &amp; slip drag, boundary-layer wind, gusts, thermals and ridge lift/sink. Earth gravity on every world (even Planet Ember) so numbers transfer.</span>
@@ -258,7 +274,7 @@ label.ck{display:flex;align-items:center;gap:6px;font-weight:700;font-size:13px}
 <script>
 (function(){
 'use strict';
-const BUILD_ID='DUCK-20261128-0009Z', BUILT_UTC='2026-11-28T00:09:52Z';
+const BUILD_ID='DUCK-20261128-0016Z', BUILT_UTC='2026-11-28T00:16:54Z';
 const KT=1.943844, FT=3.28084, FPM=196.8504, D2R=Math.PI/180, R2D=180/Math.PI, G=9.80665, RHO0=1.225;
 const clamp=(v,a,b)=>v<a?a:v>b?b:v, lerp=(a,b,t)=>a+(b-a)*t;
 const smooth=(a,b,x)=>{const t=clamp((x-a)/(b-a),0,1);return t*t*(3-2*t);};
@@ -276,13 +292,13 @@ function rng(seed){let a=seed>>>0;return ()=>{a=(a+0x6D2B79F5)|0;let t=Math.imul
 /* ---------------- duck profiles (aero) ---------------- */
 const NOFLAP={n:'UP',dCL:0,dCLmax:0,dCD:0};
 const PROFILES={
- mallard:{id:'mallard',name:'Mallard 172',like:'Cessna 172-like engine-out glide',m:1043,S:16.2,b:11.0,e:0.75,CD0:0.0544,CLa:5.0,a0:-2,CLmax:1.5,roll:45,slipCD:0.06,vcr:105,
+ mallard:{id:'mallard',name:'Mallard 172',like:'Cessna 172-like engine-out glide',m:1043,S:16.2,b:11.0,e:0.75,CD0:0.0544,CLa:5.0,a0:-2,CLmax:1.5,roll:45,slipCD:0.06,vcr:105,lim:{vfe:85,vno:129,vne:163},
    flaps:[NOFLAP,{n:'10°',dCL:.15,dCLmax:.15,dCD:.008},{n:'20°',dCL:.35,dCLmax:.35,dCD:.022},{n:'30°',dCL:.55,dCLmax:.55,dCD:.048}],
    col:{body:0xffd21a,head:0x2fbf5a,wing:0xfff3b0,tip:0x1e7fd8,beak:0xff8a00}},
- cub:{id:'cub',name:'Teal Cub',like:'Piper J-3 Cub-like — no flaps, slip to lose height',m:550,S:16.6,b:10.7,e:0.75,CD0:0.0635,CLa:4.8,a0:-2,CLmax:1.5,roll:40,slipCD:0.085,vcr:70,
+ cub:{id:'cub',name:'Teal Cub',like:'Piper J-3 Cub-like — no flaps, slip to lose height',m:550,S:16.6,b:10.7,e:0.75,CD0:0.0635,CLa:4.8,a0:-2,CLmax:1.5,roll:40,slipCD:0.085,vcr:70,lim:{vfe:0,vno:71,vne:92},
    flaps:[{n:'NONE',dCL:0,dCLmax:0,dCD:0}],
    col:{body:0xffc800,head:0x18b4a8,wing:0xffe066,tip:0x111111,beak:0xff7a00}},
- goose:{id:'goose',name:'Glider Goose',like:'Club-class sailplane — airbrakes instead of flaps',m:400,S:10.5,b:15.0,e:0.85,CD0:0.01166,CLa:5.6,a0:-2,CLmax:1.4,roll:35,slipCD:0.05,vcr:85,
+ goose:{id:'goose',name:'Glider Goose',like:'Club-class sailplane — airbrakes instead of flaps',m:400,S:10.5,b:15.0,e:0.85,CD0:0.01166,CLa:5.6,a0:-2,CLmax:1.4,roll:35,slipCD:0.05,vcr:85,lim:{vfe:0,vno:97,vne:135},
    flaps:[{n:'CLOSED',dCL:0,dCLmax:0,dCD:0},{n:'⅓ BRK',dCL:0,dCLmax:-.05,dCD:.02},{n:'⅔ BRK',dCL:0,dCLmax:-.1,dCD:.05},{n:'FULL BRK',dCL:0,dCLmax:-.15,dCD:.09}],
    col:{body:0xf8f8f8,head:0x222222,wing:0xe8e8e8,tip:0x444444,beak:0xff9a1a}}
 };
@@ -461,7 +477,7 @@ const ruleOf=st=>st.rule||[3,4];
 
 /* ---------------- persistence ---------------- */
 const SKEY='duckglide.v1';
-let SAVE={best:{},crumbs:0,prog:{},set:{mode:'lesson',stage:{},prof:'mallard',ctl:/Mobi|Android|iPhone|iPad/i.test(navigator.userAgent)?'tilt':'keys',sens:1,invP:false,invR:false,zen:false,snd:true,world:'meadow',cfi:true,voice:true,atrim:true}};
+let SAVE={best:{},crumbs:0,prog:{},set:{mode:'lesson',stage:{},prof:'mallard',ctl:/Mobi|Android|iPhone|iPad/i.test(navigator.userAgent)?'tilt':'keys',sens:1,invP:false,invR:false,zen:false,snd:true,world:'meadow',tapes:true,mapProf:false,cfi:true,voice:true,atrim:true}};
 try{const s=JSON.parse(localStorage.getItem(SKEY));if(s){SAVE.best=s.best||{};SAVE.crumbs=s.crumbs||0;SAVE.prog=s.prog||{};Object.assign(SAVE.set,s.set||{});}}catch(e){}
 function persist(){try{localStorage.setItem(SKEY,JSON.stringify(SAVE));}catch(e){}}
 
@@ -572,11 +588,11 @@ function buildClouds(w){
 function makeDuck(p){
   const g=new THREE.Group(),c=p.col,L=(col)=>new THREE.MeshLambertMaterial({color:col,flatShading:true});
   const body=new THREE.Mesh(new THREE.SphereGeometry(1,14,10),L(c.body));body.scale.set(.1,.085,.25);g.add(body);
-  const head=new THREE.Mesh(new THREE.SphereGeometry(.075,12,9),L(c.head));head.position.set(0,.07,-.24);g.add(head);
-  if(p.id==='mallard'){const ring=new THREE.Mesh(new THREE.TorusGeometry(.055,.012,6,14),L(0xffffff));ring.position.set(0,.035,-.2);ring.rotation.x=1.2;g.add(ring);}
+  const head=new THREE.Mesh(new THREE.SphereGeometry(.075,12,9),L(c.head));head.position.set(0,.07,-.24);g.add(head);const fpHide=[head];
+  if(p.id==='mallard'){const ring=new THREE.Mesh(new THREE.TorusGeometry(.055,.012,6,14),L(0xffffff));ring.position.set(0,.035,-.2);ring.rotation.x=1.2;g.add(ring);fpHide.push(ring);}
   const beak=new THREE.Mesh(new THREE.BoxGeometry(.06,.022,.09),L(c.beak));beak.position.set(0,.06,-.32);g.add(beak);
-  for(const sx of[-1,1]){const eye=new THREE.Mesh(new THREE.SphereGeometry(.014,6,5),L(0x111111));eye.position.set(sx*.055,.095,-.28);g.add(eye);
-    const sh=new THREE.Mesh(new THREE.SphereGeometry(.005,4,3),new THREE.MeshBasicMaterial({color:0xffffff}));sh.position.set(sx*.062,.1,-.29);g.add(sh);}
+  for(const sx of[-1,1]){const eye=new THREE.Mesh(new THREE.SphereGeometry(.014,6,5),L(0x111111));eye.position.set(sx*.055,.095,-.28);g.add(eye);fpHide.push(eye);
+    const sh=new THREE.Mesh(new THREE.SphereGeometry(.005,4,3),new THREE.MeshBasicMaterial({color:0xffffff}));sh.position.set(sx*.062,.1,-.29);g.add(sh);fpHide.push(sh);}
   const tail=new THREE.Mesh(new THREE.ConeGeometry(.05,.12,6),L(c.wing));tail.rotation.x=-Math.PI/2-.3;tail.position.set(0,.03,.27);g.add(tail);
   const wings=[],flaps=[];
   for(const sx of[-1,1]){const piv=new THREE.Group();piv.position.set(sx*.07,.03,-.02);
@@ -587,7 +603,7 @@ function makeDuck(p){
   const feet=new THREE.Group();for(const sx of[-1,1]){const f=new THREE.Mesh(new THREE.BoxGeometry(.05,.008,.07),L(0xff8a00));f.position.set(sx*.04,-.1,.12);feet.add(f);
     const lg=new THREE.Mesh(new THREE.CylinderGeometry(.006,.006,.05,4),L(0xff8a00));lg.position.set(sx*.04,-.075,.1);feet.add(lg);}g.add(feet);
   const outer=new THREE.Group(),inner=new THREE.Group();inner.add(g);g.position.y=.085;outer.add(inner);inner.scale.setScalar(p.b);
-  outer.userData={wings,flaps,feet,inner,g};return outer;
+  outer.userData={wings,flaps,feet,inner,g,fpHide};return outer;
 }
 function makeTarget(leg){
   const grp=new THREE.Group(),y=W.ponds[leg.pond].y+.15,T=leg.target;
@@ -767,7 +783,7 @@ addEventListener('pointerup',endTouch);addEventListener('pointercancel',endTouch
 function hold(id,on,off,rep){const b=$(id);let iv=0;b.addEventListener('pointerdown',e=>{e.preventDefault();b.classList.add('on');on();if(rep){clearInterval(iv);iv=setInterval(on,rep);}});['pointerup','pointerleave','pointercancel'].forEach(ev=>b.addEventListener(ev,()=>clearInterval(iv)));['pointerup','pointerleave','pointercancel'].forEach(ev=>b.addEventListener(ev,()=>{b.classList.remove('on');off&&off();}));}
 let slipBtn=false;hold('bSlip',()=>slipBtn=true,()=>slipBtn=false);let boostBtn=false;hold('bBoost',()=>boostBtn=true,()=>boostBtn=false);
 hold('bFu',()=>setFlap(-1));hold('bFd',()=>setFlap(1));hold('bTu',()=>trim(1),null,140);hold('bTd',()=>trim(-1),null,140);
-$('bCam').onclick=()=>cycleCam();$('bRetry').onclick=()=>{if(state==='fly'||state==='settle')retry();};$('bMenu').onclick=()=>{if(state==='fly'||state==='settle'){state='menu';drill=null;hideAll();showHUD(false);if(cfiDuck)cfiDuck.visible=false;show('menu');renderMenu();}};$('bCal').onclick=()=>{calibrate();inp.bankK=0;toast('Level set',800);};$('bPause').onclick=()=>togglePause();
+$('bCam').onclick=()=>cycleCam();$('mini').addEventListener('pointerdown',e=>{e.stopPropagation();SAVE.set.mapProf=!SAVE.set.mapProf;persist();toast(SAVE.set.mapProf?'Profile view':'Map view',700);});$('bRetry').onclick=()=>{if(state==='fly'||state==='settle')retry();};$('bMenu').onclick=()=>{if(state==='fly'||state==='settle'){state='menu';drill=null;hideAll();showHUD(false);if(cfiDuck)cfiDuck.visible=false;show('menu');renderMenu();}};$('bCal').onclick=()=>{calibrate();inp.bankK=0;toast('Level set',800);};$('bPause').onclick=()=>togglePause();
 let padPrev={};
 function readInputs(dt){
   const k=inp.keys,sens=SAVE.set.sens;let pitch=0,bank=null,slip=(k[' ']||slipBtn)?1:0;
@@ -787,7 +803,7 @@ function readInputs(dt){
 function setFlap(d){if(state!=='fly')return;const P=profile,n=clamp(ph.flap+d,0,P.flaps.length-1);if(n!==ph.flap){ph.flap=n;beep(d>0?520:700,.06);
   if(SAVE.set.atrim){const v=tgtSpeed(P,n);ph.trim=trimFor(P,n,v);toast(`Flaps ${P.flaps[n].n} · auto-trim ${(v*KT).toFixed(0)} kt`,1100);}}}
 function trim(d){if(state!=='fly')return;ph.trim=clamp(ph.trim+d*.5,profile.a0+1,profile.aStall-1);beep(900,.03);}
-function cycleCam(){camMode=(camMode+1)%3;toast(['Chase cam','Duck-eye cam','Tower cam'][camMode],900);}
+const CAMN=['CHASE','DUCK-EYE','TOWER'];function cycleCam(){camMode=(camMode+1)%3;toast(['Chase cam','Duck-eye (1st person)','Tower cam'][camMode],900);$('bCam').textContent='CAM · '+CAMN[camMode];}
 
 /* ---------------- physics ---------------- */
 function physStep(dt){
@@ -909,7 +925,7 @@ function sfx(k){if(!AC||!SAVE.set.snd)return;if(k==='coin'){beep(988,.08,'square
 
 /* ---------------- HUD ---------------- */
 const mini=$('mini'),mctx=mini.getContext('2d');
-function showHUD(on){if(!on){const m=$('cfiMsg');if(m)m.classList.add('hide');}['hud','ctl','topbtns'].forEach(id=>$(id).classList.toggle('hide',!on));$('bBoost').classList.toggle('hide',!ZEN());}
+function showHUD(on){document.body.classList.toggle('tapes',!!SAVE.set.tapes);$('bCam').textContent='CAM · '+CAMN[camMode];if(!on){const m=$('cfiMsg');if(m)m.classList.add('hide');}['hud','ctl','topbtns'].forEach(id=>$(id).classList.toggle('hide',!on));$('bBoost').classList.toggle('hide',!ZEN());}
 let toastT=0;function toast(msg,ms){const t=$('toast');t.textContent=msg;t.style.opacity=1;clearTimeout(toastT);toastT=setTimeout(()=>t.style.opacity=0,ms||1200);}
 function show(id){['menu','brief','pause','result'].forEach(o=>$(o).classList.toggle('hide',o!==id));}
 function hideAll(){['menu','brief','pause','result'].forEach(o=>$(o).classList.add('hide'));}
@@ -937,7 +953,8 @@ function updateHUD(dt){
   if(off<600&&pd[bi].rem>150){stats.maxHi=Math.max(stats.maxHi,dev);stats.maxLo=Math.max(stats.maxLo,-dev);}}
   $('stall').classList.toggle('hide',!(s.CLlin>.9*s.CLm));
   $('crumbs').textContent=`🍞 ${stats.crumbs}/${stats.total}`+(ZEN()?` · ⚡${Math.round(s.energy*100)}%`:'');
-  drawMini(need,have);
+  if(SAVE.set.mapProf)drawProfile(need,have);else drawMini(need,have);
+  if(SAVE.set.tapes)drawTapes(ias,hT,vsi,tg);
 }
 function drawMini(need,have){
   const c=mctx,Wd=320,s=ph,T=LEG.target,ty=W.ponds[LEG.pond].y;c.clearRect(0,0,Wd,Wd);
@@ -963,6 +980,59 @@ function drawMini(need,have){
   // wind arrow + N
   const to=(W.wind.from+180)*D2R;c.save();c.translate(36,36);c.rotate(to);c.strokeStyle='#fff';c.lineWidth=4;c.beginPath();c.moveTo(0,14);c.lineTo(0,-14);c.lineTo(-7,-5);c.moveTo(0,-14);c.lineTo(7,-5);c.stroke();c.restore();
   c.fillStyle='#fff';c.font='bold 22px system-ui';c.textAlign='center';c.fillText('N',160,24);c.font='bold 18px system-ui';c.fillText(`${W.wind.kt}kt`,36,74);c.fillText(`${(range/1852).toFixed(1)}nm`,282,306);
+}
+
+/* ---------------- PFD tapes ---------------- */
+let trV=0,trA=0,pvI=null,pvA=null,pvT=0;
+function fitC(c){const r=c.getBoundingClientRect(),d=Math.min(2,devicePixelRatio||1),w=Math.max(10,Math.round(r.width*d)),h=Math.max(10,Math.round(r.height*d));if(c.width!==w||c.height!==h){c.width=w;c.height=h;}return {g:c.getContext('2d'),w,h,d};}
+function drawTapes(ias,hT,vsi,tg){const s=ph,P=profile,dtt=Math.max(.02,s.t-pvT);pvT=s.t;
+  if(pvI!==null){trV=lerp(trV,(ias-pvI)/dtt,.25);}pvI=ias;trA=vsi/60;
+  {const {g,w,h,d}=fitC($('spdTape'));g.clearRect(0,0,w,h);const ppk=h/70,cy=h/2,Y=v=>cy-(v-ias)*ppk,bw=9*d,x0=w-bw,L=P.lim;
+    const band=(lo,hi,c,x,wd)=>{const y1=clamp(Y(hi),0,h),y2=clamp(Y(lo),0,h);if(y2>y1){g.fillStyle=c;g.fillRect(x,y1,wd,y2-y1);}};
+    const vs0=P.vsF(P.flaps.length-1)*KT,vs1=P.vsF(0)*KT,vsDyn=P.vsF(s.flap)*KT*Math.sqrt(1/Math.max(.2,Math.cos(s.bank*D2R)));
+    if(L.vfe)band(vs0,L.vfe,'#fff',x0,bw*.45);band(vs1,L.vno,'#2ecc40',x0+bw*.5,bw*.5);band(L.vno,L.vne,'#ffdc00',x0+bw*.5,bw*.5);band(L.vne,L.vne+60,'#ff4136',x0,bw);
+    band(0,vsDyn,'rgba(255,65,54,.85)',x0,bw);
+    g.strokeStyle='#fff';g.fillStyle='#fff';g.lineWidth=1.5*d;g.font=`bold ${13*d}px system-ui`;g.textAlign='right';g.textBaseline='middle';
+    for(let v=Math.floor((ias-38)/5)*5;v<=ias+38;v+=5){if(v<0)continue;const y=Y(v);g.beginPath();g.moveTo(x0-(v%10?6:11)*d,y);g.lineTo(x0,y);g.stroke();if(v%10===0)g.fillText(v,x0-14*d,y);}
+    const tri=(v,c,lab)=>{const y=Y(v);if(y<0||y>h)return;g.fillStyle=c;g.beginPath();g.moveTo(x0,y);g.lineTo(x0-9*d,y-7*d);g.lineTo(x0-9*d,y+7*d);g.closePath();g.fill();if(lab){g.font=`bold ${10*d}px system-ui`;g.textAlign='left';g.fillText(lab,2*d,y);g.textAlign='right';g.font=`bold ${13*d}px system-ui`;}};
+    tri(P.vbg*KT,'#3fd0ff','G');tri(tg,'#ff2bd6');
+    g.strokeStyle='#ff2bd6';g.lineWidth=3*d;g.beginPath();g.moveTo(x0-2*d,cy);g.lineTo(x0-2*d,clamp(Y(ias+trV*6),0,h));g.stroke();
+    const bh=30*d;g.fillStyle='#000';g.strokeStyle='#fff';g.lineWidth=1.5*d;g.beginPath();g.moveTo(2*d,cy-bh/2);g.lineTo(x0-12*d,cy-bh/2);g.lineTo(x0-3*d,cy);g.lineTo(x0-12*d,cy+bh/2);g.lineTo(2*d,cy+bh/2);g.closePath();g.fill();g.stroke();
+    g.fillStyle=ias<vsDyn*1.1?'#ff6a6a':'#fff';g.font=`bold ${20*d}px system-ui`;g.textAlign='center';g.fillText(ias.toFixed(0),(x0-10*d)/2+2*d,cy+d);
+    g.fillStyle='rgba(0,0,0,.55)';g.fillRect(0,0,w,16*d);g.fillRect(0,h-16*d,w,16*d);g.fillStyle='#ff2bd6';g.font=`bold ${11*d}px system-ui`;g.fillText(`TGT ${tg.toFixed(0)}`,w/2,8*d);g.fillStyle='#fff';g.fillText(`GS ${(Math.hypot(s.vel.x,s.vel.z)*KT).toFixed(0)}`,w/2,h-8*d);}
+  {const {g,w,h,d}=fitC($('altTape'));g.clearRect(0,0,w,h);const vw=20*d,tw=w-vw,ppf=h/1000,cy=h/2,Y=a=>cy-(a-hT)*ppf,ty=W.ponds[LEG.pond].y;
+    const tG=((s.sf?s.sf.y:ty)-ty)*FT,yg=Y(tG);if(yg<h){g.fillStyle='rgba(150,90,40,.9)';g.fillRect(0,Math.max(0,yg),tw,h-Math.max(0,yg));g.strokeStyle='rgba(255,220,160,.6)';g.lineWidth=d;for(let k=-h;k<h;k+=10*d){g.beginPath();g.moveTo(k,Math.max(0,yg)+0);g.lineTo(k+h,Math.max(0,yg)+h);g.stroke();}}
+    g.strokeStyle='#fff';g.fillStyle='#fff';g.lineWidth=1.5*d;g.font=`bold ${12*d}px system-ui`;g.textAlign='left';g.textBaseline='middle';
+    for(let a=Math.floor((hT-560)/50)*50;a<=hT+560;a+=50){const y=Y(a);g.beginPath();g.moveTo(0,y);g.lineTo((a%100?6:11)*d,y);g.stroke();if(a%100===0)g.fillText(a,14*d,y);}
+    {const y=Y(0);if(y>0&&y<h){g.strokeStyle='#3fd0ff';g.lineWidth=2.5*d;g.beginPath();g.moveTo(0,y);g.lineTo(tw,y);g.stroke();g.fillStyle='#3fd0ff';g.font=`bold ${10*d}px system-ui`;g.fillText('TGT',tw-26*d,y-7*d);}}
+    if(PATH&&pathOff<600){const pa=(PATH.dense[pathIdx].y-ty)*FT,y=Y(pa);if(y>0&&y<h){g.fillStyle='#ffcc22';g.beginPath();g.moveTo(0,y);g.lineTo(9*d,y-7*d);g.lineTo(9*d,y+7*d);g.closePath();g.fill();}}
+    g.strokeStyle='#ff2bd6';g.lineWidth=3*d;g.beginPath();g.moveTo(2*d,cy);g.lineTo(2*d,clamp(Y(hT+trA*6),0,h));g.stroke();
+    const bh=30*d;g.fillStyle='#000';g.strokeStyle='#fff';g.lineWidth=1.5*d;g.beginPath();g.moveTo(tw-2*d,cy-bh/2);g.lineTo(12*d,cy-bh/2);g.lineTo(3*d,cy);g.lineTo(12*d,cy+bh/2);g.lineTo(tw-2*d,cy+bh/2);g.closePath();g.fill();g.stroke();
+    g.fillStyle='#fff';g.font=`bold ${18*d}px system-ui`;g.textAlign='center';g.fillText((Math.round(hT/10)*10).toFixed(0),(tw+10*d)/2,cy+d);
+    const vy=v=>cy-Math.sign(v)*Math.sqrt(Math.min(2000,Math.abs(v))/2000)*(h*.4);g.fillStyle='rgba(0,0,0,.35)';g.fillRect(tw,0,vw,h);g.strokeStyle='#fff';g.lineWidth=d;g.font=`${9*d}px system-ui`;g.fillStyle='#fff';
+    for(const v of[-2000,-1000,-500,0,500,1000,2000]){const y=vy(v);g.beginPath();g.moveTo(tw,y);g.lineTo(tw+5*d,y);g.stroke();if(v&&Math.abs(v)!==500)g.fillText(Math.abs(v)/1000,tw+12*d,y);}
+    const yv=vy(vsi);g.fillStyle=vsi<-1000?'#ffdc00':'#7CFF6B';g.beginPath();g.moveTo(tw+2*d,yv);g.lineTo(w,yv-6*d);g.lineTo(w,yv+6*d);g.closePath();g.fill();
+    g.fillStyle='rgba(0,0,0,.55)';g.fillRect(0,0,w,16*d);g.fillRect(0,h-16*d,w,16*d);g.font=`bold ${11*d}px system-ui`;g.fillStyle='#fff';g.fillText('HAT FT',w/2,8*d);g.fillStyle='#7CFF6B';g.fillText(`AGL ${(Math.max(0,s.hS)*FT).toFixed(0)}`,w/2,h-8*d);}
+}
+/* ---------------- profile (approach-plate side view) ---------------- */
+function drawProfile(need,have){const c=mctx,Wd=320,s=ph,P=profile,T=LEG.target,ty=W.ponds[LEG.pond].y;c.clearRect(0,0,Wd,Wd);
+  c.fillStyle='#fffdf4';c.beginPath();c.roundRect?c.roundRect(0,0,Wd,Wd,28):c.rect(0,0,Wd,Wd);c.fill();
+  const onPath=PATH&&pathOff<600,rem=onPath?pathRem:Math.hypot(s.pos.x-T[0],s.pos.z-T[1]),h=s.pos.y-ty;
+  const xr=Math.max(800,rem*1.15+200),yr=Math.max(150,h*1.25+60),X=d=>300-(d/xr)*270,Yy=a=>270-(a/yr)*230;
+  c.strokeStyle='#ddd';c.lineWidth=1;c.font='bold 16px system-ui';c.fillStyle='#888';c.textAlign='left';
+  const step=yr*FT>3000?1000:yr*FT>1200?500:200;for(let a=0;a<=yr*FT;a+=step){const y=Yy(a/FT);c.beginPath();c.moveTo(30,y);c.lineTo(305,y);c.stroke();c.fillText(a,4,y-3);}
+  // terrain along the route
+  const tp=[];if(onPath){for(const d of PATH.dense)if(d.rem<=xr)tp.push([d.rem,surfaceAt(d.x,d.z).y-ty,d.y-ty]);}
+  else{for(let k=0;k<=40;k++){const f=k/40,x=lerp(T[0],s.pos.x,f),z=lerp(T[1],s.pos.z,f);tp.push([f*rem,surfaceAt(x,z).y-ty,null]);}}
+  tp.sort((a,b)=>b[0]-a[0]);c.fillStyle='rgba(150,100,50,.55)';c.beginPath();c.moveTo(X(tp[0][0]),300);tp.forEach(p=>c.lineTo(X(p[0]),Yy(Math.max(-20,p[1]))));c.lineTo(X(tp[tp.length-1][0]),300);c.closePath();c.fill();
+  if(onPath){c.strokeStyle='#e0a800';c.lineWidth=3;c.setLineDash([8,6]);c.beginPath();tp.forEach((p,i)=>i?c.lineTo(X(p[0]),Yy(p[2])):c.moveTo(X(p[0]),Yy(p[2])));c.stroke();c.setLineDash([]);}
+  // glide reach line
+  const ld=P.ldCfg(s.flap);c.strokeStyle=need<have?'#2a9d3a':'#e52521';c.lineWidth=2.5;c.beginPath();c.moveTo(X(rem),Yy(h));c.lineTo(X(rem-h*ld),Yy(0));c.stroke();
+  // target + duck
+  c.fillStyle='#e52521';c.beginPath();c.moveTo(X(0),Yy(0));c.lineTo(X(0),Yy(0)-26);c.lineTo(X(0)+14,Yy(0)-20);c.lineTo(X(0),Yy(0)-14);c.fill();c.fillRect(X(0)-1,Yy(0)-26,2,26);
+  c.fillStyle='#3fd0ff';c.fillRect(X(0)-20,Yy(0)-2,40,4);
+  const gam=Math.atan2(s.vel.y,Math.hypot(s.vel.x,s.vel.z));c.save();c.translate(X(rem),Yy(h));c.rotate(gam);c.fillStyle='#ffd21a';c.strokeStyle='#000';c.lineWidth=2;c.beginPath();c.moveTo(12,0);c.lineTo(-10,-6);c.lineTo(-6,0);c.lineTo(-10,6);c.closePath();c.fill();c.stroke();c.restore();
+  c.fillStyle='#1b1b2f';c.font='bold 18px system-ui';c.textAlign='center';c.fillText('PROFILE',160,24);c.font='bold 15px system-ui';c.fillText(`${(rem/1852).toFixed(1)} nm · ${(h*FT).toFixed(0)} ft`,160,300);
 }
 
 /* ---------------- render update ---------------- */
@@ -998,8 +1068,9 @@ function updateVisuals(dt){
   const b=P.b,trk=tmp1.set(s.vel.x,0,s.vel.z);if(trk.lengthSq()<1)trk.set(F2(LEG.hdg)[0],0,F2(LEG.hdg)[1]);trk.normalize();
   if(camMode===0||state!=='fly'&&camMode===1){const back=(state==='fly'?3.0:4.5)*(camera.aspect<1?1.2:1);camPos.copy(s.pos).addScaledVector(trk,-b*back);camPos.y+=b*(state==='fly'?.75:1.4);
     const gy=surfaceAt(camPos.x,camPos.z,camPos.y).y+2;if(camPos.y<gy)camPos.y=gy;camera.position.lerp(camPos,1-Math.exp(-dt*5));camLook.copy(s.pos).addScaledVector(trk,b*2);camLook.y+=b*.15;camera.lookAt(camLook);camera.fov=camera.aspect<1?78:62;}
-  else if(camMode===1){camera.position.copy(s.pos).addScaledVector(fb,-b*.05).addScaledVector(ub,b*.17);camera.up.copy(ub);camera.lookAt(tmp2.copy(camera.position).add(fb));camera.up.set(0,1,0);camera.fov=72;}
+  else if(camMode===1){camera.position.copy(s.pos).addScaledVector(fb,b*.25).addScaledVector(ub,b*.17);camera.up.copy(ub);camera.lookAt(tmp2.copy(camera.position).add(fb).addScaledVector(ub,-.06));camera.up.set(0,1,0);camera.fov=camera.aspect<1?95:75;}
   else{const T=LEG.target,tp=at(T,LEG.hdg,-60,75);camera.position.set(tp[0],surfaceAt(tp[0],tp[1]).y+6,tp[1]);camera.lookAt(s.pos);const d=camera.position.distanceTo(s.pos);camera.fov=clamp(2*Math.atan(b*4/d)*R2D,4,60);}
+  {const fp=camMode===1&&state==='fly';u.fpHide.forEach(m=>m.visible=!fp);}
   camera.updateProjectionMatrix();sky.position.copy(camera.position);
   // projected markers
   const fpvEl=$('fpv'),tgEl=$('tgt');
@@ -1126,7 +1197,7 @@ function renderMenu(){
   [...$('profSeg').children].forEach(b=>b.onclick=()=>{profile=PROFILES[b.dataset.v];SAVE.set.prof=profile.id;persist();renderMenu();});
   const p=profile;$('profInfo').textContent=`${p.like} · best glide ${(p.vbg*KT).toFixed(0)} KIAS · L/D ${p.LD.toFixed(1)}:1 · Vs clean ${(p.vsF(0)*KT).toFixed(0)} / dirty ${(p.vsF(p.flaps.length-1)*KT).toFixed(0)} KIAS · span ${p.b} m`;
   [...$('ctlSeg').children].forEach(b=>{b.classList.toggle('on',b.dataset.v===SAVE.set.ctl);b.onclick=()=>{SAVE.set.ctl=b.dataset.v;persist();renderMenu();};});
-  $('sens').value=SAVE.set.sens;$('invP').checked=SAVE.set.invP;$('invR').checked=SAVE.set.invR;$('zen').checked=SAVE.set.zen;$('cfi').checked=SAVE.set.cfi;$('voice').checked=SAVE.set.voice;$('atrim').checked=SAVE.set.atrim;$('snd').checked=SAVE.set.snd;
+  $('sens').value=SAVE.set.sens;$('invP').checked=SAVE.set.invP;$('invR').checked=SAVE.set.invR;$('zen').checked=SAVE.set.zen;$('cfi').checked=SAVE.set.cfi;$('voice').checked=SAVE.set.voice;$('atrim').checked=SAVE.set.atrim;$('tapes').checked=SAVE.set.tapes;$('snd').checked=SAVE.set.snd;
   renderLadder();
   $('stampMenu').textContent=`Build ${BUILD_ID} · shipped ${BUILT_UTC} · 🍞 lifetime ${SAVE.crumbs}`;
 }
@@ -1138,7 +1209,7 @@ function renderLadder(){const el=$('ladder'),w=selW.id,L=LS[w];if(SAVE.set.mode!
   [...el.querySelectorAll('.st')].forEach(d=>d.onclick=()=>{const i=+d.dataset.i;if(!unlocked(w,i)){toast(lockReason(w,i),2200);return;}SAVE.set.stage=SAVE.set.stage||{};SAVE.set.stage[w]=i;persist();renderLadder();});}
 function pickLesson(){LES=null;if(SAVE.set.mode!=='lesson'||!LS[selW.id])return;const i=curIdx(selW.id);if(unlocked(selW.id,i))LES={w:selW.id,i,st:LS[selW.id][i]};}
 $('sens').oninput=e=>{SAVE.set.sens=+e.target.value;persist();};
-['invP','invR','zen','snd','cfi','voice','atrim'].forEach(id=>$(id).onchange=e=>{SAVE.set[id]=e.target.checked;persist();});
+['invP','invR','zen','snd','cfi','voice','atrim','tapes'].forEach(id=>$(id).onchange=e=>{SAVE.set[id]=e.target.checked;persist();});
 function brief(){
   const w=selW,p=profile,L=w.legs[0];pickLesson();$('bTitle').textContent=w.name;$('bTag').textContent=w.tag;
   const LL=SAVE.set.mode==='lesson'&&LS[w.id]?(LES?`<p style="background:#e6f6ff;border:2px solid #049cd8;border-radius:12px;padding:8px 10px">🎓 <b>Lesson: ${LES.st.name}</b> — ${LES.st.kind==='drill'?DRILLBRIEF[LES.st.id]:LES.st.desc}.<br>Pass rule: <b>${ruleTxt(LES.st)}</b> · progress ${dots(LES.w,LES.st)}${LES.st.kind==='drill'?' · flown from ~4,000 ft AGL, fail below 1,000 ft':''}</p>`:`<p style="background:#fff3d6;border:2px solid #fbd000;border-radius:12px;padding:8px 10px">🔒 ${lockReason(w.id,curIdx(w.id))} This flight is free practice.</p>`):'';

@@ -6,10 +6,10 @@
 <meta name="theme-color" content="#049cd8">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="build-id" content="DUCK-20261128-1457Z">
-<meta name="built-utc" content="2026-11-28T14:57:38Z">
+<meta name="build-id" content="DUCK-20261128-1501Z">
+<meta name="built-utc" content="2026-11-28T15:01:36Z">
 <title>Duck Glide — Fly Good, Land Gooder</title>
-<!-- Build DUCK-20261128-1457Z · shipped 2026-11-28T14:57:38Z · Three.js r128 (MIT) from vendor/ · fully offline -->
+<!-- Build DUCK-20261128-1501Z · shipped 2026-11-28T15:01:36Z · Three.js r128 (MIT) from vendor/ · fully offline -->
 <style>
 :root{--red:#e52521;--yel:#fbd000;--blu:#049cd8;--grn:#43b047;--ink:#1b1b2f;--card:#fffdf4}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none}
@@ -57,6 +57,9 @@ body.flying #rudBar{display:block}
 #altTape{right:max(10px,env(safe-area-inset-right));width:100px;--tt:300px}
 body.tapes .tape{display:block}body.tapes .th{display:none!important}
 body.tapes #crumbs{left:104px}
+#adi{display:none;position:absolute;left:104px;top:42%;width:190px;height:150px;transform:translateY(-50%);border-radius:14px;box-shadow:0 3px 0 rgba(0,0,0,.3);opacity:.93}
+body.adion #adi{display:block}
+body.adion:not(.tapes) #adi{left:max(10px,env(safe-area-inset-left))}
 /* controls */
 #ctl{position:fixed;inset:auto 0 0 0;display:flex;justify-content:space-between;align-items:flex-end;padding:0 max(10px,env(safe-area-inset-right)) max(10px,env(safe-area-inset-bottom)) max(10px,env(safe-area-inset-left));pointer-events:none}
 #ctl .grp{display:flex;gap:8px;pointer-events:auto}
@@ -114,6 +117,7 @@ label.ck{display:flex;align-items:center;gap:6px;font-weight:700;font-size:13px}
   #cfiMsg{bottom:116px;max-width:52vw;font-size:12px}
   #rudBar{bottom:56px}
   #chk{top:96px;left:100px}
+  #adi{left:100px;top:52%;width:160px;height:124px}
   body.tapes #rpanel{left:268px;top:10px}
   body.tapes #tpanel{max-width:220px}
   body.tapes .tape{--tt:96px;--tb:78px}
@@ -133,6 +137,7 @@ label.ck{display:flex;align-items:center;gap:6px;font-weight:700;font-size:13px}
   #cfiMsg{left:10px;right:96px;transform:none;max-width:none;bottom:calc(122px + env(safe-area-inset-bottom));font-size:13px}
   #rudBar{left:10px;right:96px;width:auto;transform:none;bottom:calc(62px + env(safe-area-inset-bottom))}
   #chk{left:100px;top:180px}
+  #adi{left:100px;top:182px;transform:none;width:170px;height:136px}
   #crumbs{bottom:calc(200px + env(safe-area-inset-bottom))}
   body.tapes .tape{--tt:178px;--tb:300px}
   body.tapes #altTape{--tt:250px;--tb:310px}
@@ -169,7 +174,7 @@ label.ck{display:flex;align-items:center;gap:6px;font-weight:700;font-size:13px}
       <div class="row"><span>Wind</span><span id="wnd">--</span></div></div>
   </div>
   <div id="crumbs" class="pill">🍞 0/0</div>
-  <canvas id="spdTape" class="tape"></canvas><canvas id="altTape" class="tape"></canvas>
+  <canvas id="adi"></canvas><canvas id="spdTape" class="tape"></canvas><canvas id="altTape" class="tape"></canvas>
   <svg id="fpv" viewBox="-2 -2 48 26"><g stroke="#1a0020" stroke-width="5.5" fill="none" stroke-linecap="round"><circle cx="22" cy="11" r="6"/><line x1="2" y1="11" x2="16" y2="11"/><line x1="28" y1="11" x2="42" y2="11"/><line x1="22" y1="5" x2="22" y2="0"/></g><g stroke="#ff2bd6" stroke-width="2.8" fill="none" stroke-linecap="round"><circle cx="22" cy="11" r="6"/><line x1="2" y1="11" x2="16" y2="11"/><line x1="28" y1="11" x2="42" y2="11"/><line x1="22" y1="5" x2="22" y2="0"/></g></svg>
   <div id="tgt"><b></b><span id="tgtd"></span></div>
 </div>
@@ -222,6 +227,7 @@ label.ck{display:flex;align-items:center;gap:6px;font-weight:700;font-size:13px}
       <label class="ck"><input type="checkbox" id="snd" checked> 🔊 Sound</label>
       <label class="ck"><input type="checkbox" id="cfi"> 🎓 CFI duck wingman + callouts</label>
       <label class="ck"><input type="checkbox" id="voice"> 🗣️ CFI voice</label>
+      <label class="ck"><input type="checkbox" id="adi"> 🛩️ Attitude indicator (G5-style)</label>
       <label class="ck"><input type="checkbox" id="tapes"> 📟 PFD tapes (G1000-style)</label>
       <label class="ck"><input type="checkbox" id="atrim"> 🎚️ Auto-trim when flaps move</label>
     </div>
@@ -325,7 +331,7 @@ label.ck{display:flex;align-items:center;gap:6px;font-weight:700;font-size:13px}
 <script>
 (function(){
 'use strict';
-const BUILD_ID='DUCK-20261128-1457Z', BUILT_UTC='2026-11-28T14:57:38Z';
+const BUILD_ID='DUCK-20261128-1501Z', BUILT_UTC='2026-11-28T15:01:36Z';
 const KT=1.943844, FT=3.28084, FPM=196.8504, D2R=Math.PI/180, R2D=180/Math.PI, G=9.80665, RHO0=1.225;
 const clamp=(v,a,b)=>v<a?a:v>b?b:v, lerp=(a,b,t)=>a+(b-a)*t;
 const smooth=(a,b,x)=>{const t=clamp((x-a)/(b-a),0,1);return t*t*(3-2*t);};
@@ -575,7 +581,7 @@ const ruleOf=st=>st.rule||[3,4];
 
 /* ---------------- persistence ---------------- */
 const SKEY='duckglide.v1';
-let SAVE={best:{},crumbs:0,prog:{},set:{mode:'lesson',stage:{},prof:'mallard',ctl:/Mobi|Android|iPhone|iPad/i.test(navigator.userAgent)?'tilt':'keys',sens:1,invP:false,invR:false,zen:false,snd:true,world:'meadow',tapes:true,mapProf:false,cfi:true,voice:true,atrim:true}};
+let SAVE={best:{},crumbs:0,prog:{},set:{mode:'lesson',stage:{},prof:'mallard',ctl:/Mobi|Android|iPhone|iPad/i.test(navigator.userAgent)?'tilt':'keys',sens:1,invP:false,invR:false,zen:false,snd:true,world:'meadow',tapes:true,adi:true,mapProf:false,cfi:true,voice:true,atrim:true}};
 try{const s=JSON.parse(localStorage.getItem(SKEY));if(s){SAVE.best=s.best||{};SAVE.crumbs=s.crumbs||0;SAVE.prog=s.prog||{};Object.assign(SAVE.set,s.set||{});}}catch(e){}
 function persist(){try{localStorage.setItem(SKEY,JSON.stringify(SAVE));}catch(e){}}
 
@@ -1117,7 +1123,7 @@ function sfx(k){if(!AC||!SAVE.set.snd)return;if(k==='coin'){beep(988,.08,'square
 
 /* ---------------- HUD ---------------- */
 const mini=$('mini'),mctx=mini.getContext('2d');
-function showHUD(on){document.body.classList.toggle('flying',!!on);document.body.classList.toggle('tapes',!!SAVE.set.tapes);$('bCam').textContent='CAM · '+CAMN[camMode];if(!on){const m=$('cfiMsg');if(m)m.classList.add('hide');}['hud','ctl','topbtns'].forEach(id=>$(id).classList.toggle('hide',!on));$('bBoost').classList.toggle('hide',!ZEN());}
+function showHUD(on){document.body.classList.toggle('adion',!!SAVE.set.adi);document.body.classList.toggle('flying',!!on);document.body.classList.toggle('tapes',!!SAVE.set.tapes);$('bCam').textContent='CAM · '+CAMN[camMode];if(!on){const m=$('cfiMsg');if(m)m.classList.add('hide');}['hud','ctl','topbtns'].forEach(id=>$(id).classList.toggle('hide',!on));$('bBoost').classList.toggle('hide',!ZEN());}
 let toastT=0;function toast(msg,ms){const t=$('toast');t.textContent=msg;t.style.opacity=1;clearTimeout(toastT);toastT=setTimeout(()=>t.style.opacity=0,ms||1200);}
 function show(id){['menu','brief','pause','result','inst','fixes'].forEach(o=>$(o).classList.toggle('hide',o!==id));}
 function hideAll(){['menu','brief','pause','result','inst','fixes'].forEach(o=>$(o).classList.add('hide'));}
@@ -1148,6 +1154,7 @@ function updateHUD(dt){
   $('crumbs').textContent=`🍞 ${stats.crumbs}/${stats.total}`+(ZEN()?` · ⚡${Math.round(s.energy*100)}%`:'');
   if(SAVE.set.mapProf)drawProfile(need,have);else drawMini(need,have);
   if(SAVE.set.tapes)drawTapes(ias,hT,vsi,tg);
+  if(SAVE.set.adi)drawADI();
 }
 function drawMini(need,have){
   const c=mctx,Wd=320,s=ph,T=LEG.target,ty=legY(LEG);c.clearRect(0,0,Wd,Wd);
@@ -1208,6 +1215,34 @@ function drawTapes(ias,hT,vsi,tg){const s=ph,P=profile,dtt=Math.max(.02,s.t-pvT)
     const yv=vy(vsi);g.fillStyle=vsi<-1000?'#ffdc00':'#7CFF6B';g.beginPath();g.moveTo(tw+2*d,yv);g.lineTo(w,yv-6*d);g.lineTo(w,yv+6*d);g.closePath();g.fill();
     g.fillStyle='rgba(0,0,0,.55)';g.fillRect(0,0,w,16*d);g.fillRect(0,h-16*d,w,16*d);g.font=`bold ${11*d}px system-ui`;g.fillStyle='#fff';g.fillText('HAT FT',w/2,8*d);g.fillStyle='#7CFF6B';g.fillText(`AGL ${(Math.max(0,s.hS)*FT).toFixed(0)}`,w/2,h-8*d);}
 }
+/* ---------------- attitude indicator (G5 / G1000 style) ---------------- */
+function drawADI(){const {g,w,h,d}=fitC($('adi')),s=ph,cx=w/2,cy=h*.55,ppd=h/42;g.clearRect(0,0,w,h);
+  const gam=Math.asin(clamp(s.vhat.y,-1,1))*R2D,bk=s.bank*D2R,th=gam+s.alpha*Math.cos(bk);
+  g.save();g.beginPath();g.roundRect?g.roundRect(0,0,w,h,14*d):g.rect(0,0,w,h);g.clip();
+  g.translate(cx,cy);g.rotate(-bk);g.translate(0,th*ppd);
+  g.fillStyle='#2f86e0';g.fillRect(-w*2,-h*3,w*4,h*3);g.fillStyle='#8a5a2c';g.fillRect(-w*2,0,w*4,h*3);
+  g.strokeStyle='#fff';g.lineWidth=2*d;g.beginPath();g.moveTo(-w*2,0);g.lineTo(w*2,0);g.stroke();
+  g.lineWidth=1.4*d;g.fillStyle='#fff';g.font=`bold ${10*d}px system-ui`;g.textBaseline='middle';
+  for(let p=-30;p<=30;p+=2.5){if(!p)continue;const y=-p*ppd,L=(p%10===0?28:p%5===0?16:7)*d;g.beginPath();g.moveTo(-L,y);g.lineTo(L,y);g.stroke();
+    if(p%10===0){g.textAlign='right';g.fillText(Math.abs(p),-L-3*d,y);g.textAlign='left';g.fillText(Math.abs(p),L+3*d,y);}}
+  g.restore();
+  // fixed bank scale
+  const r=Math.min(w,h)*.42,ang=a=>-Math.PI/2+a*D2R;g.strokeStyle='#fff';g.fillStyle='#fff';g.lineWidth=2*d;
+  g.beginPath();g.arc(cx,cy,r,ang(-60),ang(60));g.stroke();
+  for(const a of[-60,-45,-30,-20,-10,10,20,30,45,60]){const L=(Math.abs(a)===30||Math.abs(a)===60?12:Math.abs(a)===45?9:7)*d,c=Math.cos(ang(a)),sn=Math.sin(ang(a));g.beginPath();g.moveTo(cx+c*r,cy+sn*r);g.lineTo(cx+c*(r+L),cy+sn*(r+L));g.stroke();}
+  g.beginPath();g.moveTo(cx,cy-r-1*d);g.lineTo(cx-6*d,cy-r-11*d);g.lineTo(cx+6*d,cy-r-11*d);g.closePath();g.fill();
+  // roll pointer + slip/skid trapezoid (moves with bank)
+  g.save();g.translate(cx,cy);g.rotate(-bk);g.fillStyle='#fff';g.beginPath();g.moveTo(0,-r+1*d);g.lineTo(-7*d,-r+12*d);g.lineTo(7*d,-r+12*d);g.closePath();g.fill();
+  const sk=clamp(s.ballY*6,-1,1)*9*d;g.beginPath();g.moveTo(-8*d+sk,-r+14*d);g.lineTo(8*d+sk,-r+14*d);g.lineTo(10*d+sk,-r+18*d);g.lineTo(-10*d+sk,-r+18*d);g.closePath();g.fill();g.restore();
+  // flight-path marker (magenta) relative to the nose
+  const fx=cx+(s.beta*Math.cos(bk))*ppd*.9,fy=cy+(th-gam)*ppd;g.strokeStyle='#ff2bd6';g.lineWidth=2.2*d;g.beginPath();g.arc(fx,fy,5*d,0,6.283);g.moveTo(fx-12*d,fy);g.lineTo(fx-5*d,fy);g.moveTo(fx+5*d,fy);g.lineTo(fx+12*d,fy);g.stroke();
+  // aircraft symbol
+  g.fillStyle='#fbd000';g.strokeStyle='#000';g.lineWidth=1.5*d;
+  for(const sd of[-1,1]){g.beginPath();g.moveTo(cx+sd*14*d,cy);g.lineTo(cx+sd*44*d,cy);g.lineTo(cx+sd*44*d,cy+5*d);g.lineTo(cx+sd*20*d,cy+5*d);g.lineTo(cx+sd*20*d,cy+11*d);g.lineTo(cx+sd*14*d,cy+11*d);g.closePath();g.fill();g.stroke();}
+  g.fillRect(cx-3*d,cy-3*d,6*d,6*d);g.strokeRect(cx-3*d,cy-3*d,6*d,6*d);
+  g.fillStyle='rgba(0,0,0,.55)';g.fillRect(0,h-15*d,w,15*d);g.fillStyle='#fff';g.font=`bold ${10*d}px system-ui`;g.textAlign='center';g.fillText(`BANK ${Math.abs(s.bank).toFixed(0)}° · PITCH ${th>=0?'+':''}${th.toFixed(0)}° · AoA ${s.alpha.toFixed(0)}°`,cx,h-7.5*d);
+  g.restore&&0;}
+
 /* ---------------- profile (approach-plate side view) ---------------- */
 function drawProfile(need,have){const c=mctx,Wd=320,s=ph,P=profile,T=LEG.target,ty=legY(LEG);c.clearRect(0,0,Wd,Wd);
   c.fillStyle='#fffdf4';c.beginPath();c.roundRect?c.roundRect(0,0,Wd,Wd,28):c.rect(0,0,Wd,Wd);c.fill();
@@ -1488,7 +1523,7 @@ function renderMenu(){
   [...$('profSeg').children].forEach(b=>b.onclick=()=>{profile=PROFILES[b.dataset.v];SAVE.set.prof=profile.id;persist();renderMenu();});
   const p=profile;$('profInfo').textContent=`${p.like} · best glide ${(p.vbg*KT).toFixed(0)} KIAS · L/D ${p.LD.toFixed(1)}:1 · Vs clean ${(p.vsF(0)*KT).toFixed(0)} / dirty ${(p.vsF(p.flaps.length-1)*KT).toFixed(0)} KIAS · span ${p.b} m`;
   [...$('ctlSeg').children].forEach(b=>{b.classList.toggle('on',b.dataset.v===SAVE.set.ctl);b.onclick=()=>{SAVE.set.ctl=b.dataset.v;persist();renderMenu();};});
-  $('sens').value=SAVE.set.sens;$('invP').checked=SAVE.set.invP;$('invR').checked=SAVE.set.invR;$('zen').checked=SAVE.set.zen;$('cfi').checked=SAVE.set.cfi;$('voice').checked=SAVE.set.voice;$('atrim').checked=SAVE.set.atrim;$('tapes').checked=SAVE.set.tapes;$('snd').checked=SAVE.set.snd;
+  $('sens').value=SAVE.set.sens;$('invP').checked=SAVE.set.invP;$('invR').checked=SAVE.set.invR;$('zen').checked=SAVE.set.zen;$('cfi').checked=SAVE.set.cfi;$('voice').checked=SAVE.set.voice;$('atrim').checked=SAVE.set.atrim;$('tapes').checked=SAVE.set.tapes;$('adi').checked=SAVE.set.adi;$('snd').checked=SAVE.set.snd;
   renderLadder();
   $('stampMenu').textContent=`Build ${BUILD_ID} · shipped ${BUILT_UTC} · 🍞 lifetime ${SAVE.crumbs}`;
 }
@@ -1500,7 +1535,7 @@ function renderLadder(){const el=$('ladder'),w=selW.id,L=LS[w];if(SAVE.set.mode!
   [...el.querySelectorAll('.st')].forEach(d=>d.onclick=()=>{const i=+d.dataset.i;if(!unlocked(w,i)){toast(lockReason(w,i),2200);return;}SAVE.set.stage=SAVE.set.stage||{};SAVE.set.stage[w]=i;persist();renderLadder();});}
 function pickLesson(){LES=null;if(SCN)return;if(SAVE.set.mode!=='lesson'||!LS[selW.id])return;const i=curIdx(selW.id);if(unlocked(selW.id,i))LES={w:selW.id,i,st:LS[selW.id][i]};}
 $('sens').oninput=e=>{SAVE.set.sens=+e.target.value;persist();};
-['invP','invR','zen','snd','cfi','voice','atrim','tapes'].forEach(id=>$(id).onchange=e=>{SAVE.set[id]=e.target.checked;persist();});
+['invP','invR','zen','snd','cfi','voice','atrim','tapes','adi'].forEach(id=>$(id).onchange=e=>{SAVE.set[id]=e.target.checked;persist();});
 function brief(){
   const w=selW,p=profile,L=w.legs[0];pickLesson();$('bTitle').textContent=w.name;$('bTag').textContent=w.tag;
   const LL=SCN?`<p style="background:#fff3d6;border:2px solid #fbd000;border-radius:12px;padding:8px 10px">🧑‍✈️ <b>Instructor scenario</b> · ${esc(PROFILES[SCN.p].name)}${SCN.wind?` · wind ${String(SCN.wind.from).padStart(3,'0')}°/${SCN.wind.kt} kt${SCN.wind.gust?` gusting ${Math.round(SCN.wind.kt*(1+SCN.wind.gust))}`:''}`:''}${SCN.eng?` · failure at ${SCN.eng.agl} ft AGL`:''}${SCN.note?`<br>“${esc(SCN.note)}”`:''}<br><small>Free-practice flight (lessons paused). <a href="#" id="scnExit">Exit scenario</a></small></p>`:SAVE.set.mode==='lesson'&&LS[w.id]?(LES?`<p style="background:#e6f6ff;border:2px solid #049cd8;border-radius:12px;padding:8px 10px">🎓 <b>Lesson: ${LES.st.name}</b> — ${LES.st.kind==='drill'?DRILLBRIEF[LES.st.id]:LES.st.desc}.<br>Pass rule: <b>${ruleTxt(LES.st)}</b> · progress ${dots(LES.w,LES.st)}${LES.st.kind==='drill'?' · flown from ~4,000 ft AGL, fail below 1,000 ft':''}</p>`:`<p style="background:#fff3d6;border:2px solid #fbd000;border-radius:12px;padding:8px 10px">🔒 ${lockReason(w.id,curIdx(w.id))} This flight is free practice.</p>`):'';

@@ -18,7 +18,9 @@ Single-file, offline-capable HTML flight-training tools. GitHub Pages serves the
 - This is a ground-based cognitive training aid. It does not replace flight instruction, the POH, or the ACS.
 
 **Duck Glide notes**
-- Worlds: straight-in, power-off 180 (0 to +200 ft), mountain spiral at 6,800 ft density altitude, short field over pines (0 to +100 ft), lava caldera, 3-island hop, Engine Out! (random failure from cruise) and Cloud Kingdom (Zen free flight).
+- Worlds: Zephyr Valley (Air Work drills + scenic soaring), straight-in, power-off 180 (0 to +200 ft), mountain spiral at 6,800 ft density altitude, short field over pines (0 to +100 ft), lava caldera, Rainbow Tunnel (thread a warp tunnel, break out through clouds), 3-island hop, Engine Out! (random failure from cruise) and Cloud Kingdom (Zen free flight).
+- Lessons: each world has a mastery ladder; stages pass on repetition (3 in a row or 3 of last 4), and the checkride needs 2 in a row. Air Work (best-glide hold, trim, slow flight, approach & flare at altitude) unlocks Mallard Meadow, which unlocks the rest.
+- Instruments: G1000-style speed and altitude tapes, CFI-duck wingman with spoken callouts, chase / duck-eye / tower cameras, and an approach-plate profile view (tap the minimap).
 - Ducks: Mallard 172 (C172-like glide, about 9:1, Vg 63 KIAS), Teal Cub (no flaps, so slip), Glider Goose (sailplane, airbrakes).
 - Point-mass lift/drag physics with stall, ISA density, ground effect, flaps/slip drag, gusts, thermals and ridge lift. Tuned to be realistic, but it's a game: use the POH for numbers.
 - Build `DUCK-YYYYMMDD-HHMMZ` is stamped in the menu, pause and results screens and in the page's meta tags.

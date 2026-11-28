@@ -6,10 +6,10 @@
 <meta name="theme-color" content="#049cd8">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="build-id" content="DUCK-20261128-0016Z">
-<meta name="built-utc" content="2026-11-28T00:16:54Z">
+<meta name="build-id" content="DUCK-20261128-0021Z">
+<meta name="built-utc" content="2026-11-28T00:21:30Z">
 <title>Duck Glide — Fly Good, Land Gooder</title>
-<!-- Build DUCK-20261128-0016Z · shipped 2026-11-28T00:16:54Z · Three.js r128 (MIT) from vendor/ · fully offline -->
+<!-- Build DUCK-20261128-0021Z · shipped 2026-11-28T00:21:30Z · Three.js r128 (MIT) from vendor/ · fully offline -->
 <style>
 :root{--red:#e52521;--yel:#fbd000;--blu:#049cd8;--grn:#43b047;--ink:#1b1b2f;--card:#fffdf4}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none}
@@ -274,7 +274,7 @@ label.ck{display:flex;align-items:center;gap:6px;font-weight:700;font-size:13px}
 <script>
 (function(){
 'use strict';
-const BUILD_ID='DUCK-20261128-0016Z', BUILT_UTC='2026-11-28T00:16:54Z';
+const BUILD_ID='DUCK-20261128-0021Z', BUILT_UTC='2026-11-28T00:21:30Z';
 const KT=1.943844, FT=3.28084, FPM=196.8504, D2R=Math.PI/180, R2D=180/Math.PI, G=9.80665, RHO0=1.225;
 const clamp=(v,a,b)=>v<a?a:v>b?b:v, lerp=(a,b,t)=>a+(b-a)*t;
 const smooth=(a,b,x)=>{const t=clamp((x-a)/(b-a),0,1);return t*t*(3-2*t);};
@@ -450,7 +450,18 @@ function W_valley(){
     wind:{from:270,kt:11,gust:.2},ridgeK:1,thermals:th,trees:{kind:'pine',n:1800,r:6500,minPond:1.8,seed:111},clouds:18,
     legs:[{task:'Stress-free soaring down a mountain valley. Ride ridge lift on the windward (west-facing) slopes and thermals under the clouds; surf through clouds, thread the golden rings, swoop low over picnics (+3 🍞), and land on any lake. FLAP UP to keep going.',window:[0,300]}]};
 }
-const WORLDS=[W_valley(),W_meadow(),W_cattail(),W_tarn(),W_hollow(),W_ember(),W_islands(),W_engine(),W_sky()];
+function W_tunnel(){
+  const T=[0,0],h=0,ponds=[mkPond(T,h,380,140,300,20,'Rainbow Pond')],E=[-1800,2600];
+  const base=(x,z)=>22+40*fbm(x/700,z/700,121)*smooth(300,1800,Math.hypot(x,z))+8*fbm(x/200,z/200,123);
+  const r=rng(321),cloudVols=[];for(let i=0;i<24;i++){const f=r(),x=lerp(E[0],-900,f)+(r()-.5)*1400,z=lerp(E[1],-300,f)+(r()-.5)*900;cloudVols.push([x,380+r()*330,z,60+r()*55]);}
+  return {id:'tunnel',name:'Rainbow Tunnel',tag:'Start high · thread the warp tunnel · break out through the clouds',col:'linear-gradient(120deg,#e52521,#fbd000 35%,#43b047 65%,#049cd8)',elevFt:700,size:12000,cx:-900,cz:2000,edgeH:30,base,ponds,fluid:null,
+    tunnelPlan:{pts:[[-2300,5600],[-1600,5000],[-2300,4300],[-1500,3600],E],exit:E,R:30},cloudVols,
+    sky:{top:0x3d9bff,bot:0xe6f8ff,fog:0xe6f8ff,near:2600,far:12500},palette:earthPaint(1e9,nearestPondY(ponds,null)),
+    wind:{from:0,kt:5,gust:.15},ridgeK:.3,thermals:[],trees:{kind:'mush',n:900,r:6000,minPond:2.2,seed:131},clouds:26,
+    legs:[{target:T,hdg:h,pond:0,pts:patternPts(T,h,-1,800,600,600),prefix:true,fillet:true,window:[0,200],marginFt:0,tunnel:true,
+      task:'You start high, inside a warp tunnel. Follow its flows and curves (the bread trail runs down the middle — wall bonks cost speed), break out above scattered clouds, then follow the trail down through the gaps to a left pattern for Rainbow Pond.'}]};
+}
+const WORLDS=[W_valley(),W_meadow(),W_cattail(),W_tarn(),W_hollow(),W_ember(),W_tunnel(),W_islands(),W_engine(),W_sky()];
 
 /* ---------------- lessons / mastery ---------------- */
 const DRILLS={glide:'Best-glide hold',trim:'Trim it hands-off',slow:'Slow flight',approach:'Approach & flare'};
@@ -469,6 +480,7 @@ const LS={
  cattail:[{id:'make',name:'Make the pond',desc:'Power-off 180 that lands in the pond',test:t=>t.onTarget},{id:'window',name:'In the window',desc:'Touch down 0 to +200 ft past the target',test:(t,sc)=>t.onTarget&&sc.e===0},CK(850)],
  tarn:[{id:'spiral',name:'Spiral down',desc:'Never more than 150 ft below the trail; land in the tarn',test:t=>t.onTarget&&stats.maxLo<=150},CK(800)],
  hollow:[{id:'clear',name:'Clear the pines',desc:'Land in the pond',test:t=>t.onTarget},{id:'short',name:'Short field',desc:'0 to +100 ft past the target at ≤ 1.15× stall speed',test:(t,sc)=>t.onTarget&&sc.e===0&&t.ias<=t.vs0*1.15},CK(850)],
+ tunnel:[{id:'thread',name:'Thread the tunnel',desc:'Break out of the tunnel with no more than 2 wall bonks (and land safely)',test:()=>stats.tunOut&&stats.bonks<=2},{id:'land',name:'Land at Rainbow Pond',desc:'After the breakout, land in the pond',test:t=>t.onTarget},CK(800,' with ≤ 1 bonk',(t,sc)=>t.onTarget&&sc.total>=800&&sc.e===0&&stats.bonks<=1)],
  ember:[{id:'rim',name:'Cross the rim',desc:'Land in the caldera lagoon',test:t=>t.onTarget},CK(800)],
  islands:[{id:'hop',name:'Lagoon hops',desc:'Each leg that lands in its lagoon is a pass',test:t=>t.onTarget},{id:'ck',name:'Archipelago checkride',ck:true,rule:[2,2],desc:'All 3 legs in their lagoons, averaging 800+',test:()=>null}],
  engine:[{id:'abc',name:'A is for Airspeed',desc:'Best glide within 10 s of the failure, then re-trimmed',rule:[3,3],test:()=>stats.vgCap!==null&&stats.vgCap<=10&&stats.trimmed},
@@ -512,7 +524,7 @@ function surfaceAt(x,z,y){if(y===undefined)y=Infinity;const il=islandAt(x,z);
   if(W.fluid&&W.fluid.y>h)return {y:W.fluid.y,type:W.fluid.type};return {y:h,type:'land'};}
 function treeTopAt(x,z,rad){if(!treeGrid)return null;const cs=40,gi=Math.floor(x/cs),gj=Math.floor(z/cs);let best=null;
   for(let i=gi-1;i<=gi+1;i++)for(let j=gj-1;j<=gj+1;j++){const a=treeGrid.get(i+','+j);if(!a)continue;for(const t of a){const d=Math.hypot(t.x-x,t.z-z);if(d<t.r*.7+rad&&(!best||t.top>best.top))best=t;}}return best;}
-function windAt(p,hAGL,t,out){const w=W.wind,to=(w.from+180)*D2R,base=w.kt/KT;
+function windAt(p,hAGL,t,out){if(TUN&&!TUN.out&&ph.inTun){out.set(0,0,0);return out;}const w=W.wind,to=(w.from+180)*D2R,base=w.kt/KT;
   const bl=Math.pow(clamp((hAGL+1)/90,.05,1),.22);const g=1+w.gust*(2*fbm(t*.25+p.x*.002,p.z*.002+t*.1,99,2)-1)*1.6;
   out.set(Math.sin(to)*base*bl*g,0,-Math.cos(to)*base*bl*g);
   let wy=0;for(const th of W.thermals){const d2=((p.x-th[0])**2+(p.z-th[1])**2)/(th[3]*th[3]);if(d2<9)wy+=th[2]*Math.exp(-d2)*smooth(5,120,hAGL)*(1-smooth(1300,1800,hAGL));}
@@ -675,7 +687,7 @@ function loadWorld(w){
       const a=rr()*6.283,fall=new THREE.Mesh(new THREE.PlaneGeometry(16,is.depth*.9),fallM);fall.position.set(is.x+Math.cos(a)*is.r*1.02,is.top-is.depth*.45,is.z+Math.sin(a)*is.r*1.02);fall.rotation.y=-a+Math.PI/2;scene.add(fall);
       const bush=new THREE.SphereGeometry(1,7,5);for(let k=0;k<5;k++){const b2=rr()*6.283,dd=is.r*(.75+rr()*.2);const m=new THREE.Mesh(bush,new THREE.MeshLambertMaterial({color:[0x2fa83a,0xff7ad0,0x4cc84a][k%3],flatShading:true}));const sz=6+rr()*6;m.scale.set(sz,sz*.9,sz);m.position.set(is.x+Math.cos(b2)*dd,is.top+sz*.6,is.z+Math.sin(b2)*dd);scene.add(m);}}}
   if(w.rings){const g=new THREE.TorusGeometry(16,1.8,8,28);for(const rg of w.rings){const m=new THREE.Mesh(g,new THREE.MeshLambertMaterial({color:0xffcc22,emissive:0x775500,flatShading:true}));m.position.set(rg[0],rg[1],rg[2]);m.rotation.y=rg[3];m.userData={got:false};scene.add(m);ringMeshes.push(m);}}
-  buildTrees(w);buildClouds(w);buildValleyDecor(w);
+  buildTrees(w);buildClouds(w);buildValleyDecor(w);buildCloudVols(w);tunGrp=null;TUN=null;
   if(w.valley){bd.x=w.valley.cxz(0);bd.z=0;bd.y=w.valley.floorZ(0)+520;}else if(w.legs[0].target){bd.x=w.legs[0].target[0];bd.z=w.legs[0].target[1];bd.y=w.ponds[w.legs[0].pond].y;}else if(w.free==='sky'){bd.x=0;bd.z=0;bd.y=700;}else{bd.x=w.ponds[0].cx;bd.z=w.ponds[0].cz;bd.y=w.ponds[0].y;}
   duck=makeDuck(profile);scene.add(duck);
   cfiDuck=makeDuck({...profile,id:'cfi',col:{body:0x2a6cff,head:0xffffff,wing:0xdbe8ff,tip:0xe52521,beak:0xff8a00}});
@@ -685,7 +697,7 @@ function loadWorld(w){
   const tg=new THREE.BufferGeometry();tg.setAttribute('position',new THREE.BufferAttribute(new Float32Array(3*3000),3));tg.setDrawRange(0,0);
   traceLine=new THREE.Line(tg,new THREE.LineBasicMaterial({color:0xff3b8a}));traceLine.frustumCulled=false;scene.add(traceLine);
 }
-let targetGrp=null,cloudHit=new Set(),picHit=new Set(),inCloud=false;
+let TUN=null,tunGrp=null,bonkT=0,targetGrp=null,cloudHit=new Set(),picHit=new Set(),inCloud=false;
 function buildValleyDecor(w){if(!w.valley)return;const v=w.valley,L=(c)=>new THREE.MeshLambertMaterial({color:c,flatShading:true});
   // river ribbon
   const pos=[];for(let z=-6400;z<6400;z+=40){const z2=z+40,a=[v.cxz(z),v.floorZ(z)-.4,z],b=[v.cxz(z2),v.floorZ(z2)-.4,z2];
@@ -711,7 +723,8 @@ function buildValleyDecor(w){if(!w.valley)return;const v=w.valley,L=(c)=>new THR
     const tb=new THREE.Mesh(new THREE.BoxGeometry(6,1.2,3),L(0x9a6a3a));tb.position.set(x+11,y+1,z);scene.add(tb);
     const um=new THREE.Mesh(new THREE.ConeGeometry(5,2.2,10),L(0xfbd000));um.position.set(x+11,y+5,z);scene.add(um);const pole=new THREE.Mesh(new THREE.CylinderGeometry(.15,.15,4.5,5),L(0xffffff));pole.position.set(x+11,y+2.6,z);scene.add(pole);
     for(let k=0;k<3;k++){const dk=new THREE.Mesh(new THREE.SphereGeometry(.9,8,6),L(0xffd21a));dk.position.set(x-4+k*3,y+1,z+5);scene.add(dk);}}
-  // surfable clouds
+}
+function buildCloudVols(w){if(!w.cloudVols)return;
   const g=new THREE.SphereGeometry(1,8,6),mat=new THREE.MeshLambertMaterial({color:0xffffff,flatShading:true,emissive:0x666677}),rr=rng(31);
   const im=new THREE.InstancedMesh(g,mat,w.cloudVols.length*7),m=new THREE.Matrix4(),q=new THREE.Quaternion(),sc=new V3(),p=new V3();let k=0;
   for(const c of w.cloudVols)for(let j=0;j<7;j++){const r=c[3]*(.45+rr()*.4);p.set(c[0]+(rr()-.5)*c[3]*1.1,c[1]+(rr()-.4)*c[3]*.4,c[2]+(rr()-.5)*c[3]*1.1);sc.set(r,r*.75,r);m.compose(p,q,sc);im.setMatrixAt(k++,m);}
@@ -721,12 +734,43 @@ function resetFlight(pos,dir,ias,trimA){
   ph.pos.copy(pos);const alt=W.elevFt/FT+pos.y,rho=RHO0*Math.pow(1-2.25577e-5*alt,4.2559),tas=ias*Math.sqrt(RHO0/rho);
   ph.vel.copy(dir).multiplyScalar(tas);ph.vel.y=ias>profile.vbg*1.1?0:-tas/profile.LD;{const sf=surfaceAt(ph.pos.x,ph.pos.z,ph.pos.y);windAt(ph.pos,ph.pos.y-sf.y,0,tmp2);ph.vel.x+=tmp2.x;ph.vel.z+=tmp2.z;}
   ph.trim=trimA;ph.alpha=trimA;ph.bank=0;ph.slip=0;ph.flap=0;ph.flapAnim=0;ph.stalled=false;ph.drop=0;ph.energy=1;ph.t=0;
-  pathIdx=0;trace=[];rec=[];recAcc=0;td=null;inp.bankK=0;cloudHit=new Set();picHit=new Set();$('rLesson').classList.add('hide');
+  ph.inTun=false;pathIdx=0;trace=[];rec=[];recAcc=0;td=null;inp.bankK=0;cloudHit=new Set();picHit=new Set();$('rLesson').classList.add('hide');
   traceLine.geometry.setDrawRange(0,0);ripples.forEach(r=>scene.remove(r));ripples=[];
   duck.userData.inner.scale.setScalar(profile.b);duck.visible=true;cfiDuck.userData.inner.scale.setScalar(profile.b);cfiSnap=true;pathDev=0;pathOff=1e9;pathRem=1e9;resetCoach();state='fly';showHUD(true);
 }
 function newStats(total){return {tVg:0,tGlide:0,maxHi:0,maxLo:0,stallW:0,maxBank:0,crumbs:0,total,vgCap:null,trimmed:false,engine:W.free==='engine',start:performance.now()};}
-function startLeg(i,fromPt){
+function buildTunnel(exitY){const tp=W.tunnelPlan,R=tp.R;
+  const c2=new THREE.CatmullRomCurve3(tp.pts.map(p=>new V3(p[0],0,p[1])),false,'centripetal'),N=600,pp=c2.getSpacedPoints(N);let Lt=0;for(let i=1;i<pp.length;i++)Lt+=pp[i].distanceTo(pp[i-1]);
+  const pts=[];pp.forEach((p,i)=>{const sA=Lt*i/N,y=exitY+(Lt-sA)/7+12*Math.sin(sA/Lt*Math.PI*6)*smooth(0,300,sA)*(1-smooth(Lt-300,Lt,sA));pts.push(new V3(p.x,y,p.z));});
+  const curve=new THREE.CatmullRomCurve3(pts,false,'centripetal');const dense=curve.getSpacedPoints(Math.ceil(Lt/5));
+  if(tunGrp)scene.remove(tunGrp);tunGrp=new THREE.Group();
+  const segs=Math.ceil(Lt/6),inG=new THREE.TubeGeometry(curve,segs,R,20,false),nc=inG.attributes.position.count,cols=new Float32Array(nc*3),greens=[C(0x2fd24a),C(0x1f9e38),C(0x7be86a)];
+  for(let i=0;i<nc;i++){const seg=Math.floor(i/21),band=Math.floor(seg*6/40)%3,cc=greens[band];cols[i*3]=cc[0];cols[i*3+1]=cc[1];cols[i*3+2]=cc[2];}
+  inG.setAttribute('color',new THREE.BufferAttribute(cols,3));
+  tunGrp.add(new THREE.Mesh(inG,new THREE.MeshLambertMaterial({vertexColors:true,side:THREE.BackSide,emissive:0x0c3a12,flatShading:true})));
+  tunGrp.add(new THREE.Mesh(new THREE.TubeGeometry(curve,Math.ceil(Lt/12),R+2,14,false),new THREE.MeshLambertMaterial({color:0x2fbf3a,flatShading:true})));
+  const lipM=new THREE.MeshLambertMaterial({color:0x26a832,flatShading:true});for(const u of[0,1]){const p=curve.getPointAt(u),t=curve.getTangentAt(u),lip=new THREE.Mesh(new THREE.TorusGeometry(R+2,3.2,10,28),lipM);lip.position.copy(p);lip.lookAt(p.clone().add(t));tunGrp.add(lip);}
+  const rainbow=[0xff3b3b,0xff9f1a,0xffe03a,0x3ddc4a,0x3ab0ff,0x8e5bff],rg=new THREE.TorusGeometry(R-.6,1.1,8,40);let k=0;
+  for(let sA=120;sA<Lt-60;sA+=120){const u=sA/Lt,p=curve.getPointAt(u),t=curve.getTangentAt(u),m=new THREE.Mesh(rg,new THREE.MeshBasicMaterial({color:rainbow[k++%6]}));m.position.copy(p);m.lookAt(p.clone().add(t));tunGrp.add(m);}
+  scene.add(tunGrp);
+  const arr=[];let acc=0;dense.forEach((p,i)=>{if(i)acc+=p.distanceTo(dense[i-1]);arr.push({x:p.x,y:p.y,z:p.z,s:acc});});
+  TUN={pts:arr,R,Lt:acc,idx:0,out:false};return TUN;}
+function startTunnelLeg(){legIdx=0;LEG=W.legs[0];if(targetGrp)scene.remove(targetGrp);windsocks=[];targetGrp=makeTarget(LEG);scene.add(targetGrp);
+  const route=buildPath(LEG,W.tunnelPlan.exit),exitY=route.dense[0].y+25,tn=buildTunnel(exitY);
+  const td2=tn.pts.map(p=>({x:p.x,y:p.y,z:p.z,s:p.s,rem:route.len+tn.Lt-p.s}));route.dense.forEach(d=>{d.s+=tn.Lt;});
+  PATH={dense:td2.concat(route.dense),len:tn.Lt+route.len};placeBeads(PATH);
+  const a=tn.pts[6],b2=tn.pts[10];resetFlight(tmp3.set(a.x,a.y,a.z),new V3(b2.x-a.x,b2.y-a.y,b2.z-a.z).normalize(),profile.vbg,profile.aTrim);ph.vel.y=Math.min(ph.vel.y,-profile.vbg/profile.LD);
+  tn.idx=6;tn.out=false;stats=newStats(beadMeshes.length);stats.bonks=0;stats.tunOut=false;toast('🌈 Into the warp tunnel!',1600);}
+function tunnelStep(){const tn=TUN;if(!tn||tn.out)return;const s=ph,P=tn.pts;let i=tn.idx;
+  for(let k=0;k<30;k++){const a=i>0?P[i-1]:null,b=i<P.length-1?P[i+1]:null,dc=(P[i].x-s.pos.x)**2+(P[i].y-s.pos.y)**2+(P[i].z-s.pos.z)**2;
+    if(b&&(b.x-s.pos.x)**2+(b.y-s.pos.y)**2+(b.z-s.pos.z)**2<dc)i++;else if(a&&(a.x-s.pos.x)**2+(a.y-s.pos.y)**2+(a.z-s.pos.z)**2<dc)i--;else break;}
+  tn.idx=i;const c=P[i];
+  if(i>=P.length-1){const pv=P[i-1],tx=c.x-pv.x,ty=c.y-pv.y,tz=c.z-pv.z;if((s.pos.x-c.x)*tx+(s.pos.y-c.y)*ty+(s.pos.z-c.z)*tz>0){tn.out=true;stats.tunOut=true;s.inTun=false;toast('☁️ Breakout! Follow the bread to Rainbow Pond',2200);say('breakout','Nice threading! Now pick up best glide and follow the trail down through the cloud gaps.',0,true);return;}}
+  s.inTun=true;const nx=s.pos.x-c.x,ny=s.pos.y-c.y,nz=s.pos.z-c.z,d=Math.hypot(nx,ny,nz);
+  if(d>tn.R-2.5){const ux=nx/d,uy=ny/d,uz=nz/d,k2=(tn.R-4)/d;s.pos.set(c.x+nx*k2,c.y+ny*k2,c.z+nz*k2);const vr=s.vel.x*ux+s.vel.y*uy+s.vel.z*uz;
+    if(vr>0){s.vel.x-=ux*vr*1.6;s.vel.y-=uy*vr*1.6;s.vel.z-=uz*vr*1.6;}s.vel.multiplyScalar(.93);
+    if(s.t-bonkT>.6){bonkT=s.t;stats.bonks++;beep(140,.12,'square',.2);toast(`Bonk! 🦆💫 (${stats.bonks})`,700);}}}
+function startLeg(i,fromPt){if(W.tunnelPlan)return startTunnelLeg();
   if(W.free)return startFree(fromPt||null);
   legIdx=i;LEG=W.legs[i];if(targetGrp)scene.remove(targetGrp);windsocks=[];targetGrp=makeTarget(LEG);scene.add(targetGrp);
   PATH=buildPath(LEG,LEG.prefix?(fromPt||null):null);placeBeads(PATH);
@@ -874,6 +918,7 @@ function coachFlight(){const c=[],P=profile;
   if(stats.tGlide>5){const pct=stats.tVg/stats.tGlide*100;c.push(pct>65?`Nice speed discipline: ${pct.toFixed(0)}% of the glide within ±5 kt of Vg (${(P.vbg*KT).toFixed(0)} KIAS).`:`Only ${pct.toFixed(0)}% of the glide was within ±5 kt of Vg (${(P.vbg*KT).toFixed(0)} KIAS). Trim for Vg first, then manage the path with turns, flaps and slips — not by pitching off speed.`);}
   if(stats.maxLo>150)c.push(`You got ${stats.maxLo.toFixed(0)} ft below the bread trail at one point. Low is the dangerous side: tighten the pattern / turn toward the target earlier; you can always dump extra height later.`);
   if(stats.maxHi>350)c.push(`You were up to ${stats.maxHi.toFixed(0)} ft high of the trail. Extend downwind, S-turn, or add flaps/slip earlier — but keep the target in reach.`);
+  if(stats.bonks!==undefined)c.push(stats.bonks===0?'Tunnel: zero wall bonks — smooth, small corrections.':`Tunnel: ${stats.bonks} wall bonk${stats.bonks>1?'s':''}. Lead the curves — start the bank as the walls begin to bend, and keep it shallow.`);
   if(stats.stallW>2)c.push(`Stall warning ${stats.stallW}× — pull less on turns; stall speed rises with bank (≈ +19% at 45°).`);
   if(stats.maxBank>50)c.push(`Max bank ${stats.maxBank.toFixed(0)}°. Keep it ≤ 45° in the pattern; steep turns low burn altitude and raise stall speed.`);
   return c;}
@@ -1066,7 +1111,8 @@ function updateVisuals(dt){
   else if(s.t<lastTrace)lastTrace=0;
   // camera
   const b=P.b,trk=tmp1.set(s.vel.x,0,s.vel.z);if(trk.lengthSq()<1)trk.set(F2(LEG.hdg)[0],0,F2(LEG.hdg)[1]);trk.normalize();
-  if(camMode===0||state!=='fly'&&camMode===1){const back=(state==='fly'?3.0:4.5)*(camera.aspect<1?1.2:1);camPos.copy(s.pos).addScaledVector(trk,-b*back);camPos.y+=b*(state==='fly'?.75:1.4);
+  if(camMode===0&&state==='fly'&&TUN&&!TUN.out&&ph.inTun){const P=TUN.pts,j=Math.max(0,TUN.idx-Math.round(b*3/5)),c=P[j],cc=P[TUN.idx];camPos.set(c.x+(s.pos.x-cc.x)*.6,c.y+(s.pos.y-cc.y)*.6+b*.35,c.z+(s.pos.z-cc.z)*.6);camera.position.lerp(camPos,1-Math.exp(-dt*8));camera.lookAt(s.pos);camera.fov=camera.aspect<1?84:68;}
+  else if(camMode===0||state!=='fly'&&camMode===1){const back=(state==='fly'?3.0:4.5)*(camera.aspect<1?1.2:1);camPos.copy(s.pos).addScaledVector(trk,-b*back);camPos.y+=b*(state==='fly'?.75:1.4);
     const gy=surfaceAt(camPos.x,camPos.z,camPos.y).y+2;if(camPos.y<gy)camPos.y=gy;camera.position.lerp(camPos,1-Math.exp(-dt*5));camLook.copy(s.pos).addScaledVector(trk,b*2);camLook.y+=b*.15;camera.lookAt(camLook);camera.fov=camera.aspect<1?78:62;}
   else if(camMode===1){camera.position.copy(s.pos).addScaledVector(fb,b*.25).addScaledVector(ub,b*.17);camera.up.copy(ub);camera.lookAt(tmp2.copy(camera.position).add(fb).addScaledVector(ub,-.06));camera.up.set(0,1,0);camera.fov=camera.aspect<1?95:75;}
   else{const T=LEG.target,tp=at(T,LEG.hdg,-60,75);camera.position.set(tp[0],surfaceAt(tp[0],tp[1]).y+6,tp[1]);camera.lookAt(s.pos);const d=camera.position.distanceTo(s.pos);camera.fov=clamp(2*Math.atan(b*4/d)*R2D,4,60);}
@@ -1138,6 +1184,7 @@ function runCoach(dt){
   const dist=PATH&&pathOff<600?pathRem:Math.hypot(s.pos.x-T[0],s.pos.z-T[1]),need=h>1?dist/h:99,have=P.ldCfg(s.flap),fn=P.flaps[s.flap].n;
   if(s.t<1.5){if(W.free==='engine')say('start',`Engine's quiet — your duck. Nose up gently to ${(P.vbg*KT).toFixed(0)} knots, then trim off the pressure and pick a pond in the green ring.`,999,true);
     else if(LEG.fixedStartFt)say('start',`Power's out abeam. Hold ${(P.vbg*KT).toFixed(0)} knots, turn base when the pond's about 45 degrees behind you. Flaps only once it's made.`,999,true);
+    else if(TUN)say('start',`Warp tunnel! I'll meet you at the breakout. Hold ${(profile.vbg*KT).toFixed(0)} knots, small early banks into each curve, stay on the bread.`,999,true);
     else say('start',`Your duck. She's trimmed for ${(P.vbg*KT).toFixed(0)} knots — phone at neutral holds it. Follow the bread trail; I'm on the glidepath off your right wing.`,999,true);return;}
   if(s.CLlin>.9*s.CLm){say('stall','Stall horn! Ease forward — lower the nose.',4,true);return;}
   if(agl>160)coach.alt={};
@@ -1159,7 +1206,7 @@ function runCoach(dt){
   else if(need>have)say('reach','The target is outside our glide ring — pick something closer, now.',12);
 }
 const cfTarget=new V3(),cfQ=new THREE.Quaternion();
-function updateCFI(dt){if(!cfiDuck)return;const on=SAVE.set.cfi&&state==='fly';cfiDuck.visible=on;if(!on)return;
+function updateCFI(dt){if(!cfiDuck)return;const on=SAVE.set.cfi&&state==='fly'&&!(TUN&&!TUN.out);cfiDuck.visible=on;if(!on)return;
   const s=ph,b=profile.b;let tx=s.vel.x,tz=s.vel.z;const L=Math.hypot(tx,tz)||1;tx/=L;tz/=L;
   let y=s.pos.y;if(PATH&&pathOff<600)y=s.pos.y+clamp(PATH.dense[pathIdx].y-s.pos.y,-2.4*b,2.4*b);
   const port=camera.aspect<1,lat=(port?1.1:2.1)*b,fw=(port?1.7:1.3)*b;y=Math.max(y,surfaceAt(s.pos.x-tz*lat,s.pos.z+tx*lat,y).y+.5);
@@ -1174,7 +1221,7 @@ function updateCFI(dt){if(!cfiDuck)return;const on=SAVE.set.cfi&&state==='fly';c
 /* ---------------- main loop ---------------- */
 let last=performance.now(),accum=0;const DT=1/120;
 function loop(now){requestAnimationFrame(loop);let dt=Math.min(.05,(now-last)/1000);last=now;if(!W)return;
-  if(state==='fly'){readInputs(dt);accum+=dt;while(accum>=DT){physStep(DT);accum-=DT;checkContacts();if(state!=='fly')break;
+  if(state==='fly'){readInputs(dt);accum+=dt;while(accum>=DT){physStep(DT);accum-=DT;if(TUN)tunnelStep();checkContacts();if(state!=='fly')break;
       const s=ph;if(s.CLlin>.9*s.CLm){if(!s._sw){stats.stallW++;s._sw=true;}}else s._sw=false;stats.maxBank=Math.max(stats.maxBank,Math.abs(s.bank));
       if(s.pos.y-W.ponds[LEG.pond].y>150){stats.tGlide+=DT;if(Math.abs(s.IAS-profile.vbg)*KT<=5)stats.tVg+=DT;}}
     if(state==='fly'){updateHUD(dt);if(drill)runDrill(dt);else runCoach(dt);}
@@ -1252,7 +1299,7 @@ $('stampRes').textContent=`Build ${BUILD_ID} · shipped ${BUILT_UTC}`;
 loadWorld(selW);duck.visible=false;
 const menuSpin=()=>{if(state==='menu'){const t=performance.now()*.00005;camera.position.set(bd.x+Math.cos(t)*1400,bd.y+320,bd.z+Math.sin(t)*1400);camera.lookAt(bd.x,bd.y,bd.z);camera.fov=62;camera.updateProjectionMatrix();sky.position.copy(camera.position);}requestAnimationFrame(menuSpin);};menuSpin();
 renderMenu();show('menu');requestAnimationFrame(loop);
-window.__duck={ph,PROFILES,WORLDS,get state(){return state},get td(){return td},startLeg,inp,surfaceAt:(x,z,y)=>surfaceAt(x,z,y),get PATH(){return PATH},physStep,checkContacts,get stats(){return stats},get drill(){return drill},runDrill:(dt)=>runDrill(dt),get LES(){return LES},startDrill,SAVE,startFree,get LEG(){return LEG},get W(){return W},startReplay,get rec(){return rec},get lastCrash(){return lastCrash}};
+window.__duck={ph,PROFILES,WORLDS,get state(){return state},get td(){return td},startLeg,inp,surfaceAt:(x,z,y)=>surfaceAt(x,z,y),get PATH(){return PATH},physStep,checkContacts,get stats(){return stats},get TUN(){return TUN},tunnelStep:()=>tunnelStep(),get drill(){return drill},runDrill:(dt)=>runDrill(dt),get LES(){return LES},startDrill,SAVE,startFree,get LEG(){return LEG},get W(){return W},startReplay,get rec(){return rec},get lastCrash(){return lastCrash}};
 })();
 
 </script>

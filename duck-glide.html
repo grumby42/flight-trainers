@@ -6,10 +6,10 @@
 <meta name="theme-color" content="#049cd8">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="build-id" content="DUCK-20261128-0341Z">
-<meta name="built-utc" content="2026-11-28T03:41:16Z">
+<meta name="build-id" content="DUCK-20261128-1440Z">
+<meta name="built-utc" content="2026-11-28T14:40:35Z">
 <title>Duck Glide — Fly Good, Land Gooder</title>
-<!-- Build DUCK-20261128-0341Z · shipped 2026-11-28T03:41:16Z · Three.js r128 (MIT) from vendor/ · fully offline -->
+<!-- Build DUCK-20261128-1440Z · shipped 2026-11-28T14:40:35Z · Three.js r128 (MIT) from vendor/ · fully offline -->
 <style>
 :root{--red:#e52521;--yel:#fbd000;--blu:#049cd8;--grn:#43b047;--ink:#1b1b2f;--card:#fffdf4}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none}
@@ -174,7 +174,7 @@ label.ck{display:flex;align-items:center;gap:6px;font-weight:700;font-size:13px}
   <div id="tgt"><b></b><span id="tgtd"></span></div>
 </div>
 <div id="stick" class="hide"><i></i></div>
-<div id="chk" class="pill hide"><b>C · RESTART (C172S POH)</b><ol id="chkList"></ol></div>
+<div id="chk" class="pill hide"><b>C · RESTART</b><ol id="chkList"></ol><div id="secHead" class="hide"><b>SECURE — when committed</b></div><ol id="secList"></ol></div>
 
 <div id="ctl" class="hide">
   <div class="grp">
@@ -226,6 +226,7 @@ label.ck{display:flex;align-items:center;gap:6px;font-weight:700;font-size:13px}
       <label class="ck"><input type="checkbox" id="atrim"> 🎚️ Auto-trim when flaps move</label>
     </div>
     <button class="btn r" id="bGo" style="width:100%;height:60px;font-size:20px">BRIEFING ▶</button>
+    <button class="btn" id="bInst" style="width:100%;margin-top:8px">🧑‍✈️ INSTRUCTOR · build &amp; share a scenario</button>
     <details><summary><b>How to fly</b></summary>
       <div class="kv" style="margin-top:6px">
         <b>Tilt</b><span>Hold the phone sideways like a yoke. Tilt left/right = bank. Tilt top toward you = nose up (slower), away = nose down (faster). Tap LEVEL to re-zero.</span>
@@ -254,6 +255,23 @@ label.ck{display:flex;align-items:center;gap:6px;font-weight:700;font-size:13px}
     <div id="bBody"></div>
     <p class="sub" id="bTilt">📱 Hold your phone sideways in a comfortable "neutral yoke" position, then tap FLY — that position becomes level.</p>
     <div class="opts"><button class="btn r" id="bFly" style="flex:1;height:60px;font-size:20px">FLY ▶</button><button class="btn" id="bBack">◀ MENU</button></div>
+  </div>
+</div>
+
+<!-- INSTRUCTOR -->
+<div class="ov hide" id="inst">
+  <div class="card" style="max-width:640px">
+    <h1>Instructor</h1>
+    <div class="sub">Build a scenario and send it as a link. It opens straight into your briefing on the student's phone.</div>
+    <div class="kv">
+      <b>World</b><select id="iW"></select>
+      <b>Duck</b><select id="iP"></select>
+      <b>Wind</b><span><select id="iWm"><option value="def">world default / random</option><option value="set">set it →</option></select> <input id="iWf" type="number" min="0" max="360" step="10" value="230" style="width:64px">° / <input id="iWk" type="number" min="0" max="35" value="12" style="width:52px"> kt, gusting +<input id="iWg" type="number" min="0" max="15" value="0" style="width:48px"> kt</span>
+      <b class="eo">Failure</b><span class="eo">at <input id="iA" type="number" min="800" max="8000" step="100" value="2500" style="width:76px"> ft AGL · cause <select id="iC"></select> · <label><input type="checkbox" id="iSame" checked> same spot every time</label></span>
+      <b>Note</b><input id="iN" maxlength="240" placeholder="e.g. Fly it twice: once with full flaps, once with a slip.">
+    </div>
+    <div class="opts"><button class="btn r" id="iFly">FLY IT ▶</button><button class="btn g" id="iShare">SHARE LINK</button><button class="btn" id="iBack">◀ MENU</button></div>
+    <input id="iLink" readonly style="width:100%;font-size:12px">
   </div>
 </div>
 
@@ -294,7 +312,7 @@ label.ck{display:flex;align-items:center;gap:6px;font-weight:700;font-size:13px}
 <script>
 (function(){
 'use strict';
-const BUILD_ID='DUCK-20261128-0341Z', BUILT_UTC='2026-11-28T03:41:16Z';
+const BUILD_ID='DUCK-20261128-1440Z', BUILT_UTC='2026-11-28T14:40:35Z';
 const KT=1.943844, FT=3.28084, FPM=196.8504, D2R=Math.PI/180, R2D=180/Math.PI, G=9.80665, RHO0=1.225;
 const clamp=(v,a,b)=>v<a?a:v>b?b:v, lerp=(a,b,t)=>a+(b-a)*t;
 const smooth=(a,b,x)=>{const t=clamp((x-a)/(b-a),0,1);return t*t*(3-2*t);};
@@ -315,6 +333,9 @@ const PROFILES={
  mallard:{id:'mallard',name:'Mallard 172',like:'Cessna 172S-like at 2,550 lb (POH: Vg 68, Vs1 48, Vs0 40 KIAS)',app:[68,65,63,61],m:1157,S:16.2,b:11.0,e:0.7164,CD0:0.0519,CLa:5.7,a0:-2,CLmax:1.876,roll:45,slipCD:0.06,vcr:105,lim:{vfe:85,vno:129,vne:163},
    flaps:[NOFLAP,{n:'10°',dCL:.2,dCLmax:.25,dCD:.008},{n:'20°',dCL:.45,dCLmax:.55,dCD:.022},{n:'30°',dCL:.7,dCLmax:.825,dCD:.048}],
    col:{body:0xffd21a,head:0x2fbf5a,wing:0xfff3b0,tip:0x1e7fd8,beak:0xff8a00}},
+ archer:{id:'archer',name:'Pintail Archer',like:'Piper PA-28-181 Archer-like at 2,550 lb (POH: Vg 76, Vs1 50, Vs0 45 KIAS, ~10:1)',app:[76,73,70,66],m:1157,S:15.8,b:10.8,e:0.661,CD0:0.03834,CLa:5.2,a0:-2,CLmax:1.772,roll:40,slipCD:0.06,vcr:115,lim:{vfe:102,vno:125,vne:154},
+   flaps:[NOFLAP,{n:'10°',dCL:.1,dCLmax:.12,dCD:.01},{n:'25°',dCL:.24,dCLmax:.28,dCD:.025},{n:'40°',dCL:.36,dCLmax:.416,dCD:.05}],
+   col:{body:0xd9a066,head:0x7a4a2a,wing:0xf3e6c8,tip:0x2a6cff,beak:0x555555}},
  cub:{id:'cub',name:'Teal Cub',like:'Piper J-3 Cub-like — no flaps, slip to lose height',m:550,S:16.6,b:10.7,e:0.75,CD0:0.0635,CLa:4.8,a0:-2,CLmax:1.5,roll:40,slipCD:0.085,vcr:70,lim:{vfe:0,vno:71,vne:92},
    flaps:[{n:'NONE',dCL:0,dCLmax:0,dCD:0}],
    col:{body:0xffc800,head:0x18b4a8,wing:0xffe066,tip:0x111111,beak:0xff7a00}},
@@ -338,7 +359,7 @@ function mkRwy(C,h,len,wid,y,num,rnum){return {cx:C[0],cz:C[1],hdg:h,F:F2(h),R:R
 function rwyLoc(rw,x,z){const dx=x-rw.cx,dz=z-rw.cz;return [dx*rw.F[0]+dz*rw.F[1],dx*rw.R[0]+dz*rw.R[1]];}
 function carveRwy(h,x,z,rws){for(const rw of rws){const [f,r]=rwyLoc(rw,x,z),d=Math.hypot(Math.max(0,Math.abs(f)-rw.len/2),Math.max(0,Math.abs(r)-rw.wid/2-30));if(d<140)h=lerp(rw.y-.05,h,smooth(0,140,d));}return h;}
 const legY=L=>L.rwy!==undefined?W.runways[L.rwy].y:W.ponds[L.pond].y;
-const legName=L=>L.rwy!==undefined?'Runway '+W.runways[L.rwy].num:W.ponds[L.pond].name;
+const legName=L=>L.rwy!==undefined?(W.runways[L.rwy].name||'Runway '+W.runways[L.rwy].num):W.ponds[L.pond].name;
 function pondE(p,x,z){const dx=x-p.cx,dz=z-p.cz,f=dx*p.F[0]+dz*p.F[1],r=dx*p.R[0]+dz*p.R[1];return Math.sqrt((f/p.a)*(f/p.a)+(r/p.b)*(r/p.b));}
 function carve(h,x,z,ponds){for(const p of ponds){if(p.sky)continue;const e=pondE(p,x,z);if(e<1)return p.y-1.2-5*(1-e*e);if(e<1.8){const t=smooth(1,1.8,e);h=lerp(p.y+.6,Math.max(h,p.y+.6),t);}}return h;}
 function patternPts(T,h,s,P,D,Fl){return [at(T,h,D+550,s*(P+550)),at(T,h,D,s*P),at(T,h,0,s*P),at(T,h,-Fl,s*P),at(T,h,-Fl,0),at(T,h,0,0)];}
@@ -437,14 +458,25 @@ function W_engine(){
   const base=(x,z)=>18+55*fbm(x/1400,z/1400,81)+110*smooth(.58,.85,fbm(x/2600,z/2600,83));
   while(ponds.length<16&&tries<800){tries++;const x=(r()-.5)*11000,z=(r()-.5)*11000;if(ponds.some(p=>Math.hypot(p.cx-x,p.cz-z)<1200))continue;
     const a=150+r()*320,b=55+r()*110,h=r()*Math.PI;ponds.push(mkPond([x,z],h,a,b,0,base(x,z)-.6,PNAMES[ponds.length]+' Pond'));}
+  const runways=[],wires=[];let rt=0;
+  while(runways.length<4&&rt<900){rt++;const x=(r()-.5)*10000,z=(r()-.5)*10000,len=560+r()*240,h=r()*Math.PI,F=F2(h),y0=base(x,z);
+    if(Math.max(Math.abs(base(x+F[0]*len/2,z+F[1]*len/2)-y0),Math.abs(base(x-F[0]*len/2,z-F[1]*len/2)-y0))>4)continue;
+    if(ponds.some(p=>Math.hypot(p.cx-x,p.cz-z)<p.a+len/2+250)||runways.some(q=>Math.hypot(q.cx-x,q.cz-z)<1400))continue;
+    const rw=mkRwy([x,z],h,len,25,y0+.3,'','');rw.kind='grass';rw.name=['Hayfield','Sod Farm','Clover','Barnyard'][runways.length]+' Strip';runways.push(rw);}
+  for(let k=0;k<900;k++){const x=(r()-.5)*9000,z=(r()-.5)*9000,len=1500,h=r()*Math.PI,F=F2(h),y0=base(x,z);let ok=true;
+    for(let q=-1;q<=1.01;q+=.25)if(Math.abs(base(x+F[0]*len/2*q,z+F[1]*len/2*q)-y0)>5){ok=false;break;}
+    if(!ok||ponds.some(p=>Math.hypot(p.cx-x,p.cz-z)<p.a+950)||runways.some(q=>Math.hypot(q.cx-x,q.cz-z)<1300))continue;
+    const rw=mkRwy([x,z],h,len,9,y0+.3,'','');rw.kind='road';rw.name='Farm Road';runways.push(rw);
+    const pts=[];for(let f=-len/2-220;f<=len/2+220;f+=110)pts.push(at([x,z],h,f,18));wires.push({pts,h:11});break;}
+  if(runways[0]){const s0=runways[0],pts=[];for(let q=-330;q<=330;q+=110)pts.push(at([s0.cx,s0.cz],s0.hdg,s0.len/2+170,q));wires.push({pts,h:12});}
   const ny=nearestPondY(ponds,null);
   const pal=(h,sl,x,z,n)=>{if(h<ny(x,z)+1.6&&sl<.25)return PAL.sand;if(sl>.4)return mixc(PAL.rock,PAL.grass2,.3);
     const c=hash2(Math.floor(x/380+fbm(x/300,z/300,5)*.7),Math.floor(z/380),17);return c<.22?FIELD.wheat:c<.5?PAL.grass:c<.72?FIELD.lime:PAL.grass2;};
   const th=[];for(let i=0;i<7;i++)th.push([(r()-.5)*9000,(r()-.5)*9000,1.4+r()*1.2,140]);
-  return {id:'engine',name:'Engine Out!',tag:'Random failure from cruise · pick any pond · ABCs',col:'#ff7a00',elevFt:900,size:14000,cx:0,cz:0,edgeH:40,base,ponds,fluid:null,free:'engine',
+  return {id:'engine',name:'Engine Out!',tag:'Random failure from cruise · ponds, grass strips & a farm road · ABCs',col:'#ff7a00',elevFt:900,size:14000,cx:0,cz:0,edgeH:40,base,ponds,runways,wires,fluid:null,free:'engine',
     sky:{top:0x3d9bff,bot:0xd4f2ff,fog:0xd4f2ff,near:2600,far:12500},palette:pal,
     wind:{from:0,kt:0,gust:.2},ridgeK:.4,thermals:th,trees:{kind:'round',n:1600,r:6800,minPond:2.2,seed:44},clouds:32,
-    legs:[{task:'Cruising along at ~cruise speed when the engine quits. <b>A</b>irspeed: pitch for best glide and re-trim. <b>B</b>est place: pick a pond inside the green ring, ideally into the wind. <b>C</b>hecklist/plan: fly a pattern to it and land. Any pond counts — each gets its own bullseye laid out into the wind. RETRY replays the same failure; NEW FAILURE rolls a fresh one.',window:[0,300]}]};
+    legs:[{task:'Cruising along at ~cruise speed when the engine quits. <b>A</b>irspeed: pitch for best glide and re-trim. <b>B</b>est place: pick a pond inside the green ring, ideally into the wind. <b>C</b>hecklist/plan: fly a pattern to it and land. Any pond, grass strip or the farm road counts — each gets its own target laid out into the wind. Watch for power lines (look for the poles): one runs along the road, another crosses past the end of a strip. RETRY replays the same failure; NEW FAILURE rolls a fresh one.',window:[0,300]}]};
 }
 const SKYN=['Cumulus','Nimbus','Zephyr','Puffball','Cirrus','Marshmallow','Halo','Drizzle','Rainbow','Stratus','Breeze','Sunbeam','Cotton','Feather'];
 function W_sky(){
@@ -522,8 +554,8 @@ const LS={
  ember:[{id:'rim',name:'Cross the rim',desc:'Land in the caldera lagoon',test:t=>t.onTarget},CK(800)],
  islands:[{id:'hop',name:'Lagoon hops',desc:'Each leg that lands in its lagoon is a pass',test:t=>t.onTarget},{id:'ck',name:'Archipelago checkride',ck:true,rule:[2,2],desc:'All 3 legs in their lagoons, averaging 800+',test:()=>null}],
  engine:[{id:'abc',name:'A is for Airspeed',desc:'Best glide within 10 s of the failure, then re-trimmed',rule:[3,3],test:()=>stats.vgCap!==null&&stats.vgCap<=10&&stats.trimmed},
-   {id:'chk',name:'C is for Checklist',desc:'Mallard: run the POH restart checklist in order, after Vg is set (other ducks auto-pass)',test:()=>!chk||chkResult().ok},
-   {id:'pond',name:'Make a pond',desc:'Land in any pond',test:t=>t.onTarget},CK(750,' with the ABCs met',(t,sc)=>t.onTarget&&sc.total>=750&&sc.e===0&&stats.vgCap!==null&&stats.vgCap<=10&&(!chk||chkResult().ok))]};
+   {id:'chk',name:'C is for Checklist',desc:'Mallard or Pintail: run that POH restart checklist in order, after Vg is set (other ducks auto-pass)',test:()=>!chk||chkResult().ok},
+   {id:'pond',name:'Make a field',desc:'Land in any pond, grass strip or on the farm road',test:t=>t.onTarget},CK(750,' with the ABCs met',(t,sc)=>t.onTarget&&sc.total>=750&&sc.e===0&&stats.vgCap!==null&&stats.vgCap<=10&&(!chk||chkResult().ok))]};
 const ruleOf=st=>st.rule||[3,4];
 
 /* ---------------- persistence ---------------- */
@@ -538,7 +570,7 @@ function makeH(w){return (x,z)=>{let h=carve(w.base(x,z),x,z,w.ponds);if(w.runwa
 function islandAt(x,z){if(!W.islands)return null;for(const is of W.islands){const d=Math.hypot(x-is.x,z-is.z);if(d<is.r)return {is,d};}return null;}
 function inIsland(x,y,z){const il=islandAt(x,z);if(!il)return false;const is=il.is;return y<is.top-14&&y>is.top-is.depth*(1-il.d/is.r);}
 const ZEN=()=>!LES&&(SAVE.set.zen||!!(W&&W.zen));
-let LES=null,drill=null;
+let LES=null,drill=null,SCN=null;
 const pr=(w,id)=>SAVE.prog[w+'.'+id]||(SAVE.prog[w+'.'+id]={h:[],done:false});
 function dots(w,st){const m=ruleOf(st)[1],h=pr(w,st.id).h.slice(-m);let o='';for(let i=0;i<m-h.length;i++)o+='○';return o+h.map(x=>x?'●':'✕').join('');}
 function recordAttempt(w,st,pass){const p=pr(w,st.id);p.h.push(pass?1:0);if(p.h.length>30)p.h.shift();const [n,m]=ruleOf(st),last=p.h.slice(-m);
@@ -730,7 +762,7 @@ function loadWorld(w){
       const a=rr()*6.283,fall=new THREE.Mesh(new THREE.PlaneGeometry(16,is.depth*.9),fallM);fall.position.set(is.x+Math.cos(a)*is.r*1.02,is.top-is.depth*.45,is.z+Math.sin(a)*is.r*1.02);fall.rotation.y=-a+Math.PI/2;scene.add(fall);
       const bush=new THREE.SphereGeometry(1,7,5);for(let k=0;k<5;k++){const b2=rr()*6.283,dd=is.r*(.75+rr()*.2);const m=new THREE.Mesh(bush,new THREE.MeshLambertMaterial({color:[0x2fa83a,0xff7ad0,0x4cc84a][k%3],flatShading:true}));const sz=6+rr()*6;m.scale.set(sz,sz*.9,sz);m.position.set(is.x+Math.cos(b2)*dd,is.top+sz*.6,is.z+Math.sin(b2)*dd);scene.add(m);}}}
   if(w.rings){const g=new THREE.TorusGeometry(16,1.8,8,28);for(const rg of w.rings){const m=new THREE.Mesh(g,new THREE.MeshLambertMaterial({color:0xffcc22,emissive:0x775500,flatShading:true}));m.position.set(rg[0],rg[1],rg[2]);m.rotation.y=rg[3];m.userData={got:false};scene.add(m);ringMeshes.push(m);}}
-  buildRunways(w);buildTrees(w);buildClouds(w);buildValleyDecor(w);buildCloudVols(w);tunGrp=null;TUN=null;
+  buildRunways(w);buildWires(w);buildTrees(w);buildClouds(w);buildValleyDecor(w);buildCloudVols(w);tunGrp=null;TUN=null;
   if(w.valley){bd.x=w.valley.cxz(0);bd.z=0;bd.y=w.valley.floorZ(0)+520;}else if(w.legs[0].target){bd.x=w.legs[0].target[0];bd.z=w.legs[0].target[1];bd.y=legY(w.legs[0]);}else if(w.free==='sky'){bd.x=0;bd.z=0;bd.y=700;}else{bd.x=w.ponds[0].cx;bd.z=w.ponds[0].cz;bd.y=w.ponds[0].y;}
   duck=makeDuck(profile);scene.add(duck);
   cfiDuck=makeDuck({...profile,id:'cfi',col:{body:0x2a6cff,head:0xffffff,wing:0xdbe8ff,tip:0xe52521,beak:0xff8a00}});
@@ -742,6 +774,11 @@ function loadWorld(w){
 }
 let TUN=null,tunGrp=null,bonkT=0,targetGrp=null,cloudHit=new Set(),picHit=new Set(),inCloud=false;
 function rwyTexture(rw){const ppx=11,ppy=1.68,Wpx=Math.round(rw.wid*ppx),H=Math.round(rw.len*ppy),cv=document.createElement('canvas');cv.width=Wpx;cv.height=Math.min(4096,H);const sy=cv.height/H,g=cv.getContext('2d');
+  if(rw.kind==='grass'||rw.kind==='road'){const Y=fm=>cv.height-fm*ppy*sy,box=(x0,x1,f0,f1)=>{g.fillRect((x0+rw.wid/2)*ppx,Y(f1),(x1-x0)*ppx,(f1-f0)*ppy*sy);};
+    if(rw.kind==='grass'){g.fillStyle='#4fb83a';g.fillRect(0,0,Wpx,cv.height);for(let k=0;k<6;k++){g.fillStyle=k%2?'#5fca44':'#46a934';box(-rw.wid/2+k*rw.wid/6,-rw.wid/2+(k+1)*rw.wid/6,0,rw.len);}
+      g.fillStyle='#ffffff';for(const f0 of[0,rw.len-12])for(const sd of[-1,1]){box(sd<0?-rw.wid/2:rw.wid/2-1.2,sd<0?-rw.wid/2+1.2:rw.wid/2,f0,f0+12);box(sd<0?-rw.wid/2:rw.wid/2-6,sd<0?-rw.wid/2+6:rw.wid/2,f0<1?0:rw.len-1.2,f0<1?1.2:rw.len);}}
+    else{g.fillStyle='#4a4d52';g.fillRect(0,0,Wpx,cv.height);g.fillStyle='#eeeeee';box(-rw.wid/2+.2,-rw.wid/2+.5,0,rw.len);box(rw.wid/2-.5,rw.wid/2-.2,0,rw.len);g.fillStyle='#ffd21a';for(let f=0;f<rw.len;f+=12)box(-.12,.12,f,f+3);}
+    const tex=new THREE.CanvasTexture(cv);tex.anisotropy=renderer.capabilities.getMaxAnisotropy();return tex;}
   g.fillStyle='#3b3f46';g.fillRect(0,0,Wpx,cv.height);for(let i=0;i<1500;i++){g.fillStyle=`rgba(${Math.random()<.5?255:0},${Math.random()<.5?255:0},${Math.random()<.5?255:0},.04)`;g.fillRect(Math.random()*Wpx,Math.random()*cv.height,3,6);}
   const Y=fm=>cv.height-fm*ppy*sy,box=(x0,x1,f0,f1)=>{g.fillRect((x0+rw.wid/2)*ppx,Y(f1),(x1-x0)*ppx,(f1-f0)*ppy*sy);};
   g.fillStyle='#f4f4f4';box(-rw.wid/2+.3,-rw.wid/2+1.2,0,rw.len);box(rw.wid/2-1.2,rw.wid/2-.3,0,rw.len);
@@ -751,6 +788,12 @@ function rwyTexture(rw){const ppx=11,ppy=1.68,Wpx=Math.round(rw.wid*ppx),H=Math.
     for(const [a,b] of [[152,175],[305,350]]){bx(-rw.wid/2+3,-rw.wid/2+(a>300?7.5:5),a,b);bx(rw.wid/2-(a>300?7.5:5),rw.wid/2-3,a,b);}}
   for(let f=100;f<rw.len-100;f+=61)box(-.45,.45,f,f+36.5);
   const tex=new THREE.CanvasTexture(cv);tex.anisotropy=renderer.capabilities.getMaxAnisotropy();return tex;}
+function buildWires(w){W._wires=[];if(!w.wires)return;const pm=new THREE.MeshLambertMaterial({color:0x6b4a2b,flatShading:true}),bm=new THREE.MeshLambertMaterial({color:0xff6a00}),lm=new THREE.LineBasicMaterial({color:0x222222});
+  for(const wl of w.wires){const P3=wl.pts.map(p=>new V3(p[0],Hfn(p[0],p[1])+wl.h,p[1]));
+    P3.forEach((p,i)=>{const pole=new THREE.Mesh(new THREE.CylinderGeometry(.18,.25,wl.h+1,6),pm);pole.position.set(p.x,p.y-wl.h/2,p.z);scene.add(pole);const arm=new THREE.Mesh(new THREE.BoxGeometry(3,.2,.2),pm);arm.position.copy(p);scene.add(arm);
+      if(i){const a=P3[i-1];for(const off of[-1.3,1.3]){const g=new THREE.BufferGeometry().setFromPoints([new V3(a.x,a.y,a.z+off*0),new V3(p.x,p.y,p.z)]);scene.add(new THREE.Line(g,lm));}
+        W._wires.push([a.x,a.y,a.z,p.x,p.y,p.z]);if(i%2){const m=new THREE.Mesh(new THREE.SphereGeometry(.7,8,6),bm);m.position.set((a.x+p.x)/2,(a.y+p.y)/2-.3,(a.z+p.z)/2);scene.add(m);}}});}}
+function segDist(p,w){const ax=w[0],ay=w[1],az=w[2],dx=w[3]-ax,dy=w[4]-ay,dz=w[5]-az,L2=dx*dx+dy*dy+dz*dz,t=clamp(((p.x-ax)*dx+(p.y-ay)*dy+(p.z-az)*dz)/L2,0,1);return Math.hypot(p.x-ax-dx*t,p.y-ay-dy*t,p.z-az-dz*t);}
 function buildRunways(w){if(!w.runways)return;for(const rw of w.runways){const g=new THREE.PlaneGeometry(rw.wid,rw.len);g.rotateX(-Math.PI/2);
     const m=new THREE.Mesh(g,new THREE.MeshLambertMaterial({map:rwyTexture(rw)}));m.rotation.y=-rw.hdg;m.position.set(rw.cx,rw.y+.06,rw.cz);scene.add(m);}}
 function makeRwyTarget(leg){const grp=new THREE.Group(),rw=W.runways[leg.rwy],y=rw.y+.1,T=leg.target,lo=leg.window[0]/FT,hi=leg.window[1]/FT;
@@ -833,7 +876,8 @@ function tunnelStep(){const tn=TUN;if(!tn||tn.out)return;const s=ph,P=tn.pts;let
     if(vr>0){s.vel.x-=ux*vr*1.6;s.vel.y-=uy*vr*1.6;s.vel.z-=uz*vr*1.6;}s.vel.multiplyScalar(.93);
     if(s.t-bonkT>.6){bonkT=s.t;stats.bonks++;beep(140,.12,'square',.2);toast(`Bonk! 🦆💫 (${stats.bonks})`,700);}}}
 function startLeg(i,fromPt){chk=null;$('chk').classList.add('hide');if(W.tunnelPlan)return startTunnelLeg();
-  if(W.legs[i]&&W.legs[i].randWind){const hd=W.legs[i].hdg*R2D,sd=Math.random()<.5?-1:1;W.wind.from=Math.round((hd+sd*(30+Math.random()*45)+360)%360/10)*10;W.wind.kt=Math.round(8+Math.random()*9);W.wind.gust=.3;}
+  if(SCN&&SCN.wind){W.wind.from=SCN.wind.from;W.wind.kt=SCN.wind.kt;W.wind.gust=SCN.wind.gust;}
+  else if(W.legs[i]&&W.legs[i].randWind){const hd=W.legs[i].hdg*R2D,sd=Math.random()<.5?-1:1;W.wind.from=Math.round((hd+sd*(30+Math.random()*45)+360)%360/10)*10;W.wind.kt=Math.round(8+Math.random()*9);W.wind.gust=.3;}
   if(W.free)return startFree(fromPt||null);
   legIdx=i;LEG=W.legs[i];if(targetGrp)scene.remove(targetGrp);windsocks=[];targetGrp=makeTarget(LEG);scene.add(targetGrp);
   PATH=buildPath(LEG,LEG.prefix?(fromPt||null):null);placeBeads(PATH);
@@ -847,19 +891,21 @@ function startLeg(i,fromPt){chk=null;$('chk').classList.add('hide');if(W.tunnelP
 let freeLegs=[],lastFree=null,bestT=0;
 function freeTargets(){
   freeLegs=W.ponds.map((p,i)=>{let h=p.hdg;if(W.wind.kt>0&&Math.cos(wrapPi(h-W.wind.from*D2R))<0)h+=Math.PI;h=(h+4*Math.PI)%(2*Math.PI);
-    return {target:at([p.cx,p.cz],h,-(p.a-Math.min(80,p.a*.3)),0),hdg:h,pond:i,window:[0,300],free:true,task:W.legs[0].task};});
+    return {target:at([p.cx,p.cz],h,-(p.a-Math.min(80,p.a*.3)),0),hdg:h,pond:i,window:[0,300],free:true,task:W.legs[0].task};}).concat((W.runways||[]).map((rw,i)=>{let h=rw.hdg;if(W.wind.kt>0&&Math.cos(wrapPi(h-W.wind.from*D2R))<0)h+=Math.PI;h=(h+4*Math.PI)%(2*Math.PI);
+    return {target:at([rw.cx,rw.cz],h,-(rw.len/2-Math.min(90,rw.len*.15)),0),hdg:h,rwy:i,window:[0,300],free:true,task:W.legs[0].task};}));
   if(targetGrp)scene.remove(targetGrp);windsocks=[];targetGrp=new THREE.Group();freeLegs.forEach(l=>targetGrp.add(makeTarget(l)));scene.add(targetGrp);}
 function pickBest(force){const s=ph,have=profile.ldCfg(0);let best=null,bs=1e18;
-  for(const l of freeLegs){const p=W.ponds[l.pond],h=s.pos.y-p.y;if(h<-5)continue;const d=Math.hypot(s.pos.x-l.target[0],s.pos.z-l.target[1]),need=h>1?d/h:99;
+  for(const l of freeLegs){const h=s.pos.y-legY(l);if(h<-5)continue;const d=Math.hypot(s.pos.x-l.target[0],s.pos.z-l.target[1]),need=h>1?d/h:99;
     const sc=need<have*.85?d:1e6+need*1000;if(sc<bs){bs=sc;best=l;}}
   if(best&&(force||best!==LEG))LEG=best;}
-function newScenario(){const r=Math.random,a=r()*6.283,d=r()*4500;return {cause:['shut','sel','pump','mix','ign','mech','mech','mech'][Math.floor(r()*8)],x:Math.cos(a)*d,z:Math.sin(a)*d,agl:1800+r()*2700,hdg:r()*360,wfrom:Math.round(r()*35)*10,wkt:Math.round(r()*14),id:Math.floor(r()*9000+1000)};}
+function newScenario(seed){const r=seed?rng(seed):Math.random,a=r()*6.283,d=r()*4500;return {seed:seed||0,causeR:r(),x:Math.cos(a)*d,z:Math.sin(a)*d,agl:1800+r()*2700,hdg:r()*360,wfrom:Math.round(r()*35)*10,wkt:Math.round(r()*14),id:Math.floor(r()*9000+1000)};}
 function startFree(arg){
   PATH=null;placeBeads(null);const P=profile;
-  if(W.free==='engine'){const sc=arg&&arg.scenario?arg.scenario:newScenario();lastFree={scenario:sc};W.wind.from=sc.wfrom;W.wind.kt=sc.wkt;freeTargets();
+  if(W.free==='engine'){let sc=arg&&arg.scenario?arg.scenario:null;if(!sc){if(SCN&&SCN.eng&&!arg){sc=newScenario(SCN.eng.seed||((Math.random()*1e9)|0));sc.agl=SCN.eng.agl;sc.causeK=SCN.eng.cause!=='rand'?SCN.eng.cause:null;}else sc=newScenario();}
+    lastFree={scenario:sc};W.wind.from=sc.wfrom;W.wind.kt=sc.wkt;if(SCN&&SCN.wind){W.wind.from=SCN.wind.from;W.wind.kt=SCN.wind.kt;W.wind.gust=SCN.wind.gust;}freeTargets();
     const gy=surfaceAt(sc.x,sc.z).y,h=sc.hdg*D2R,vcr=P.vcr/KT,cl=2*P.m*G/(RHO0*P.S*vcr*vcr);
     resetFlight(tmp3.set(sc.x,gy+sc.agl/FT,sc.z),new V3(Math.sin(h),0,-Math.cos(h)),vcr,cl/P.CLa*R2D+P.a0);
-    stats=newStats(0);chkReset(sc.cause);sfx('sputter');toast(`💥 ENGINE FAILURE! #${sc.id}`,2600);setTimeout(()=>{if(state==='fly')toast(`Pitch for ${(P.vbg*KT).toFixed(0)} kt · trim · pick a pond`,2600);},2700);}
+    stats=newStats(0);chkReset(sc.causeR,sc.causeK);sfx('sputter');toast(`💥 ENGINE FAILURE! #${sc.id}`,2600);setTimeout(()=>{if(state==='fly')toast(`Pitch for ${(P.vbg*KT).toFixed(0)} kt · trim · pick a pond`,2600);},2700);}
   else{const L=arg&&arg.launch?arg.launch:W.launch;lastFree={launch:L};freeTargets();ringMeshes.forEach(m=>{m.userData.got=false;m.material.color.setHex(0xffcc22);m.scale.setScalar(1);});
     const h=L[3]*D2R;resetFlight(tmp3.set(L[0],L[1],L[2]),new V3(Math.sin(h),0,-Math.cos(h)),P.vbg,P.aTrim);stats=newStats(ringMeshes.length*5+(W.cloudVols?W.cloudVols.length:0)+(W.picnics?W.picnics.length*3:0));if(!drill)toast(W.valley?'🏔️ Soar the valley!':'☁️ Free flight!',1500);}
   legIdx=0;LEG=freeLegs[0];pickBest(true);bestT=0;
@@ -963,6 +1009,7 @@ function attQuat(q){const s=ph,cb=Math.cos(s.bank*D2R),sb=Math.sin(s.bank*D2R),c
 /* ---------------- contacts / landing ---------------- */
 function checkContacts(){
   const s=ph,sf=surfaceAt(s.pos.x,s.pos.z,s.pos.y);
+  if(W._wires)for(const wr of W._wires)if(segDist(s.pos,wr)<2.4)return crash('Wire strike! ⚡','Power lines are nearly invisible from the air — look for the poles and the orange marker balls. Cross them high and near a pole, or pick another field.');
   if(inIsland(s.pos.x,s.pos.y,s.pos.z))return crash('Bonk! Sky-rock.','You flew into the underside of a floating isle. Arrive above the island top with height to spare.');
   const tr=treeTopAt(s.pos.x,s.pos.z,1.5);if(tr&&s.pos.y<tr.top-1&&s.pos.y>tr.y)return crash('Duck vs. pine tree!','Trees win every time. Clear obstacles with margin, then use flaps + slip to get down steeply.');
   if(s.pos.y>sf.y+.25)return;
@@ -972,7 +1019,7 @@ function checkContacts(){
   if(sf.type==='rwy'&&(vs>900||bank>20))return crash('Hard landing!',`Hit the runway at ${vs.toFixed(0)} fpm with ${bank.toFixed(0)}° bank — likely a bounce or prop strike. Round out earlier and hold it off.`);
   if(sf.type==='land'){if(vs>450||bank>12||gsv>32)return crash('Off-field crunch!',`Hit the ground at ${vs.toFixed(0)} fpm, ${ias.toFixed(0)} kt, ${bank.toFixed(0)}° bank. Pick your field early and arrive slow and level.`);}
   else if(sf.type!=='rwy'&&(vs>1100||bank>25))return crash('Cartwheel splash!',`Touched water at ${vs.toFixed(0)} fpm with ${bank.toFixed(0)}° bank. Level the wings and flare to < 300 fpm.`);
-  if(W.free&&sf.type==='pond')LEG=freeLegs[sf.pond];
+  if(W.free&&sf.type==='pond')LEG=freeLegs.find(l=>l.pond===sf.pond)||LEG;else if(W.free&&sf.type==='rwy')LEG=freeLegs.find(l=>l.rwy===sf.rwy)||LEG;
   const T=LEG.target,F=F2(LEG.hdg),R=R2(LEG.hdg),dx=s.pos.x-T[0],dz=s.pos.z-T[1];
   td={type:sf.type,drift:Math.abs(s.vel.x*R[0]+s.vel.z*R[1])*KT,onTarget:LEG.rwy!==undefined?(sf.type==='rwy'&&sf.rwy===LEG.rwy):(sf.type==='pond'&&sf.pond===LEG.pond),f:(dx*F[0]+dz*F[1])*FT,r:(dx*R[0]+dz*R[1])*FT,vs,ias,vs0,bank,align:Math.abs(wrapPi(s.noseHdg-LEG.hdg))*R2D,flapN:profile.flaps[s.flap].n,
     gs:gsv*KT,pos:s.pos.clone()};
@@ -989,7 +1036,8 @@ function scoreTD(t){const lo=LEG.window[0],hi=LEG.window[1];
   return {acc,cross,sink,spd,aln,dr,bk,total:Math.round(acc+cross+sink+spd+aln+dr+bk),e};}
 function coachFlight(){const c=[],P=profile;
   if(stats.engine){c.push(stats.vgCap===null?`Never stabilized at best glide (${(P.vbg*KT).toFixed(0)} KIAS). First action after a failure: pitch for Vg — every knot off Vg costs range.`:stats.vgCap<=10?`Best glide captured in ${stats.vgCap.toFixed(0)} s — crisp. You traded the extra cruise speed for height.`:`Best glide took ${stats.vgCap.toFixed(0)} s to capture. Aim for < 10 s: pitch up, let it slow, then hold Vg.`);
-    if(chk){const r=chkResult();c.push(`Cause: ${r.cause}.`);c.push(r.ok?`C — checklist ✓: ${r.restarted?'run in order until the restart':'all items in POH order'}, after Vg was set.`:!r.aviateFirst?'C — you started the checklist before best glide was set. Aviate first: Airspeed (A) and a field (B), then the checklist (C).':!r.allDone?`C — checklist incomplete (${r.n} of 5 items). Flow through it: fuel shutoff ON → selector BOTH → pump ON → mixture RICH → ignition BOTH.`:'C — items were done out of POH order. Use the checklist order so nothing gets skipped under stress.');}
+    if(chk){const r=chkResult();c.push(`Cause: ${r.cause}.`);c.push(r.ok?`C — checklist ✓: ${r.restarted?'run in order until the restart':'all items in POH order'}, after Vg was set.`:!r.aviateFirst?'C — you started the checklist before best glide was set. Aviate first: Airspeed (A) and a field (B), then the checklist (C).':!r.allDone?`C — checklist incomplete (${r.n} of ${r.N} items). Flow: ${r.flow}.`:'C — items were done out of POH order. Use the checklist order so nothing gets skipped under stress.');
+      if(!r.restarted)c.push(r.sec===r.secN?`Secure ✓ — all ${r.secN} items done before touchdown.`:`Secure: ${r.sec}/${r.secN} items done before touchdown. Once you're committed to the forced landing, secure the engine (fuel, mixture, ignition, master) — it makes a post-crash fire much less likely.`);}
     c.push(stats.trimmed?`You re-trimmed for Vg — good; a trimmed duck frees your brain for picking the field.`:`You never re-trimmed for Vg (trim was still near cruise). Hold the pitch, then trim the pressure out (TRIM ▲ / ]).`);}
   if(stats.tGlide>5){const pct=stats.tVg/stats.tGlide*100;c.push(pct>65?`Nice speed discipline: ${pct.toFixed(0)}% of the glide within ±5 kt of Vg (${(P.vbg*KT).toFixed(0)} KIAS).`:`Only ${pct.toFixed(0)}% of the glide was within ±5 kt of Vg (${(P.vbg*KT).toFixed(0)} KIAS). Trim for Vg first, then manage the path with turns, flaps and slips — not by pitching off speed.`);}
   if(stats.maxLo>150)c.push(`You got ${stats.maxLo.toFixed(0)} ft below the bread trail at one point. Low is the dangerous side: tighten the pattern / turn toward the target earlier; you can always dump extra height later.`);
@@ -1050,8 +1098,8 @@ function sfx(k){if(!AC||!SAVE.set.snd)return;if(k==='coin'){beep(988,.08,'square
 const mini=$('mini'),mctx=mini.getContext('2d');
 function showHUD(on){document.body.classList.toggle('flying',!!on);document.body.classList.toggle('tapes',!!SAVE.set.tapes);$('bCam').textContent='CAM · '+CAMN[camMode];if(!on){const m=$('cfiMsg');if(m)m.classList.add('hide');}['hud','ctl','topbtns'].forEach(id=>$(id).classList.toggle('hide',!on));$('bBoost').classList.toggle('hide',!ZEN());}
 let toastT=0;function toast(msg,ms){const t=$('toast');t.textContent=msg;t.style.opacity=1;clearTimeout(toastT);toastT=setTimeout(()=>t.style.opacity=0,ms||1200);}
-function show(id){['menu','brief','pause','result'].forEach(o=>$(o).classList.toggle('hide',o!==id));}
-function hideAll(){['menu','brief','pause','result'].forEach(o=>$(o).classList.add('hide'));}
+function show(id){['menu','brief','pause','result','inst'].forEach(o=>$(o).classList.toggle('hide',o!==id));}
+function hideAll(){['menu','brief','pause','result','inst'].forEach(o=>$(o).classList.add('hide'));}
 let hudT=0;
 function updateHUD(dt){
   hudT+=dt;if(hudT<.06)return;hudT=0;const s=ph,P=profile,ty=legY(LEG),T=LEG.target;
@@ -1086,7 +1134,7 @@ function drawMini(need,have){
   const X=x=>cx+(x-s.pos.x)*sc,Y=z=>cy+(z-s.pos.z)*sc;
   c.save();c.beginPath();c.arc(cx,cy,156,0,6.283);c.clip();
   c.fillStyle=W.fluid&&W.fluid.type==='lava'?'rgba(255,90,20,.25)':W.fluid?'rgba(30,140,255,.25)':'rgba(60,170,60,.25)';c.fillRect(0,0,Wd,Wd);
-  if(W.runways)for(const rw of W.runways){c.save();c.translate(X(rw.cx),Y(rw.cz));c.rotate(rw.hdg);c.fillStyle='#d0d4da';c.fillRect(-Math.max(2,rw.wid*sc),-rw.len*sc/2,Math.max(4,rw.wid*sc*2),rw.len*sc);c.restore();}
+  if(W.runways)for(const rw of W.runways){c.save();c.translate(X(rw.cx),Y(rw.cz));c.rotate(rw.hdg);c.fillStyle=rw.kind==='grass'?'#2e8b2e':rw.kind==='road'?'#8a8a8a':'#d0d4da';c.fillRect(-Math.max(2,rw.wid*sc),-rw.len*sc/2,Math.max(4,rw.wid*sc*2),rw.len*sc);c.restore();}
   if(W.islands)for(const is of W.islands){c.fillStyle='rgba(120,220,90,.85)';c.beginPath();c.arc(X(is.x),Y(is.z),Math.max(3,is.r*sc),0,6.283);c.fill();}
   for(const p of W.ponds){c.save();c.translate(X(p.cx),Y(p.cz));c.rotate(p.hdg);c.beginPath();c.ellipse(0,0,Math.max(2,p.b*sc),Math.max(3,p.a*sc),0,0,6.283);c.fillStyle='#3ab0ff';c.fill();c.restore();}
   if(PATH){c.setLineDash([6,6]);c.strokeStyle='rgba(255,255,255,.8)';c.lineWidth=2;c.beginPath();PATH.dense.forEach((d,i)=>i?c.lineTo(X(d.x),Y(d.z)):c.moveTo(X(d.x),Y(d.z)));c.stroke();c.setLineDash([]);}
@@ -1221,20 +1269,36 @@ function updateReplay(dt){rp.t+=dt*rp.speed;const f=rp.t/.1,i=Math.floor(f);if(i
   $('rpInfo').textContent=`REPLAY ${rp.speed}× · ${(rp.t).toFixed(0)} / ${(rec.length*.1).toFixed(0)} s · ${['chase','side','tower'][camMode]}`;}
 
 /* ---------------- engine restart checklist (C172S POH) ---------------- */
-const CHK=[{k:'as',t:'Airspeed — 68 KIAS',auto:true},{k:'shut',t:'Fuel shutoff valve — ON (push full in)'},{k:'sel',t:'Fuel selector — BOTH'},{k:'pump',t:'Aux fuel pump — ON'},{k:'mix',t:'Mixture — RICH'},{k:'ign',t:'Ignition — BOTH (START if prop stopped)'}];
-const CAUSE={shut:'the fuel shutoff valve had been bumped OFF — pushing it in fixed it',sel:'the selector was on the empty LEFT tank — BOTH fixed it',pump:'fuel pressure dropped (vapor) — the aux pump fixed it',mix:'the mixture had been pulled lean — RICH fixed it',ign:'the ignition switch was knocked to OFF — BOTH fixed it',mech:'mechanical failure (oil pressure gone) — no restart was possible; the forced landing was the only option'};
+const MAYDAY={k:'may',t:'Radio — MAYDAY 121.5 · XPDR 7700'};
+const CHKS={
+ mallard:{title:'C172S POH',restart:[{k:'as',t:'Airspeed — 68 KIAS',auto:true},{k:'shut',t:'Fuel shutoff valve — ON (push full in)'},{k:'sel',t:'Fuel selector — BOTH'},{k:'pump',t:'Aux fuel pump — ON'},{k:'mix',t:'Mixture — RICH'},{k:'ign',t:'Ignition — BOTH (START if prop stopped)'}],
+   causes:{shut:'the fuel shutoff valve had been bumped OFF — pushing it in fixed it',sel:'the selector was on the empty LEFT tank — BOTH fixed it',pump:'fuel pressure dropped (vapor) — the aux pump fixed it',mix:'the mixture had been pulled lean — RICH fixed it',ign:'the ignition switch was knocked to OFF — BOTH fixed it'},
+   secure:[MAYDAY,{k:'mixc',t:'Mixture — IDLE CUTOFF'},{k:'fsoff',t:'Fuel shutoff valve — OFF (pull out)'},{k:'pumpoff',t:'Aux fuel pump — OFF'},{k:'flaps',t:'Flaps — as required (full once landing assured)'},{k:'master',t:'Master switch — OFF'},{k:'door',t:'Cabin door — UNLATCH before touchdown'}]},
+ archer:{title:'PA-28-181 POH',restart:[{k:'as',t:'Airspeed — 76 KIAS',auto:true},{k:'sel',t:'Fuel selector — tank containing fuel'},{k:'pump',t:'Electric fuel pump — ON'},{k:'mix',t:'Mixture — RICH'},{k:'carb',t:'Carburetor heat — ON'},{k:'gauges',t:'Engine gauges — CHECK for cause'}],
+   causes:{sel:'the selector was on an empty tank — switching to the tank with fuel fixed it',pump:'the engine-driven fuel pump failed — the electric pump restored fuel pressure',mix:'the mixture had been pulled lean — RICH fixed it',carb:'carburetor ice — carb heat cleared it (it runs rough first)'},
+   secure:[MAYDAY,{k:'ign',t:'Ignition — OFF'},{k:'master',t:'Master switch — OFF'},{k:'fsel',t:'Fuel selector — OFF'},{k:'mixc',t:'Mixture — IDLE CUT-OFF'},{k:'belt',t:'Seat belt & harness — TIGHT'}]}};
+const MECH='mechanical failure (oil pressure gone, prop stopped) — no restart was possible; the forced landing was the only option';
 let chk=null;
-function chkReset(cause){const on=W.free==='engine'&&profile.id==='mallard';$('chk').classList.remove('mini');$('chk').classList.toggle('hide',!on);if(!on){chk=null;return;}
-  chk={cause,done:{},order:[],restartAt:null,firstManual:null};$('chkList').innerHTML=CHK.map((c,i)=>`<li data-k="${c.k}">${i+1}. ${c.t}</li>`).join('');
+function pickCause(r,forced){const S=CHKS[profile.id];if(!S)return 'mech';if(forced&&(forced==='mech'||S.causes[forced]))return forced;if(r>=.6)return 'mech';const ks=Object.keys(S.causes);return ks[Math.min(ks.length-1,Math.floor(r/.6*ks.length))];}
+function chkReset(causeR,forced){const S=CHKS[profile.id],on=W.free==='engine'&&!!S,el=$('chk');el.classList.remove('mini');el.classList.toggle('hide',!on);if(!on){chk=null;return;}
+  chk={S,cause:pickCause(causeR,forced),done:{},order:[],restartAt:null,firstManual:null,secure:false,sdone:{}};el.querySelector('b').textContent=`C · RESTART (${S.title})`;
+  $('chkList').classList.remove('hide');$('chkList').innerHTML=S.restart.map((c,i)=>`<li data-k="${c.k}">${i+1}. ${c.t}</li>`).join('');$('secList').innerHTML='';$('secHead').classList.add('hide');
   [...$('chkList').children].forEach(li=>li.onclick=()=>chkTap(li.dataset.k));}
-function chkTap(k){if(!chk||state!=='fly'||chk.done[k])return;const c=CHK.find(x=>x.k===k);if(c.auto)return;chk.done[k]=ph.t;chk.order.push(k);if(chk.firstManual===null)chk.firstManual=ph.t;beep(880,.05);
-  $('chkList').querySelector(`[data-k="${k}"]`).classList.add('ok');if(CHK.every(c=>chk.done[c.k]!==undefined))setTimeout(()=>$('chk').classList.add('mini'),2500);
+function chkTap(k){if(!chk||state!=='fly'||chk.done[k]!==undefined)return;const c=chk.S.restart.find(x=>x.k===k);if(!c||c.auto)return;chk.done[k]=ph.t;chk.order.push(k);if(chk.firstManual===null)chk.firstManual=ph.t;beep(880,.05);
+  $('chkList').querySelector(`[data-k="${k}"]`).classList.add('ok');
   if(k===chk.cause&&!ph.eng){chk.restartAt=ph.t+2.5;toast('Cough… cough…',1500);}}
-function chkStep(){if(!chk)return;const ias=ph.IAS*KT;if(!chk.done.as&&Math.abs(ias-profile.vbg*KT)<=5){chk.done.as=ph.t;chk.order.unshift('as');const li=$('chkList').querySelector('[data-k="as"]');if(li)li.classList.add('ok');}
-  if(chk.restartAt!==null&&ph.t>=chk.restartAt&&!ph.eng){ph.eng=1;setTimeout(()=>$('chk').classList.add('mini'),2500);chk.restartAt=null;sfx('vroom');toast('🔊 Engine\'s back — partial power!',2200);say('restart','Engine\'s back with partial power. Don\'t trust it: land at the nearest suitable pond — a precautionary landing.',0,true);}}
-function chkResult(){if(!chk)return null;const man=CHK.filter(c=>!c.auto).map(c=>c.k),done=man.filter(k=>chk.done[k]!==undefined),restarted=!!ph.eng||chk.order.includes(chk.cause)&&chk.cause!=='mech';
+function showSecure(){if(!chk||chk.secure)return;chk.secure=true;$('chk').classList.remove('mini');$('chkList').classList.add('hide');$('secHead').classList.remove('hide');
+  $('secList').innerHTML=chk.S.secure.map((c,i)=>`<li data-k="${c.k}">${i+1}. ${c.t}</li>`).join('');
+  [...$('secList').children].forEach(li=>li.onclick=()=>{const k=li.dataset.k;if(!chk||chk.sdone[k]!==undefined||state!=='fly')return;chk.sdone[k]=ph.t;li.classList.add('ok');beep(660,.05);});
+  say('secure','No restart. Fly the forced landing, and once you are committed, secure the engine — that checklist turns a crash into a walk-away.',0,true);}
+function chkStep(){if(!chk)return;const ias=ph.IAS*KT;if(chk.done.as===undefined&&Math.abs(ias-profile.vbg*KT)<=5){chk.done.as=ph.t;chk.order.unshift('as');const li=$('chkList').querySelector('[data-k="as"]');if(li)li.classList.add('ok');}
+  if(chk.restartAt!==null&&ph.t>=chk.restartAt&&!ph.eng){ph.eng=1;setTimeout(()=>$('chk').classList.add('mini'),2500);chk.restartAt=null;sfx('vroom');toast('🔊 Engine\'s back — partial power!',2200);say('restart','Engine\'s back with partial power. Don\'t trust it: land at the nearest suitable field — a precautionary landing.',0,true);}
+  if(!ph.eng&&!chk.secure&&chk.restartAt===null){const man=chk.S.restart.filter(c=>!c.auto),all=man.every(c=>chk.done[c.k]!==undefined),last=Math.max(...man.map(c=>chk.done[c.k]??-1));
+    if((all&&ph.t-last>4)||Math.max(0,ph.hS)*FT<1200)showSecure();}}
+function chkResult(){if(!chk)return null;const S=chk.S,man=S.restart.filter(c=>!c.auto).map(c=>c.k),done=man.filter(k=>chk.done[k]!==undefined),restarted=!!ph.eng||(chk.cause!=='mech'&&chk.order.includes(chk.cause));
   const needed=restarted?man.slice(0,man.indexOf(chk.cause)+1):man,allDone=needed.every(k=>chk.done[k]!==undefined),inOrder=needed.every((k,i)=>i===0||chk.done[k]>=chk.done[needed[i-1]]);
-  const aviateFirst=stats.vgCap!==null&&chk.firstManual!==null&&chk.firstManual>=stats.vgCap;return {ok:allDone&&inOrder&&aviateFirst,allDone,inOrder,aviateFirst,restarted,cause:CAUSE[chk.cause],n:done.length};}
+  const aviateFirst=stats.vgCap!==null&&chk.firstManual!==null&&chk.firstManual>=stats.vgCap,sec=S.secure.filter(c=>chk.sdone[c.k]!==undefined).length;
+  return {ok:allDone&&inOrder&&aviateFirst,allDone,inOrder,aviateFirst,restarted,cause:chk.cause==='mech'?MECH:S.causes[chk.cause],n:done.length,N:man.length,flow:man.map(k=>S.restart.find(c=>c.k===k).t.replace(' — ',' ')).join(' → '),sec,secN:S.secure.length,secShown:chk.secure};}
 
 /* ---------------- Air Work drills ---------------- */
 function startDrill(id){const v=W.valley,z=-5400;drill=null;startFree({launch:[v.cxz(z),v.floorZ(z)+1300,z,v.vh(z)*R2D]});
@@ -1339,7 +1403,7 @@ let selW=WORLDS.find(w=>w.id===SAVE.set.world)||WORLDS[0],lastPrefix=null;
 function renderMenu(){
   const lesson=SAVE.set.mode==='lesson';[...$('modeSeg').children].forEach(b=>{b.classList.toggle('on',b.dataset.v===SAVE.set.mode);b.onclick=()=>{SAVE.set.mode=b.dataset.v;persist();renderMenu();};});
   $('worlds').innerHTML=WORLDS.map(w=>{const b=SAVE.best[w.id],L=LS[w.id];const lp=lesson&&L?`<small style="display:block;font-weight:700">🎓 ${L.filter(st=>pr(w.id,st.id).done).length}/${L.length}${pr(w.id,L[L.length-1].id).done?' 🏅':''}${unlocked(w.id,curIdx(w.id))?'':' 🔒'}</small>`:'';return `<div class="wc${w===selW?' sel':''}" data-id="${w.id}" style="background:${w.col}"><b>${w.name}</b><small>${lesson&&w.ltag?w.ltag:w.tag}</small>${lp}<span class="stars">${b?'★'.repeat(b.stars)+'☆'.repeat(3-b.stars)+` <small style="display:inline">${b.score}</small>`:'☆☆☆'}</span></div>`;}).join('');
-  [...document.querySelectorAll('.wc')].forEach(el=>el.onclick=()=>{const nw=WORLDS.find(w=>w.id===el.dataset.id);if(nw===selW)return;selW=nw;SAVE.set.world=selW.id;persist();renderMenu();if(state==='menu'){loadWorld(selW);duck.visible=false;}});
+  [...document.querySelectorAll('.wc')].forEach(el=>el.onclick=()=>{clearScn();const nw=WORLDS.find(w=>w.id===el.dataset.id);if(nw===selW)return;selW=nw;SAVE.set.world=selW.id;persist();renderMenu();if(state==='menu'){loadWorld(selW);duck.visible=false;}});
   $('profSeg').innerHTML=Object.values(PROFILES).map(p=>`<button data-v="${p.id}" class="${p===profile?'on':''}">${p.name}</button>`).join('');
   [...$('profSeg').children].forEach(b=>b.onclick=()=>{profile=PROFILES[b.dataset.v];SAVE.set.prof=profile.id;persist();renderMenu();});
   const p=profile;$('profInfo').textContent=`${p.like} · best glide ${(p.vbg*KT).toFixed(0)} KIAS · L/D ${p.LD.toFixed(1)}:1 · Vs clean ${(p.vsF(0)*KT).toFixed(0)} / dirty ${(p.vsF(p.flaps.length-1)*KT).toFixed(0)} KIAS · span ${p.b} m`;
@@ -1354,20 +1418,20 @@ function renderLadder(){const el=$('ladder'),w=selW.id,L=LS[w];if(SAVE.set.mode!
     return `<div class="st${i===ci?' sel':''}${u?'':' lock'}" data-i="${i}"><div><b>${p.done?'🏅':u?(st.ck?'🎖️':'▶'):'🔒'} ${st.name}</b><small>${st.desc} · pass: ${ruleTxt(st)}</small></div><span class="dots">${dots(w,st)}</span></div>`;}).join('')+
     (unlocked(w,ci)?'':`<small>🔒 ${lockReason(w,ci)} FLY gives free practice meanwhile.</small>`)+'</div>';
   [...el.querySelectorAll('.st')].forEach(d=>d.onclick=()=>{const i=+d.dataset.i;if(!unlocked(w,i)){toast(lockReason(w,i),2200);return;}SAVE.set.stage=SAVE.set.stage||{};SAVE.set.stage[w]=i;persist();renderLadder();});}
-function pickLesson(){LES=null;if(SAVE.set.mode!=='lesson'||!LS[selW.id])return;const i=curIdx(selW.id);if(unlocked(selW.id,i))LES={w:selW.id,i,st:LS[selW.id][i]};}
+function pickLesson(){LES=null;if(SCN)return;if(SAVE.set.mode!=='lesson'||!LS[selW.id])return;const i=curIdx(selW.id);if(unlocked(selW.id,i))LES={w:selW.id,i,st:LS[selW.id][i]};}
 $('sens').oninput=e=>{SAVE.set.sens=+e.target.value;persist();};
 ['invP','invR','zen','snd','cfi','voice','atrim','tapes'].forEach(id=>$(id).onchange=e=>{SAVE.set[id]=e.target.checked;persist();});
 function brief(){
   const w=selW,p=profile,L=w.legs[0];pickLesson();$('bTitle').textContent=w.name;$('bTag').textContent=w.tag;
-  const LL=SAVE.set.mode==='lesson'&&LS[w.id]?(LES?`<p style="background:#e6f6ff;border:2px solid #049cd8;border-radius:12px;padding:8px 10px">🎓 <b>Lesson: ${LES.st.name}</b> — ${LES.st.kind==='drill'?DRILLBRIEF[LES.st.id]:LES.st.desc}.<br>Pass rule: <b>${ruleTxt(LES.st)}</b> · progress ${dots(LES.w,LES.st)}${LES.st.kind==='drill'?' · flown from ~4,000 ft AGL, fail below 1,000 ft':''}</p>`:`<p style="background:#fff3d6;border:2px solid #fbd000;border-radius:12px;padding:8px 10px">🔒 ${lockReason(w.id,curIdx(w.id))} This flight is free practice.</p>`):'';
+  const LL=SCN?`<p style="background:#fff3d6;border:2px solid #fbd000;border-radius:12px;padding:8px 10px">🧑‍✈️ <b>Instructor scenario</b> · ${esc(PROFILES[SCN.p].name)}${SCN.wind?` · wind ${String(SCN.wind.from).padStart(3,'0')}°/${SCN.wind.kt} kt${SCN.wind.gust?` gusting ${Math.round(SCN.wind.kt*(1+SCN.wind.gust))}`:''}`:''}${SCN.eng?` · failure at ${SCN.eng.agl} ft AGL`:''}${SCN.note?`<br>“${esc(SCN.note)}”`:''}<br><small>Free-practice flight (lessons paused). <a href="#" id="scnExit">Exit scenario</a></small></p>`:SAVE.set.mode==='lesson'&&LS[w.id]?(LES?`<p style="background:#e6f6ff;border:2px solid #049cd8;border-radius:12px;padding:8px 10px">🎓 <b>Lesson: ${LES.st.name}</b> — ${LES.st.kind==='drill'?DRILLBRIEF[LES.st.id]:LES.st.desc}.<br>Pass rule: <b>${ruleTxt(LES.st)}</b> · progress ${dots(LES.w,LES.st)}${LES.st.kind==='drill'?' · flown from ~4,000 ft AGL, fail below 1,000 ft':''}</p>`:`<p style="background:#fff3d6;border:2px solid #fbd000;border-radius:12px;padding:8px 10px">🔒 ${lockReason(w.id,curIdx(w.id))} This flight is free practice.</p>`):'';
   const altM=w.elevFt/FT,rho=RHO0*Math.pow(1-2.25577e-5*altM,4.2559);
   $('bBody').innerHTML=LL+`<p><b>${LES&&LES.st.kind==='drill'?'Where':'Task'}:</b> ${LES&&LES.st.kind==='drill'?'High over Zephyr Valley, pointed down the valley. Keep it straight-ish; the ridges are close.':L.task}</p><div class="kv">
     <b>Duck</b><span>${p.name} — ${p.like}</span>
     <b>Best glide</b><span>${(p.vbg*KT).toFixed(0)} KIAS (trimmed hands-off) · L/D ${p.LD.toFixed(1)}:1 → ~${(p.LD*1000/6076).toFixed(1)} nm per 1000 ft in still air</span>
     <b>Stall</b><span>${(p.vsF(0)*KT).toFixed(0)} KIAS clean · ${(p.vsF(p.flaps.length-1)*KT).toFixed(0)} KIAS ${p.flaps[p.flaps.length-1].n} (rises with bank)</span>
-    <b>Wind</b><span>${w.free==='engine'?'Random each failure (check the windsocks &amp; minimap arrow)':`${String(w.wind.from).padStart(3,'0')}° at ${w.wind.kt} kt`}${w.wind.gust>.2?', gusty':''}${w.ridgeK>.6?' · ridge lift/sink':''}</span>
+    <b>Wind</b><span>${SCN&&SCN.wind?`${String(SCN.wind.from).padStart(3,'0')}° at ${SCN.wind.kt} kt (instructor)`:L.randWind?'Random gusty crosswind each flight':w.free==='engine'?'Random each failure (check the windsocks &amp; minimap arrow)':`${String(w.wind.from).padStart(3,'0')}° at ${w.wind.kt} kt`}${w.wind.gust>.2?', gusty':''}${w.ridgeK>.6?' · ridge lift/sink':''}</span>
     <b>Field elev</b><span>${w.elevFt.toLocaleString()} ft MSL${w.elevFt>3000?` · TAS ≈ ${(Math.sqrt(RHO0/rho)*100-100).toFixed(0)}% above IAS`:''}</span>
-    <b>Accuracy window</b><span>${L.window[0]} to +${L.window[1]} ft past the bullseye (green buoys)</span>
+    <b>Accuracy window</b><span>${L.window[0]} to +${L.window[1]} ft past the ${L.rwy!==undefined?'magenta line (green line = +200 ft)':'bullseye (green buoys)'}</span>
     ${w.free==='engine'?`<b>Cruise</b><span>${p.vcr} KIAS and trimmed for it when the engine quits — you must re-trim</span>`:''}
     ${w.legs.length>1?`<b>Legs</b><span>${w.legs.length} lagoons — land, flap back up, hop to the next</span>`:''}
     <b>Your speeds</b><span>${p.flaps.map((f,i)=>`${f.n}: <b>${(tgtSpeed(p,i)*KT).toFixed(0)}</b> kt`).join(' · ')} — the HUD "Tgt" row shows the one for your current flaps</span>
@@ -1376,7 +1440,7 @@ function brief(){
     <b>Flare</b><span>~100 ft: on speed, aim point (magenta ⊕) on the near edge of the bullseye. ~25 ft: round out (ease back). ~10 ft: hold it off, keep easing back as it slows. Touch at ~${(p.vsF(p.flaps.length-1)*KT).toFixed(0)}–${(p.vsF(p.flaps.length-1)*KT+5).toFixed(0)} kt with full ${p.flaps[p.flaps.length-1].n}, wings level, under 300 fpm.</span>
     <b>CFI duck</b><span>${SAVE.set.cfi?'ON — the blue duck with the red cap flies off your right wing <i>at the ideal glidepath height</i> (above you = you\'re low, below = high) with his flaps set where he\'d have them, and talks you through it.':'OFF (turn on in the menu)'}</span>
     <b>Mode</b><span>${LES?'🎓 Lesson — Zen is off, crashes count':SAVE.set.zen||w.zen?'🌸 Zen — no crashes, B / FLAP WINGS gives a boost':'Training — crashes count, best score saved'}</span></div>`;
-  $('bTilt').classList.toggle('hide',SAVE.set.ctl!=='tilt');show('brief');
+  $('bTilt').classList.toggle('hide',SAVE.set.ctl!=='tilt');show('brief');const ex=$('scnExit');if(ex)ex.onclick=e=>{e.preventDefault();clearScn();show('menu');renderMenu();};
 }
 $('bGo').onclick=()=>{audio();brief();};
 $('bBack').onclick=()=>{show('menu');renderMenu();};
@@ -1386,6 +1450,26 @@ $('bFly').onclick=async()=>{audio();if(AC&&AC.state==='suspended')AC.resume();
   try{if(navigator.wakeLock)navigator.wakeLock.request('screen').catch(()=>{});}catch(e){}
   hideAll();pickLesson();drill=null;loadWorld(selW);legScores=[];lastPrefix=null;camMode=0;if(LES&&LES.st.kind==='drill')startDrill(LES.st.id);else startLeg(0);};
 $('rLesson').onclick=()=>{hideAll();brief();};
+/* ---- instructor mode: scenario links (v1; a future version adds legs[] for cross-country challenges) ---- */
+const esc=t=>String(t).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const b64e=o=>btoa(unescape(encodeURIComponent(JSON.stringify(o)))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+const b64d=t=>JSON.parse(decodeURIComponent(escape(atob(t.replace(/-/g,'+').replace(/_/g,'/')))));
+function scnFromForm(){const w=$('iW').value,p=$('iP').value,sc={v:1,w,p,note:$('iN').value.slice(0,240)};
+  if($('iWm').value==='set'){const kt=clamp(+$('iWk').value||0,0,35);sc.wind={from:((+$('iWf').value||0)%360+360)%360,kt,gust:kt?clamp((+$('iWg').value||0)/kt,0,1):0};}
+  if(w==='engine')sc.eng={agl:clamp(+$('iA').value||2500,800,8000),cause:$('iC').value,seed:$('iSame').checked?(SCNseed||(SCNseed=(Math.random()*1e9)|0)):0};return sc;}
+let SCNseed=0;
+function instForm(){const P=PROFILES[$('iP').value]||profile,S=CHKS[P.id];$('iC').innerHTML='<option value="rand">random</option>'+(S?Object.keys(S.causes).map(k=>`<option value="${k}">${k==='shut'?'fuel shutoff OFF':k==='sel'?'fuel selector / empty tank':k==='pump'?'fuel pump':k==='mix'?'mixture lean':k==='ign'?'ignition OFF':k==='carb'?'carb ice':k}</option>`).join(''):'')+'<option value="mech">mechanical (no restart)</option>';
+  document.querySelectorAll('#inst .eo').forEach(e=>e.classList.toggle('hide',$('iW').value!=='engine'));const u=location.href.split('#')[0]+'#s='+b64e(scnFromForm());$('iLink').value=u;return u;}
+function openInst(){$('iW').innerHTML=WORLDS.map(w=>`<option value="${w.id}">${esc(w.name)}</option>`).join('');$('iW').value=selW.id;$('iP').innerHTML=Object.values(PROFILES).map(p=>`<option value="${p.id}">${esc(p.name)}</option>`).join('');$('iP').value=profile.id;
+  SCNseed=0;instForm();show('inst');}
+['iW','iP','iWm','iWf','iWk','iWg','iA','iC','iSame','iN'].forEach(id=>{$(id).addEventListener('input',instForm);$(id).addEventListener('change',instForm);});
+$('bInst').onclick=openInst;$('iBack').onclick=()=>{show('menu');renderMenu();};
+$('iShare').onclick=async()=>{const u=instForm();try{if(navigator.share){await navigator.share({title:'Duck Glide scenario',text:$('iN').value||'Fly this scenario',url:u});return;}}catch(e){}
+  try{await navigator.clipboard.writeText(u);toast('Link copied 📋',1500);}catch(e){$('iLink').select();toast('Select & copy the link',1500);}};
+$('iFly').onclick=()=>{applyScn(scnFromForm());brief();};
+function applyScn(sc){const w=WORLDS.find(x=>x.id===sc.w),p=PROFILES[sc.p];if(!w||!p)return false;SCN=sc;selW=w;profile=p;return true;}
+function clearScn(){if(!SCN)return;SCN=null;try{history.replaceState(null,'',location.href.split('#')[0]);}catch(e){}}
+
 function togglePause(){if(state==='fly'){state='paused';showHUD(false);$('stampPause').textContent=`Build ${BUILD_ID} · shipped ${BUILT_UTC}`;show('pause');}else if(state==='paused'){hideAll();state='fly';showHUD(true);last=performance.now();if(SAVE.set.ctl==='tilt')calibrate();}}
 $('pResume').onclick=togglePause;$('pRetry').onclick=retry;$('pMenu').onclick=()=>{state='menu';drill=null;hideAll();showHUD(false);show('menu');renderMenu();};
 $('rRetry').onclick=retry;$('rReplay').onclick=startReplay;$('rpExit').onclick=endReplay;$('rpSpd').onclick=()=>{rp.speed=rp.speed===4?1:rp.speed===1?8:4;};$('rpCam').onclick=()=>{camMode=(camMode+1)%3;};
@@ -1399,7 +1483,8 @@ $('stampRes').textContent=`Build ${BUILD_ID} · shipped ${BUILT_UTC}`;
 loadWorld(selW);duck.visible=false;
 const menuSpin=()=>{if(state==='menu'){const t=performance.now()*.00005;camera.position.set(bd.x+Math.cos(t)*1400,bd.y+320,bd.z+Math.sin(t)*1400);camera.lookAt(bd.x,bd.y,bd.z);camera.fov=62;camera.updateProjectionMatrix();sky.position.copy(camera.position);}requestAnimationFrame(menuSpin);};menuSpin();
 renderMenu();show('menu');requestAnimationFrame(loop);
-window.__duck={ph,PROFILES,WORLDS,get state(){return state},get td(){return td},startLeg,inp,surfaceAt:(x,z,y)=>surfaceAt(x,z,y),get PATH(){return PATH},physStep,checkContacts,get stats(){return stats},get chk(){return chk},chkStep:()=>chkStep(),updHUD:(dt)=>{hudT=1;updateHUD(dt);},chkTap,chkResult:()=>chkResult(),get TUN(){return TUN},tunnelStep:()=>tunnelStep(),get drill(){return drill},runDrill:(dt)=>runDrill(dt),get LES(){return LES},startDrill,SAVE,startFree,get LEG(){return LEG},get W(){return W},startReplay,get rec(){return rec},get lastCrash(){return lastCrash}};
+try{const m=location.hash.match(/^#s=([A-Za-z0-9_-]+)/);if(m){const sc=b64d(m[1]);if(sc&&sc.v===1&&applyScn(sc)){if(W!==selW){loadWorld(selW);duck.visible=false;}renderMenu();brief();}}}catch(e){console.warn('bad scenario link',e);}
+window.__duck={ph,PROFILES,WORLDS,get state(){return state},get td(){return td},startLeg,inp,surfaceAt:(x,z,y)=>surfaceAt(x,z,y),get PATH(){return PATH},physStep,checkContacts,get stats(){return stats},get SCN(){return SCN},b64e,get chk(){return chk},chkStep:()=>chkStep(),updHUD:(dt)=>{hudT=1;updateHUD(dt);},chkTap,chkResult:()=>chkResult(),get TUN(){return TUN},tunnelStep:()=>tunnelStep(),get drill(){return drill},runDrill:(dt)=>runDrill(dt),get LES(){return LES},startDrill,SAVE,startFree,get LEG(){return LEG},get W(){return W},startReplay,get rec(){return rec},get lastCrash(){return lastCrash}};
 })();
 
 </script>

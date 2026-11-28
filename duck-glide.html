@@ -6,10 +6,10 @@
 <meta name="theme-color" content="#049cd8">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="build-id" content="DUCK-20261128-0327Z">
-<meta name="built-utc" content="2026-11-28T03:27:34Z">
+<meta name="build-id" content="DUCK-20261128-0341Z">
+<meta name="built-utc" content="2026-11-28T03:41:16Z">
 <title>Duck Glide — Fly Good, Land Gooder</title>
-<!-- Build DUCK-20261128-0327Z · shipped 2026-11-28T03:27:34Z · Three.js r128 (MIT) from vendor/ · fully offline -->
+<!-- Build DUCK-20261128-0341Z · shipped 2026-11-28T03:41:16Z · Three.js r128 (MIT) from vendor/ · fully offline -->
 <style>
 :root{--red:#e52521;--yel:#fbd000;--blu:#049cd8;--grn:#43b047;--ink:#1b1b2f;--card:#fffdf4}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none}
@@ -36,7 +36,19 @@ canvas#c{position:fixed;inset:0;width:100%;height:100%;display:block}
 #tgt b{display:block;width:16px;height:16px;margin:0 auto 2px;border:3px solid var(--red);transform:rotate(45deg);background:rgba(255,255,255,.35)}
 #rbar{position:fixed;left:50%;bottom:max(12px,env(safe-area-inset-bottom));transform:translateX(-50%);display:flex;gap:8px;align-items:center}
 #rpInfo{font-size:13px;white-space:nowrap}
-#cfiMsg{position:fixed;left:50%;bottom:calc(84px + env(safe-area-inset-bottom));transform:translateX(-50%);max-width:min(560px,70vw);background:#fffbe0;color:#1b1b2f;border:3px solid #fbd000;border-radius:16px;padding:7px 12px;font-size:14px;font-weight:700;box-shadow:0 4px 0 rgba(0,0,0,.25);pointer-events:none;display:flex;gap:8px;align-items:flex-start}
+#rudBar{display:none;position:fixed;left:50%;transform:translateX(-50%);bottom:calc(60px + env(safe-area-inset-bottom));width:min(260px,46vw);text-align:center;pointer-events:none}
+body.flying #rudBar{display:block}
+#rudTrack{pointer-events:auto;position:relative;height:26px;border-radius:13px;background:rgba(20,24,48,.6);border:2px solid rgba(255,255,255,.6);touch-action:none}
+#rudTrack .ctr{position:absolute;left:50%;top:2px;bottom:2px;width:2px;background:#fff8}
+#rudKnob{position:absolute;top:2px;width:30px;height:18px;margin-left:-15px;left:50%;border-radius:9px;background:#fbd000;box-shadow:0 2px 0 #a88a00}
+#ballTube{position:relative;height:16px;width:110px;margin:0 auto 3px;border-radius:8px;background:rgba(255,255,255,.75);border:1px solid #333}
+#ballTube:before,#ballTube:after{content:'';position:absolute;top:0;bottom:0;width:2px;background:#333}#ballTube:before{left:42%}#ballTube:after{left:58%}
+#ball{position:absolute;top:1px;width:12px;height:12px;margin-left:-6px;left:50%;border-radius:50%;background:#111}
+#rudBar small{display:block;color:#fff;font-weight:800;font-size:10px;text-shadow:0 1px 0 #000}
+#chk{position:fixed;left:104px;top:42%;max-width:230px;font-size:12px;pointer-events:auto}
+#chk.mini ol{display:none}#chk b{cursor:pointer}
+#chk ol{margin:4px 0 0;padding-left:4px;list-style:none}#chk li{padding:5px 6px;margin:3px 0;border-radius:8px;background:rgba(255,255,255,.12);cursor:pointer}#chk li.ok{background:rgba(67,176,71,.85);text-decoration:line-through}
+#cfiMsg{position:fixed;left:50%;bottom:calc(128px + env(safe-area-inset-bottom));transform:translateX(-50%);max-width:min(560px,70vw);background:#fffbe0;color:#1b1b2f;border:3px solid #fbd000;border-radius:16px;padding:7px 12px;font-size:14px;font-weight:700;box-shadow:0 4px 0 rgba(0,0,0,.25);pointer-events:none;display:flex;gap:8px;align-items:flex-start}
 #cfiMsg b{color:#2a6cff;white-space:nowrap}
 #toast{position:fixed;left:50%;top:38%;transform:translate(-50%,-50%);font-size:26px;font-weight:900;color:#fff;text-shadow:0 3px 0 #000,0 0 12px rgba(0,0,0,.5);pointer-events:none;transition:opacity .4s;opacity:0;text-align:center}
 #crumbs{position:absolute;left:max(10px,env(safe-area-inset-left));bottom:92px;font-size:15px}
@@ -99,7 +111,9 @@ label.ck{display:flex;align-items:center;gap:6px;font-weight:700;font-size:13px}
   #task{font-size:11px}
   #mini{width:150px;height:150px}
   #crumbs{bottom:78px}
-  #cfiMsg{bottom:74px;max-width:52vw;font-size:12px}
+  #cfiMsg{bottom:116px;max-width:52vw;font-size:12px}
+  #rudBar{bottom:56px}
+  #chk{top:96px;left:100px}
   body.tapes #rpanel{left:268px;top:10px}
   body.tapes #tpanel{max-width:220px}
   body.tapes .tape{--tt:96px;--tb:78px}
@@ -116,7 +130,9 @@ label.ck{display:flex;align-items:center;gap:6px;font-weight:700;font-size:13px}
   .btn{min-width:48px;height:50px;font-size:12px;padding:0 8px}
   .btn.sm{min-width:44px;height:40px}
   #topbtns{left:auto;right:max(10px,env(safe-area-inset-right));bottom:calc(76px + env(safe-area-inset-bottom));transform:none;flex-direction:column;align-items:stretch}
-  #cfiMsg{left:10px;right:96px;transform:none;max-width:none;bottom:calc(76px + env(safe-area-inset-bottom));font-size:13px}
+  #cfiMsg{left:10px;right:96px;transform:none;max-width:none;bottom:calc(122px + env(safe-area-inset-bottom));font-size:13px}
+  #rudBar{left:10px;right:96px;width:auto;transform:none;bottom:calc(62px + env(safe-area-inset-bottom))}
+  #chk{left:100px;top:180px}
   #crumbs{bottom:calc(200px + env(safe-area-inset-bottom))}
   body.tapes .tape{--tt:178px;--tb:300px}
   body.tapes #altTape{--tt:250px;--tb:310px}
@@ -158,6 +174,7 @@ label.ck{display:flex;align-items:center;gap:6px;font-weight:700;font-size:13px}
   <div id="tgt"><b></b><span id="tgtd"></span></div>
 </div>
 <div id="stick" class="hide"><i></i></div>
+<div id="chk" class="pill hide"><b>C · RESTART (C172S POH)</b><ol id="chkList"></ol></div>
 
 <div id="ctl" class="hide">
   <div class="grp">
@@ -171,6 +188,7 @@ label.ck{display:flex;align-items:center;gap:6px;font-weight:700;font-size:13px}
     <button class="btn r" id="bSlip">SLIP<br>(hold)</button>
   </div>
 </div>
+<div id="rudBar"><div id="ballTube"><i id="ball"></i></div><div id="rudTrack"><span class="ctr"></span><i id="rudKnob"></i></div><small>◀ RUDDER ▶</small></div>
 <div id="topbtns" class="hide">
   <button class="btn sm r" id="bMenu">☰ MENU</button>
   <button class="btn sm g" id="bRetry">↻ RETRY</button>
@@ -211,7 +229,8 @@ label.ck{display:flex;align-items:center;gap:6px;font-weight:700;font-size:13px}
     <details><summary><b>How to fly</b></summary>
       <div class="kv" style="margin-top:6px">
         <b>Tilt</b><span>Hold the phone sideways like a yoke. Tilt left/right = bank. Tilt top toward you = nose up (slower), away = nose down (faster). Tap LEVEL to re-zero.</span>
-        <b>Keys</b><span>↑/W nose down · ↓/S nose up · ←/→ or A/D roll (bank holds) · L level wings · F / R flaps down / up · Space slip · [ ] trim · C camera · B wing-flap (Zen) · P pause</span>
+        <b>Rudder</b><span>Drag the yellow RUDDER knob (springs back when you let go), or hold Z / X. The ball above it is the inclinometer — in a crosswind wing-low it sits toward the low wing, which is correct. SLIP = full rudder opposite your bank (a forward slip).</span>
+        <b>Keys</b><span>↑/W nose down · ↓/S nose up · ←/→ or A/D roll (bank holds) · L level wings · F / R flaps down / up · Z / X rudder · Space slip · [ ] trim · C camera · B wing-flap (Zen) · P pause</span>
         <b>Gamepad</b><span>Left stick = yoke · A slip · LB/RB flaps · Y camera · Start pause</span>
         <b>Trim</b><span>Trim sets the speed the duck holds with the phone at your LEVEL position (or keys released). It starts trimmed for best glide (Vg). Tilt = temporary change; trim = new "hands-off" speed. If you're holding the phone tilted to keep a speed, trim it out. Flaps change the trimmed speed (more lift at the same attitude), so re-trim after each notch — or leave Auto-trim on.</span>
         <b>Landing</b><span>Flaps only once the pond is made; full flaps on final at the "Tgt" speed; round out ~25 ft, hold it off ~10 ft, touch near stall speed (~44 kt in the Mallard with full flaps).</span>
@@ -219,7 +238,7 @@ label.ck{display:flex;align-items:center;gap:6px;font-weight:700;font-size:13px}
         <b>Profile view</b><span>Tap the minimap to flip between the top-down map and an approach-plate-style side profile: the bread-trail glidepath (dashed), terrain along the route, your duck, and your glide-reach line to the target.</span>
         <b>Green ring</b><span>Minimap glide reach at best glide in the current configuration, shifted by wind. Target inside ring = you can make it.</span>
         <b>Flight-path marker</b><span>The magenta ⊖ is where you're actually going. Put it just short of the bullseye on final — that's your aim point.</span>
-        <b>About the model</b><span>Read before teaching with it. (1) The Mallard is tuned to Cessna 172S POH numbers at 2,550 lb: Vg 68, Vs1 48, Vs0 40 KIAS, about 9:1 glide; the approach "Tgt" speeds are 68 / 65 / 63 / 61 KIAS. Speeds are shown as KIAS with no instrument or position error. The Cub and Goose are generic, not any specific aircraft. (2) The stall horn sounds about 5–6 kt above stall; real horns vary by airplane. (3) It is a point-mass model: no pitch dynamics, no flap balloon, no adverse yaw. Turns are always coordinated, and the slip adds drag only — no sideslip, so there is no crosswind or crab technique. (4) Water stands in for a runway; this is not seaplane technique. (5) Auto-trim is a game aid, and it is off for checkrides. (6) The engine-out "C" (restart checklist) is not simulated. (7) Wind is given in true degrees; heights are shown above the target, not MSL. Practice here is no substitute for dual instruction or the POH.</span>
+        <b>About the model</b><span>Read before teaching with it. (1) The Mallard is tuned to Cessna 172S POH numbers at 2,550 lb: Vg 68, Vs1 48, Vs0 40 KIAS, about 9:1 glide; the approach "Tgt" speeds are 68 / 65 / 63 / 61 KIAS. Speeds are shown as KIAS with no instrument or position error. The Cub and Goose are generic, not any specific aircraft. (2) The stall horn sounds about 5–6 kt above stall; real horns vary by airplane. (3) It is a point-mass model: no pitch dynamics, no flap balloon, no adverse yaw. Sideslip is real (a rudder input creates sideslip, side force and drag), so crab and wing-low techniques work. There is no yaw/roll coupling, and the gear has no cornering forces. (4) Water stands in for a runway; this is not seaplane technique. (5) Auto-trim is a game aid, and it is off for checkrides. (6) The engine-out restart checklist follows the C172S POH order. Its failure causes are simplified, and power after a restart is a fixed partial setting. (7) Wind is given in true degrees; heights are shown above the target, not MSL. Practice here is no substitute for dual instruction or the POH.</span>
         <b>Physics</b><span>Point-mass 3-DOF: real lift/drag polar (CD0 + k·CL²), stall at CLmax, ISA air density by altitude, ground effect, flaps &amp; slip drag, boundary-layer wind, gusts, thermals and ridge lift/sink. Earth gravity on every world (even Planet Ember) so numbers transfer.</span>
       </div>
     </details>
@@ -275,7 +294,7 @@ label.ck{display:flex;align-items:center;gap:6px;font-weight:700;font-size:13px}
 <script>
 (function(){
 'use strict';
-const BUILD_ID='DUCK-20261128-0327Z', BUILT_UTC='2026-11-28T03:27:34Z';
+const BUILD_ID='DUCK-20261128-0341Z', BUILT_UTC='2026-11-28T03:41:16Z';
 const KT=1.943844, FT=3.28084, FPM=196.8504, D2R=Math.PI/180, R2D=180/Math.PI, G=9.80665, RHO0=1.225;
 const clamp=(v,a,b)=>v<a?a:v>b?b:v, lerp=(a,b,t)=>a+(b-a)*t;
 const smooth=(a,b,x)=>{const t=clamp((x-a)/(b-a),0,1);return t*t*(3-2*t);};
@@ -315,6 +334,11 @@ const trimFor=(P,f,v)=>{const cl=2*P.m*G/(RHO0*P.S*v*v);return clamp((cl-P.flaps
 const F2=h=>[Math.sin(h),-Math.cos(h)], R2=h=>[Math.cos(h),Math.sin(h)];
 function at(T,h,f,r){const F=F2(h),R=R2(h);return [T[0]+F[0]*f+R[0]*r,T[1]+F[1]*f+R[1]*r];}
 function mkPond(T,h,a,b,fOff,y,name){const c=at(T,h,fOff,0);return {cx:c[0],cz:c[1],a,b,hdg:h,F:F2(h),R:R2(h),y,name:name||'pond'};}
+function mkRwy(C,h,len,wid,y,num,rnum){return {cx:C[0],cz:C[1],hdg:h,F:F2(h),R:R2(h),len,wid,y,num,rnum};}
+function rwyLoc(rw,x,z){const dx=x-rw.cx,dz=z-rw.cz;return [dx*rw.F[0]+dz*rw.F[1],dx*rw.R[0]+dz*rw.R[1]];}
+function carveRwy(h,x,z,rws){for(const rw of rws){const [f,r]=rwyLoc(rw,x,z),d=Math.hypot(Math.max(0,Math.abs(f)-rw.len/2),Math.max(0,Math.abs(r)-rw.wid/2-30));if(d<140)h=lerp(rw.y-.05,h,smooth(0,140,d));}return h;}
+const legY=L=>L.rwy!==undefined?W.runways[L.rwy].y:W.ponds[L.pond].y;
+const legName=L=>L.rwy!==undefined?'Runway '+W.runways[L.rwy].num:W.ponds[L.pond].name;
 function pondE(p,x,z){const dx=x-p.cx,dz=z-p.cz,f=dx*p.F[0]+dz*p.F[1],r=dx*p.R[0]+dz*p.R[1];return Math.sqrt((f/p.a)*(f/p.a)+(r/p.b)*(r/p.b));}
 function carve(h,x,z,ponds){for(const p of ponds){if(p.sky)continue;const e=pondE(p,x,z);if(e<1)return p.y-1.2-5*(1-e*e);if(e<1.8){const t=smooth(1,1.8,e);h=lerp(p.y+.6,Math.max(h,p.y+.6),t);}}return h;}
 function patternPts(T,h,s,P,D,Fl){return [at(T,h,D+550,s*(P+550)),at(T,h,D,s*P),at(T,h,0,s*P),at(T,h,-Fl,s*P),at(T,h,-Fl,0),at(T,h,0,0)];}
@@ -463,7 +487,18 @@ function W_tunnel(){
     legs:[{target:T,hdg:h,pond:0,pts:patternPts(T,h,-1,800,600,600),prefix:true,fillet:true,window:[0,200],marginFt:0,tunnel:true,
       task:'You start high, inside a warp tunnel. Follow its flows and curves (the bread trail runs down the middle — wall bonks cost speed), break out above scattered clouds, then follow the trail down through the gaps to a left pattern for Rainbow Pond.'}]};
 }
-const WORLDS=[W_valley(),W_meadow(),W_cattail(),W_tarn(),W_hollow(),W_ember(),W_tunnel(),W_islands(),W_engine(),W_sky()];
+function W_xwind(){
+  const C=[0,0],h=270*D2R,len=1220,wid=23,s=-1,P=850,Fl=550,runways=[mkRwy(C,h,len,wid,14,'27','09'),mkRwy([-250,40],0,900,23,14,'36','18')];
+  const T=at(C,h,-len/2+305,0),ponds=[mkPond([-1600,1300],.7,200,90,0,11,'Goose Pond')];
+  const base=(x,z)=>14+5*fbm(x/500,z/500,141)+40*fbm(x/1500,z/1500,143)*smooth(1500,4000,Math.hypot(x,z));
+  const ny=nearestPondY(ponds,null),pal=(hh,sl,x,z,n)=>{if(hh<ny(x,z)+1.6&&sl<.25)return PAL.sand;const c=hash2(Math.floor(x/420+fbm(x/300,z/300,5)*.7),Math.floor(z/420),19);return c<.2?FIELD.wheat:c<.55?PAL.grass:c<.75?FIELD.lime:PAL.grass2;};
+  return {id:'xwind',name:'Crosswind County',tag:'Real runway · gusty crosswind · power-off 180 · crab → wing-low',col:'#5a6b7a',elevFt:850,size:11000,cx:0,cz:0,edgeH:20,base,ponds,runways,fluid:null,
+    sky:{top:0x3d9bff,bot:0xdff3ff,fog:0xdff3ff,near:2500,far:11000},palette:pal,
+    wind:{from:230,kt:12,gust:.3},ridgeK:0,thermals:[],trees:{kind:'round',n:700,r:5200,minPond:2,seed:151},clouds:24,
+    legs:[{target:T,hdg:h,rwy:0,pts:[at(T,h,250,s*P),at(T,h,0,s*P),at(T,h,-Fl,s*P),at(T,h,-Fl,0),at(T,h,0,0)],fillet:true,fixedStartFt:1000,window:[0,200],randWind:true,
+      task:'Power-off 180 to Runway 27 with a fresh gusty crosswind every flight. Specified point: the start of the 1000-ft aiming-point bars (magenta line). Crab to track the pattern; at about 100 ft switch to wing-low: rudder lines the nose up with the centerline, bank into the wind stops the drift. Touch down 0 to +200 ft, no side drift, nose aligned.'}]};
+}
+const WORLDS=[W_valley(),W_meadow(),W_cattail(),W_tarn(),W_hollow(),W_ember(),W_tunnel(),W_xwind(),W_islands(),W_engine(),W_sky()];
 
 /* ---------------- lessons / mastery ---------------- */
 const DRILLS={glide:'Best-glide hold',trim:'Trim it hands-off',slow:'Slow flight',approach:'Approach & flare'};
@@ -482,11 +517,13 @@ const LS={
  cattail:[{id:'make',name:'Make the pond',desc:'Power-off 180 that lands in the pond',test:t=>t.onTarget},{id:'window',name:'In the window',desc:'Touch down 0 to +200 ft past the target',test:(t,sc)=>t.onTarget&&sc.e===0},CK(850)],
  tarn:[{id:'spiral',name:'Spiral down',desc:'Never more than 150 ft below the trail; land in the tarn',test:t=>t.onTarget&&stats.maxLo<=150},CK(800)],
  hollow:[{id:'clear',name:'Clear the pines',desc:'Land in the pond',test:t=>t.onTarget},{id:'short',name:'Short field',desc:'0 to +100 ft past the target at ≤ 1.15× stall speed',test:(t,sc)=>t.onTarget&&sc.e===0&&t.ias<=t.vs0*1.15},CK(850)],
+ xwind:[{id:'nodrift',name:'No side drift',desc:'On the runway with under 3 kt of side drift',test:t=>t.onTarget&&t.drift<3},{id:'aligned',name:'Nose aligned',desc:'On the runway, drift < 3 kt and nose within 5° of the centerline',test:t=>t.onTarget&&t.drift<3&&t.align<=5},CK(850,', drift < 3 kt, nose ≤ 5°',(t,sc)=>t.onTarget&&sc.total>=850&&sc.e===0&&t.drift<3&&t.align<=5)],
  tunnel:[{id:'thread',name:'Thread the tunnel',desc:'Break out of the tunnel with no more than 2 wall bonks (and land safely)',test:()=>stats.tunOut&&stats.bonks<=2},{id:'land',name:'Land at Rainbow Pond',desc:'After the breakout, land in the pond',test:t=>t.onTarget},CK(800,' with ≤ 1 bonk',(t,sc)=>t.onTarget&&sc.total>=800&&sc.e===0&&stats.bonks<=1)],
  ember:[{id:'rim',name:'Cross the rim',desc:'Land in the caldera lagoon',test:t=>t.onTarget},CK(800)],
  islands:[{id:'hop',name:'Lagoon hops',desc:'Each leg that lands in its lagoon is a pass',test:t=>t.onTarget},{id:'ck',name:'Archipelago checkride',ck:true,rule:[2,2],desc:'All 3 legs in their lagoons, averaging 800+',test:()=>null}],
  engine:[{id:'abc',name:'A is for Airspeed',desc:'Best glide within 10 s of the failure, then re-trimmed',rule:[3,3],test:()=>stats.vgCap!==null&&stats.vgCap<=10&&stats.trimmed},
-   {id:'pond',name:'Make a pond',desc:'Land in any pond',test:t=>t.onTarget},CK(750,' with the ABCs met',(t,sc)=>t.onTarget&&sc.total>=750&&sc.e===0&&stats.vgCap!==null&&stats.vgCap<=10)]};
+   {id:'chk',name:'C is for Checklist',desc:'Mallard: run the POH restart checklist in order, after Vg is set (other ducks auto-pass)',test:()=>!chk||chkResult().ok},
+   {id:'pond',name:'Make a pond',desc:'Land in any pond',test:t=>t.onTarget},CK(750,' with the ABCs met',(t,sc)=>t.onTarget&&sc.total>=750&&sc.e===0&&stats.vgCap!==null&&stats.vgCap<=10&&(!chk||chkResult().ok))]};
 const ruleOf=st=>st.rule||[3,4];
 
 /* ---------------- persistence ---------------- */
@@ -497,7 +534,7 @@ function persist(){try{localStorage.setItem(SKEY,JSON.stringify(SAVE));}catch(e)
 
 /* ---------------- world runtime ---------------- */
 let W=null, Hfn=null, treeGrid=null, profile=PROFILES[SAVE.set.prof]||PROFILES.mallard;
-function makeH(w){return (x,z)=>{let h=carve(w.base(x,z),x,z,w.ponds);const d=Math.max(Math.abs(x-w.cx),Math.abs(z-w.cz));return lerp(h,w.edgeH,smooth(w.size*.4,w.size*.5,d));};}
+function makeH(w){return (x,z)=>{let h=carve(w.base(x,z),x,z,w.ponds);if(w.runways)h=carveRwy(h,x,z,w.runways);const d=Math.max(Math.abs(x-w.cx),Math.abs(z-w.cz));return lerp(h,w.edgeH,smooth(w.size*.4,w.size*.5,d));};}
 function islandAt(x,z){if(!W.islands)return null;for(const is of W.islands){const d=Math.hypot(x-is.x,z-is.z);if(d<is.r)return {is,d};}return null;}
 function inIsland(x,y,z){const il=islandAt(x,z);if(!il)return false;const is=il.is;return y<is.top-14&&y>is.top-is.depth*(1-il.d/is.r);}
 const ZEN=()=>!LES&&(SAVE.set.zen||!!(W&&W.zen));
@@ -522,6 +559,7 @@ function lessonLine(pass){if(!LES)return '';const r=recordAttempt(LES.w,LES.st,p
   return x;}
 function surfaceAt(x,z,y){if(y===undefined)y=Infinity;const il=islandAt(x,z);
   if(il&&y>il.is.top-14){const p=W.ponds[il.is.pond];if(pondE(p,x,z)<1)return {y:p.y,type:'pond',pond:il.is.pond};return {y:il.is.top+1.2,type:'land',isl:true};}
+  if(W.runways)for(let i=0;i<W.runways.length;i++){const rw=W.runways[i],[f,r]=rwyLoc(rw,x,z);if(Math.abs(f)<rw.len/2&&Math.abs(r)<rw.wid/2)return {y:rw.y,type:'rwy',rwy:i};}
   const h=Hfn(x,z);for(let i=0;i<W.ponds.length;i++){const p=W.ponds[i];if(!p.sky&&p.y>h&&pondE(p,x,z)<1.05)return {y:p.y,type:'pond',pond:i};}
   if(W.fluid&&W.fluid.y>h)return {y:W.fluid.y,type:W.fluid.type};return {y:h,type:'land'};}
 function treeTopAt(x,z,rad){if(!treeGrid)return null;const cs=40,gi=Math.floor(x/cs),gj=Math.floor(z/cs);let best=null;
@@ -568,6 +606,7 @@ function buildTrees(w){
   const T=w.trees,list=[],r=rng(T.seed),Hn=Hfn;
   const ok=(x,z)=>{const sf=surfaceAt(x,z);if(sf.type!=='land')return false;for(const p of w.ponds)if(pondE(p,x,z)<(T.minPond||1.6))return false;
     if(T.landMin!==undefined&&(sf.y<T.landMin||sf.y>T.landMax))return false;if(T.maxH!==undefined&&sf.y>T.maxH)return false;
+    if(W.runways)for(const rw of W.runways){const [f,r]=rwyLoc(rw,x,z);if(Math.abs(f)<rw.len/2+450&&Math.abs(r)<rw.wid/2+160)return false;}
     if(T.clear){const p=w.ponds[T.clear.p];if(pondE({...p,a:p.a+T.clear.da,b:p.b+T.clear.db},x,z)<1)return false;}return true;};
   if(T.kind==='forest'){for(let x=-T.r;x<T.r;x+=T.spacing)for(let z=-T.r;z<T.r;z+=T.spacing){const xx=x+(r()-.5)*T.spacing*.8,zz=z+(r()-.5)*T.spacing*.8;
       if(Math.hypot(xx,zz)>T.r||r()<.2||!ok(xx,zz))continue;const ht=22+r()*7;list.push({x:xx,z:zz,y:Hn(xx,zz),h:ht,r:4.5+r()*1.5,kind:'pine'});}}
@@ -619,8 +658,8 @@ function makeDuck(p){
   const outer=new THREE.Group(),inner=new THREE.Group();inner.add(g);g.position.y=.085;outer.add(inner);inner.scale.setScalar(p.b);
   outer.userData={wings,flaps,feet,inner,g,fpHide};return outer;
 }
-function makeTarget(leg){
-  const grp=new THREE.Group(),y=W.ponds[leg.pond].y+.15,T=leg.target;
+function makeTarget(leg){if(leg.rwy!==undefined)return makeRwyTarget(leg);
+  const grp=new THREE.Group(),y=legY(leg)+.15,T=leg.target;
   const cols=[0xe52521,0xffffff,0xe52521,0xffffff,0xe52521];
   for(let i=0;i<5;i++){const rg=new THREE.Mesh(new THREE.RingGeometry(i*5,i*5+5,32),new THREE.MeshBasicMaterial({color:cols[i],side:THREE.DoubleSide,transparent:true,opacity:.85,depthWrite:false}));
     rg.rotation.x=-Math.PI/2;rg.position.set(T[0],y+i*.01,T[1]);grp.add(rg);}
@@ -651,7 +690,7 @@ function buildPath(leg,prefixPt){
   const dense=[];let s=0;for(let i=0;i<pts.length-1;i++){const a=pts[i],b=pts[i+1],L=Math.hypot(b[0]-a[0],b[1]-a[1]),n=Math.max(1,Math.ceil(L/15));
     for(let k=0;k<n;k++){const t=k/n;dense.push({x:lerp(a[0],b[0],t),z:lerp(a[1],b[1],t),s:s+L*t});}s+=L;}
   const last=pts[pts.length-1];dense.push({x:last[0],z:last[1],s});
-  const ty=W.ponds[leg.pond].y,Gg=profile.LD*.85,Gf=profile.ldCfg(profile.flaps.length-1)*.95,Lf=Math.min(600,s*.3);
+  const ty=legY(leg),Gg=profile.LD*.85,Gf=profile.ldCfg(profile.flaps.length-1)*.95,Lf=Math.min(600,s*.3);
   for(const d of dense){d.rem=s-d.s;let y=ty+1.2+(d.rem<=Lf?d.rem/Gf:Lf/Gf+(d.rem-Lf)/Gg);const sf=surfaceAt(d.x,d.z);let ob=sf.y;const tr=treeTopAt(d.x,d.z,12);if(tr)ob=Math.max(ob,tr.top);
     const mg=Math.min(14,d.rem/10);y=Math.max(y,ob+mg);d.y=y;}
   for(let i=dense.length-2;i>=0;i--)dense[i].y=Math.max(dense[i].y,dense[i+1].y);
@@ -666,7 +705,7 @@ function placeBeads(path){
 }
 
 /* ---------------- game state ---------------- */
-const ph={pos:new V3(),vel:new V3(),alpha:0,bank:0,slip:0,flap:0,flapAnim:0,trim:0,stalled:false,drop:0,boost:0,energy:1,t:0,
+const ph={beta:0,eng:0,noseHdg:0,ballY:0,pos:new V3(),vel:new V3(),alpha:0,bank:0,slip:0,flap:0,flapAnim:0,trim:0,stalled:false,drop:0,boost:0,energy:1,t:0,
   vhat:new V3(0,0,-1),right:new V3(1,0,0),lift0:new V3(0,1,0),IAS:0,TAS:0,rho:RHO0,CLlin:0,CLm:1.5,sf:null,hS:0,wind:new V3()};
 let lastCrash=null,state='menu', legIdx=0, LEG=null, PATH=null, legScores=[], stats=null, td=null, settleT=0, camMode=0, pathIdx=0, trace=[], lastTrace=0;
 const tmp1=new V3(),tmp2=new V3(),tmp3=new V3(),acc=new V3();
@@ -691,8 +730,8 @@ function loadWorld(w){
       const a=rr()*6.283,fall=new THREE.Mesh(new THREE.PlaneGeometry(16,is.depth*.9),fallM);fall.position.set(is.x+Math.cos(a)*is.r*1.02,is.top-is.depth*.45,is.z+Math.sin(a)*is.r*1.02);fall.rotation.y=-a+Math.PI/2;scene.add(fall);
       const bush=new THREE.SphereGeometry(1,7,5);for(let k=0;k<5;k++){const b2=rr()*6.283,dd=is.r*(.75+rr()*.2);const m=new THREE.Mesh(bush,new THREE.MeshLambertMaterial({color:[0x2fa83a,0xff7ad0,0x4cc84a][k%3],flatShading:true}));const sz=6+rr()*6;m.scale.set(sz,sz*.9,sz);m.position.set(is.x+Math.cos(b2)*dd,is.top+sz*.6,is.z+Math.sin(b2)*dd);scene.add(m);}}}
   if(w.rings){const g=new THREE.TorusGeometry(16,1.8,8,28);for(const rg of w.rings){const m=new THREE.Mesh(g,new THREE.MeshLambertMaterial({color:0xffcc22,emissive:0x775500,flatShading:true}));m.position.set(rg[0],rg[1],rg[2]);m.rotation.y=rg[3];m.userData={got:false};scene.add(m);ringMeshes.push(m);}}
-  buildTrees(w);buildClouds(w);buildValleyDecor(w);buildCloudVols(w);tunGrp=null;TUN=null;
-  if(w.valley){bd.x=w.valley.cxz(0);bd.z=0;bd.y=w.valley.floorZ(0)+520;}else if(w.legs[0].target){bd.x=w.legs[0].target[0];bd.z=w.legs[0].target[1];bd.y=w.ponds[w.legs[0].pond].y;}else if(w.free==='sky'){bd.x=0;bd.z=0;bd.y=700;}else{bd.x=w.ponds[0].cx;bd.z=w.ponds[0].cz;bd.y=w.ponds[0].y;}
+  buildRunways(w);buildTrees(w);buildClouds(w);buildValleyDecor(w);buildCloudVols(w);tunGrp=null;TUN=null;
+  if(w.valley){bd.x=w.valley.cxz(0);bd.z=0;bd.y=w.valley.floorZ(0)+520;}else if(w.legs[0].target){bd.x=w.legs[0].target[0];bd.z=w.legs[0].target[1];bd.y=legY(w.legs[0]);}else if(w.free==='sky'){bd.x=0;bd.z=0;bd.y=700;}else{bd.x=w.ponds[0].cx;bd.z=w.ponds[0].cz;bd.y=w.ponds[0].y;}
   duck=makeDuck(profile);scene.add(duck);
   cfiDuck=makeDuck({...profile,id:'cfi',col:{body:0x2a6cff,head:0xffffff,wing:0xdbe8ff,tip:0xe52521,beak:0xff8a00}});
   {const gog=new THREE.Mesh(new THREE.BoxGeometry(.13,.03,.03),new THREE.MeshLambertMaterial({color:0x111111}));gog.position.set(0,.095,-.29);cfiDuck.userData.g.add(gog);
@@ -702,6 +741,25 @@ function loadWorld(w){
   traceLine=new THREE.Line(tg,new THREE.LineBasicMaterial({color:0xff3b8a}));traceLine.frustumCulled=false;scene.add(traceLine);
 }
 let TUN=null,tunGrp=null,bonkT=0,targetGrp=null,cloudHit=new Set(),picHit=new Set(),inCloud=false;
+function rwyTexture(rw){const ppx=11,ppy=1.68,Wpx=Math.round(rw.wid*ppx),H=Math.round(rw.len*ppy),cv=document.createElement('canvas');cv.width=Wpx;cv.height=Math.min(4096,H);const sy=cv.height/H,g=cv.getContext('2d');
+  g.fillStyle='#3b3f46';g.fillRect(0,0,Wpx,cv.height);for(let i=0;i<1500;i++){g.fillStyle=`rgba(${Math.random()<.5?255:0},${Math.random()<.5?255:0},${Math.random()<.5?255:0},.04)`;g.fillRect(Math.random()*Wpx,Math.random()*cv.height,3,6);}
+  const Y=fm=>cv.height-fm*ppy*sy,box=(x0,x1,f0,f1)=>{g.fillRect((x0+rw.wid/2)*ppx,Y(f1),(x1-x0)*ppx,(f1-f0)*ppy*sy);};
+  g.fillStyle='#f4f4f4';box(-rw.wid/2+.3,-rw.wid/2+1.2,0,rw.len);box(rw.wid/2-1.2,rw.wid/2-.3,0,rw.len);
+  for(const end of[0,1]){const F=fm=>end?rw.len-fm:fm,bx=(x0,x1,a,b)=>box(x0,x1,Math.min(F(a),F(b)),Math.max(F(a),F(b)));
+    for(let k=0;k<8;k++){const x=-rw.wid/2+2+k*(rw.wid-4)/8+((k>=4)?1.2:0);bx(x,x+1.6,6,52);}
+    const t=end?rw.rnum:rw.num;g.save();g.setTransform(ppx,0,0,ppy*sy,(rw.wid/2)*ppx,Y(F(72)));if(end)g.rotate(Math.PI);g.font='bold 20px Arial';g.textAlign='center';g.textBaseline='middle';g.fillStyle='#f4f4f4';g.scale(.62,1);g.fillText(t,0,0);g.restore();
+    for(const [a,b] of [[152,175],[305,350]]){bx(-rw.wid/2+3,-rw.wid/2+(a>300?7.5:5),a,b);bx(rw.wid/2-(a>300?7.5:5),rw.wid/2-3,a,b);}}
+  for(let f=100;f<rw.len-100;f+=61)box(-.45,.45,f,f+36.5);
+  const tex=new THREE.CanvasTexture(cv);tex.anisotropy=renderer.capabilities.getMaxAnisotropy();return tex;}
+function buildRunways(w){if(!w.runways)return;for(const rw of w.runways){const g=new THREE.PlaneGeometry(rw.wid,rw.len);g.rotateX(-Math.PI/2);
+    const m=new THREE.Mesh(g,new THREE.MeshLambertMaterial({map:rwyTexture(rw)}));m.rotation.y=-rw.hdg;m.position.set(rw.cx,rw.y+.06,rw.cz);scene.add(m);}}
+function makeRwyTarget(leg){const grp=new THREE.Group(),rw=W.runways[leg.rwy],y=rw.y+.1,T=leg.target,lo=leg.window[0]/FT,hi=leg.window[1]/FT;
+  const bar=(f,c)=>{const p=at(T,leg.hdg,f,0),b=new THREE.Mesh(new THREE.BoxGeometry(rw.wid,.08,1.4),new THREE.MeshBasicMaterial({color:c}));b.position.set(p[0],y,p[1]);b.rotation.y=-leg.hdg;grp.add(b);};
+  bar(lo,0xff2bd6);bar(hi,0x43d047);
+  const cone=new THREE.ConeGeometry(.9,2.4,8),cm=new THREE.MeshLambertMaterial({color:0xff7a00});for(const f of[lo,hi])for(const r of[-rw.wid/2-4,rw.wid/2+4]){const p=at(T,leg.hdg,f,r),c=new THREE.Mesh(cone,cm);c.position.set(p[0],y+1.2,p[1]);grp.add(c);}
+  const sp=at(T,leg.hdg,-400,rw.wid/2+45),sy=surfaceAt(sp[0],sp[1]).y,ws=new THREE.Group();ws.position.set(sp[0],sy,sp[1]);const wp=new THREE.Mesh(new THREE.CylinderGeometry(.2,.2,10,6),new THREE.MeshLambertMaterial({color:0xdddddd}));wp.position.y=5;ws.add(wp);
+  const cn=new THREE.Mesh(new THREE.ConeGeometry(1.1,6,8,1,true),new THREE.MeshLambertMaterial({color:0xff6a00,side:THREE.DoubleSide}));cn.rotation.x=Math.PI/2;cn.position.set(0,9.6,3);const cg=new THREE.Group();cg.add(cn);ws.add(cg);ws.userData.cg=cg;windsocks.push(ws);grp.add(ws);
+  return grp;}
 function buildValleyDecor(w){if(!w.valley)return;const v=w.valley,L=(c)=>new THREE.MeshLambertMaterial({color:c,flatShading:true});
   // river ribbon
   const pos=[];for(let z=-6400;z<6400;z+=40){const z2=z+40,a=[v.cxz(z),v.floorZ(z)-.4,z],b=[v.cxz(z2),v.floorZ(z2)-.4,z2];
@@ -737,7 +795,7 @@ function buildCloudVols(w){if(!w.cloudVols)return;
 function resetFlight(pos,dir,ias,trimA){
   ph.pos.copy(pos);const alt=W.elevFt/FT+pos.y,rho=RHO0*Math.pow(1-2.25577e-5*alt,4.2559),tas=ias*Math.sqrt(RHO0/rho);
   ph.vel.copy(dir).multiplyScalar(tas);ph.vel.y=ias>profile.vbg*1.1?0:-tas/profile.LD;{const sf=surfaceAt(ph.pos.x,ph.pos.z,ph.pos.y);windAt(ph.pos,ph.pos.y-sf.y,0,tmp2);ph.vel.x+=tmp2.x;ph.vel.z+=tmp2.z;}
-  ph.trim=trimA;ph.alpha=trimA;ph.bank=0;ph.slip=0;ph.flap=0;ph.flapAnim=0;ph.stalled=false;ph.drop=0;ph.energy=1;ph.t=0;
+  ph.trim=trimA;ph.alpha=trimA;ph.bank=0;ph.slip=0;ph.beta=0;ph.eng=0;ph.flap=0;ph.flapAnim=0;ph.stalled=false;ph.drop=0;ph.energy=1;ph.t=0;
   ph.inTun=false;pathIdx=0;trace=[];rec=[];recAcc=0;td=null;inp.bankK=0;cloudHit=new Set();picHit=new Set();$('rLesson').classList.add('hide');
   traceLine.geometry.setDrawRange(0,0);ripples.forEach(r=>scene.remove(r));ripples=[];
   duck.userData.inner.scale.setScalar(profile.b);duck.visible=true;cfiDuck.userData.inner.scale.setScalar(profile.b);cfiSnap=true;pathDev=0;pathOff=1e9;pathRem=1e9;resetCoach();state='fly';showHUD(true);
@@ -774,11 +832,12 @@ function tunnelStep(){const tn=TUN;if(!tn||tn.out)return;const s=ph,P=tn.pts;let
   if(d>tn.R-2.5){const ux=nx/d,uy=ny/d,uz=nz/d,k2=(tn.R-4)/d;s.pos.set(c.x+nx*k2,c.y+ny*k2,c.z+nz*k2);const vr=s.vel.x*ux+s.vel.y*uy+s.vel.z*uz;
     if(vr>0){s.vel.x-=ux*vr*1.6;s.vel.y-=uy*vr*1.6;s.vel.z-=uz*vr*1.6;}s.vel.multiplyScalar(.93);
     if(s.t-bonkT>.6){bonkT=s.t;stats.bonks++;beep(140,.12,'square',.2);toast(`Bonk! 🦆💫 (${stats.bonks})`,700);}}}
-function startLeg(i,fromPt){if(W.tunnelPlan)return startTunnelLeg();
+function startLeg(i,fromPt){chk=null;$('chk').classList.add('hide');if(W.tunnelPlan)return startTunnelLeg();
+  if(W.legs[i]&&W.legs[i].randWind){const hd=W.legs[i].hdg*R2D,sd=Math.random()<.5?-1:1;W.wind.from=Math.round((hd+sd*(30+Math.random()*45)+360)%360/10)*10;W.wind.kt=Math.round(8+Math.random()*9);W.wind.gust=.3;}
   if(W.free)return startFree(fromPt||null);
   legIdx=i;LEG=W.legs[i];if(targetGrp)scene.remove(targetGrp);windsocks=[];targetGrp=makeTarget(LEG);scene.add(targetGrp);
   PATH=buildPath(LEG,LEG.prefix?(fromPt||null):null);placeBeads(PATH);
-  const d0=PATH.dense[0],d1=PATH.dense[Math.min(4,PATH.dense.length-1)],ty=W.ponds[LEG.pond].y;
+  const d0=PATH.dense[0],d1=PATH.dense[Math.min(4,PATH.dense.length-1)],ty=legY(LEG);
   let y=LEG.fixedStartFt?ty+LEG.fixedStartFt/FT:d0.y+(LEG.marginFt||0)/FT;
   resetFlight(tmp3.set(d0.x,y,d0.z),new V3(d1.x-d0.x,0,d1.z-d0.z).normalize(),profile.vbg,profile.aTrim);
   stats=newStats(beadMeshes.length);
@@ -794,13 +853,13 @@ function pickBest(force){const s=ph,have=profile.ldCfg(0);let best=null,bs=1e18;
   for(const l of freeLegs){const p=W.ponds[l.pond],h=s.pos.y-p.y;if(h<-5)continue;const d=Math.hypot(s.pos.x-l.target[0],s.pos.z-l.target[1]),need=h>1?d/h:99;
     const sc=need<have*.85?d:1e6+need*1000;if(sc<bs){bs=sc;best=l;}}
   if(best&&(force||best!==LEG))LEG=best;}
-function newScenario(){const r=Math.random,a=r()*6.283,d=r()*4500;return {x:Math.cos(a)*d,z:Math.sin(a)*d,agl:1800+r()*2700,hdg:r()*360,wfrom:Math.round(r()*35)*10,wkt:Math.round(r()*14),id:Math.floor(r()*9000+1000)};}
+function newScenario(){const r=Math.random,a=r()*6.283,d=r()*4500;return {cause:['shut','sel','pump','mix','ign','mech','mech','mech'][Math.floor(r()*8)],x:Math.cos(a)*d,z:Math.sin(a)*d,agl:1800+r()*2700,hdg:r()*360,wfrom:Math.round(r()*35)*10,wkt:Math.round(r()*14),id:Math.floor(r()*9000+1000)};}
 function startFree(arg){
   PATH=null;placeBeads(null);const P=profile;
   if(W.free==='engine'){const sc=arg&&arg.scenario?arg.scenario:newScenario();lastFree={scenario:sc};W.wind.from=sc.wfrom;W.wind.kt=sc.wkt;freeTargets();
     const gy=surfaceAt(sc.x,sc.z).y,h=sc.hdg*D2R,vcr=P.vcr/KT,cl=2*P.m*G/(RHO0*P.S*vcr*vcr);
     resetFlight(tmp3.set(sc.x,gy+sc.agl/FT,sc.z),new V3(Math.sin(h),0,-Math.cos(h)),vcr,cl/P.CLa*R2D+P.a0);
-    stats=newStats(0);sfx('sputter');toast(`💥 ENGINE FAILURE! #${sc.id}`,2600);setTimeout(()=>{if(state==='fly')toast(`Pitch for ${(P.vbg*KT).toFixed(0)} kt · trim · pick a pond`,2600);},2700);}
+    stats=newStats(0);chkReset(sc.cause);sfx('sputter');toast(`💥 ENGINE FAILURE! #${sc.id}`,2600);setTimeout(()=>{if(state==='fly')toast(`Pitch for ${(P.vbg*KT).toFixed(0)} kt · trim · pick a pond`,2600);},2700);}
   else{const L=arg&&arg.launch?arg.launch:W.launch;lastFree={launch:L};freeTargets();ringMeshes.forEach(m=>{m.userData.got=false;m.material.color.setHex(0xffcc22);m.scale.setScalar(1);});
     const h=L[3]*D2R;resetFlight(tmp3.set(L[0],L[1],L[2]),new V3(Math.sin(h),0,-Math.cos(h)),P.vbg,P.aTrim);stats=newStats(ringMeshes.length*5+(W.cloudVols?W.cloudVols.length:0)+(W.picnics?W.picnics.length*3:0));if(!drill)toast(W.valley?'🏔️ Soar the valley!':'☁️ Free flight!',1500);}
   legIdx=0;LEG=freeLegs[0];pickBest(true);bestT=0;
@@ -808,7 +867,7 @@ function startFree(arg){
 function retry(){hideAll();$('rLesson').classList.add('hide');if(drill){startDrill(drill.id);return;}if(W.free)startFree(lastFree);else startLeg(legIdx,lastPrefix);}
 
 /* ---------------- input ---------------- */
-const inp={pitch:0,bank:0,slip:0,keys:{},tilt:{ok:false,g:new V3(),f:new V3(),n0:null,sgn:1,roll:0,pitch:0},touch:{id:null,x0:0,y0:0,dx:0,dy:0},bankK:0,pitchK:0,boost:false,pad:null};
+const inp={rud:0,rudK:0,rudT:null,pitch:0,bank:0,slip:0,keys:{},tilt:{ok:false,g:new V3(),f:new V3(),n0:null,sgn:1,roll:0,pitch:0},touch:{id:null,x0:0,y0:0,dx:0,dy:0},bankK:0,pitchK:0,boost:false,pad:null};
 addEventListener('keydown',e=>{const k=e.key.toLowerCase();inp.keys[k]=true;
   if(state==='fly'){if(k==='f')setFlap(1);if(k==='r')setFlap(-1);if(k==='[')trim(-1);if(k===']')trim(1);if(k==='c')cycleCam();if(k==='l')inp.bankK=0;}
   if(k==='p'||k==='escape')togglePause();if([' ','arrowup','arrowdown','arrowleft','arrowright'].includes(k))e.preventDefault();});
@@ -831,8 +890,11 @@ addEventListener('pointerup',endTouch);addEventListener('pointercancel',endTouch
 function hold(id,on,off,rep){const b=$(id);let iv=0;b.addEventListener('pointerdown',e=>{e.preventDefault();b.classList.add('on');on();if(rep){clearInterval(iv);iv=setInterval(on,rep);}});['pointerup','pointerleave','pointercancel'].forEach(ev=>b.addEventListener(ev,()=>clearInterval(iv)));['pointerup','pointerleave','pointercancel'].forEach(ev=>b.addEventListener(ev,()=>{b.classList.remove('on');off&&off();}));}
 let slipBtn=false;hold('bSlip',()=>slipBtn=true,()=>slipBtn=false);let boostBtn=false;hold('bBoost',()=>boostBtn=true,()=>boostBtn=false);
 hold('bFu',()=>setFlap(-1));hold('bFd',()=>setFlap(1));hold('bTu',()=>trim(1),null,140);hold('bTd',()=>trim(-1),null,140);
-$('bCam').onclick=()=>cycleCam();$('mini').addEventListener('pointerdown',e=>{e.stopPropagation();SAVE.set.mapProf=!SAVE.set.mapProf;persist();toast(SAVE.set.mapProf?'Profile view':'Map view',700);});$('bRetry').onclick=()=>{if(state==='fly'||state==='settle')retry();};$('bMenu').onclick=()=>{if(state==='fly'||state==='settle'){state='menu';drill=null;hideAll();showHUD(false);if(cfiDuck)cfiDuck.visible=false;show('menu');renderMenu();}};$('bCal').onclick=()=>{calibrate();inp.bankK=0;toast('Level set',800);};$('bPause').onclick=()=>togglePause();
+$('bCam').onclick=()=>cycleCam();$('chk').querySelector('b').onclick=()=>$('chk').classList.toggle('mini');$('mini').addEventListener('pointerdown',e=>{e.stopPropagation();SAVE.set.mapProf=!SAVE.set.mapProf;persist();toast(SAVE.set.mapProf?'Profile view':'Map view',700);});$('bRetry').onclick=()=>{if(state==='fly'||state==='settle')retry();};$('bMenu').onclick=()=>{if(state==='fly'||state==='settle'){state='menu';drill=null;hideAll();showHUD(false);if(cfiDuck)cfiDuck.visible=false;show('menu');renderMenu();}};$('bCal').onclick=()=>{calibrate();inp.bankK=0;toast('Level set',800);};$('bPause').onclick=()=>togglePause();
 let padPrev={};
+{const tr=$('rudTrack');let pid=null;const setR=e=>{const r=tr.getBoundingClientRect();inp.rudT=clamp(((e.clientX-r.left)/r.width)*2-1,-1,1);};
+  tr.addEventListener('pointerdown',e=>{e.preventDefault();e.stopPropagation();pid=e.pointerId;tr.setPointerCapture(pid);setR(e);});tr.addEventListener('pointermove',e=>{if(e.pointerId===pid)setR(e);});
+  const end=e=>{if(e.pointerId===pid){pid=null;inp.rudT=null;}};tr.addEventListener('pointerup',end);tr.addEventListener('pointercancel',end);}
 function readInputs(dt){
   const k=inp.keys,sens=SAVE.set.sens;let pitch=0,bank=null,slip=(k[' ']||slipBtn)?1:0;
   const pk=(k['arrowdown']||k['s']?1:0)-(k['arrowup']||k['w']?1:0);inp.pitchK=lerp(inp.pitchK,pk*.7,1-Math.exp(-dt*5));
@@ -846,6 +908,10 @@ function readInputs(dt){
       if(Math.abs(r)<2)r=0;if(Math.abs(p)<2)p=0;bank=clamp(r*1.6*sens,-60,60);pitch=clamp(p/22*sens,-1,1);inp.bankK=bank;}}
   if(SAVE.set.ctl==='touch'&&inp.touch.id!==null){bank=inp.touch.dx*60*sens*(SAVE.set.invR?-1:1);pitch=clamp(inp.touch.dy*sens*(SAVE.set.invP?-1:1),-1,1);inp.bankK=bank;}
   inp.boost=!!(k['b']||boostBtn||(gp&&gp.buttons[1]&&gp.buttons[1].pressed));
+  const rk2=(k['x']?1:0)-(k['z']?1:0);inp.rudK=rk2?clamp(inp.rudK+rk2*1.6*dt,-1,1):inp.rudK*Math.exp(-dt*5);
+  let rud=inp.rudT!==null?inp.rudT:inp.rudK;if(gp&&Math.abs(gp.axes[2]||0)>.08)rud=gp.axes[2];
+  if(slip)rud=Math.abs(ph.bank)>2?-Math.sign(ph.bank):1;
+  inp.rud=lerp(inp.rud,clamp(rud,-1,1),1-Math.exp(-dt*8));
   inp.pitch=pitch;inp.bank=bank;inp.slip=lerp(inp.slip,slip,1-Math.exp(-dt*6));
 }
 function setFlap(d){if(state!=='fly')return;const P=profile,n=clamp(ph.flap+d,0,P.flaps.length-1);if(n!==ph.flap){ph.flap=n;beep(d>0?520:700,.06);
@@ -874,9 +940,13 @@ function physStep(dt){
   if(!s.stalled&&s.CLlin>s.CLm){s.stalled=true;s.drop=(Math.random()<.5?-1:1)*(18+Math.random()*25);}else if(s.stalled&&s.CLlin<.9*s.CLm)s.stalled=false;
   let CL=s.CLlin;if(s.stalled)CL=Math.max(.55*s.CLm,s.CLm-(s.CLlin-s.CLm)*1.4);
   const hb=Math.max(.05,s.hS)/P.b,ge=hb<1.2?((16*hb)**2)/(1+(16*hb)**2):1;
-  const CD=P.CD0+fl.dCD+P.k*CL*CL*ge+s.slip*P.slipCD+(s.stalled?.12:0);
+  s.beta+=clamp(-inp.rud*18-s.beta,-40*dt,40*dt);const bR=s.beta*D2R;
+  const CD=P.CD0+fl.dCD+P.k*CL*CL*ge+P.slipCD*(s.beta/15)**2+(s.stalled?.12:0);
   const q=.5*s.rho*V*V,L=q*P.S*CL,D=q*P.S*CD,cb=Math.cos(s.bank*D2R),sb=Math.sin(s.bank*D2R);
   acc.copy(s.lift0).multiplyScalar(cb).addScaledVector(s.right,sb).multiplyScalar(L/P.m).addScaledVector(s.vhat,-D/P.m);acc.y-=G;
+  {const Fy=q*P.S*(-.95*bR);acc.x+=(s.right.x*cb-s.lift0.x*sb)*Fy/P.m;acc.y+=(s.right.y*cb-s.lift0.y*sb)*Fy/P.m;acc.z+=(s.right.z*cb-s.lift0.z*sb)*Fy/P.m;s.ballY=-Fy/(P.m*G);}
+  if(s.eng>0)acc.addScaledVector(s.vhat,s.eng*.13*G);
+  s.noseHdg=Math.atan2(s.vhat.x,-s.vhat.z)-bR;
   if(ZEN()&&inp.boost&&s.energy>0){const fwd=tmp2.copy(s.vhat);fwd.y=Math.max(fwd.y,0);fwd.normalize();acc.addScaledVector(fwd,.4*G);acc.y+=.15*G;s.energy=Math.max(0,s.energy-dt/7);s.boost=1;}
   else{s.boost=0;s.energy=Math.min(1,s.energy+dt/18);}
   s.vel.addScaledVector(acc,dt);s.pos.addScaledVector(s.vel,dt);
@@ -899,13 +969,14 @@ function checkContacts(){
   const vs=-s.vel.y*FPM,ias=s.IAS*KT,bank=Math.abs(s.bank),vs0=profile.vsF(s.flap)*KT;
   if(sf.type==='lava')return crash('Toasted duck!','You touched lava. On Planet Ember only the caldera lagoon is safe.');
   const gsv=Math.hypot(s.vel.x,s.vel.z),trk=Math.atan2(s.vel.x,-s.vel.z);
+  if(sf.type==='rwy'&&(vs>900||bank>20))return crash('Hard landing!',`Hit the runway at ${vs.toFixed(0)} fpm with ${bank.toFixed(0)}° bank — likely a bounce or prop strike. Round out earlier and hold it off.`);
   if(sf.type==='land'){if(vs>450||bank>12||gsv>32)return crash('Off-field crunch!',`Hit the ground at ${vs.toFixed(0)} fpm, ${ias.toFixed(0)} kt, ${bank.toFixed(0)}° bank. Pick your field early and arrive slow and level.`);}
-  else if(vs>1100||bank>25)return crash('Cartwheel splash!',`Touched water at ${vs.toFixed(0)} fpm with ${bank.toFixed(0)}° bank. Level the wings and flare to < 300 fpm.`);
+  else if(sf.type!=='rwy'&&(vs>1100||bank>25))return crash('Cartwheel splash!',`Touched water at ${vs.toFixed(0)} fpm with ${bank.toFixed(0)}° bank. Level the wings and flare to < 300 fpm.`);
   if(W.free&&sf.type==='pond')LEG=freeLegs[sf.pond];
   const T=LEG.target,F=F2(LEG.hdg),R=R2(LEG.hdg),dx=s.pos.x-T[0],dz=s.pos.z-T[1];
-  td={type:sf.type,onTarget:sf.type==='pond'&&sf.pond===LEG.pond,f:(dx*F[0]+dz*F[1])*FT,r:(dx*R[0]+dz*R[1])*FT,vs,ias,vs0,bank,align:Math.abs(wrapPi(trk-LEG.hdg))*R2D,flapN:profile.flaps[s.flap].n,
+  td={type:sf.type,drift:Math.abs(s.vel.x*R[0]+s.vel.z*R[1])*KT,onTarget:LEG.rwy!==undefined?(sf.type==='rwy'&&sf.rwy===LEG.rwy):(sf.type==='pond'&&sf.pond===LEG.pond),f:(dx*F[0]+dz*F[1])*FT,r:(dx*R[0]+dz*R[1])*FT,vs,ias,vs0,bank,align:Math.abs(wrapPi(s.noseHdg-LEG.hdg))*R2D,flapN:profile.flaps[s.flap].n,
     gs:gsv*KT,pos:s.pos.clone()};
-  s.pos.y=sf.y;s.vel.y=0;state='settle';settleT=0;splash(s.pos,sf.type!=='land');quack();
+  s.pos.y=sf.y;s.vel.y=0;state='settle';settleT=0;if(sf.type==='pond'||sf.type==='sea')splash(s.pos,true);else beep(1800,.08,'sine',.08);quack();
 }
 function crash(title,why){if(drill&&!ZEN()){lastCrash={title};return drillEnd(false,title+' '+why);}lastCrash={title,x:ph.pos.x,y:ph.pos.y,z:ph.pos.z,rem:PATH&&PATH.dense[pathIdx]?PATH.dense[pathIdx].rem:-1,sf:surfaceAt(ph.pos.x,ph.pos.z)};if(ZEN()){toast('Oops! 🌸 Zen respawn',1500);setTimeout(()=>{if(state==='crashing')retry();},500);state='crashing';return;}
   state='crashed';splash(ph.pos,true);sfx('crash');showHUD(false);
@@ -913,11 +984,12 @@ function crash(title,why){if(drill&&!ZEN()){lastCrash={title};return drillEnd(fa
   $('rLesson').classList.add('hide');const ll=LES?lessonLine(false):'';$('rTable').innerHTML='';$('rCoach').innerHTML=(ll?`<li>${ll}</li>`:'')+`<li>${why}</li>`+coachFlight().map(x=>`<li>${x}</li>`).join('');$('rNext').classList.toggle('hide',W.free!=='engine');$('rNext').textContent='NEW FAILURE ▶';$('rReplay').classList.toggle('hide',rec.length<10);show('result');}
 function scoreTD(t){const lo=LEG.window[0],hi=LEG.window[1];
   const e=t.f<lo?lo-t.f:t.f>hi?t.f-hi:0;const acc=t.onTarget?400*Math.max(0,1-e/300):0,cross=t.onTarget?100*Math.max(0,1-Math.abs(t.r)/120):0;
-  const sink=200*clamp((700-t.vs)/500,0,1),ratio=t.ias/t.vs0,spd=150*(ratio<=1.15?1:clamp(1-(ratio-1.15)/.35,0,1));
-  const aln=100*Math.max(0,1-t.align/25),bk=50*Math.max(0,1-t.bank/10);
-  return {acc,cross,sink,spd,aln,bk,total:Math.round(acc+cross+sink+spd+aln+bk),e};}
+  const sink=150*clamp((700-t.vs)/500,0,1),ratio=t.ias/t.vs0,spd=150*(ratio<=1.15?1:clamp(1-(ratio-1.15)/.35,0,1));
+  const aln=75*Math.max(0,1-t.align/15),dr=75*Math.max(0,1-t.drift/6),bk=50*Math.max(0,1-Math.max(0,t.bank-5)/10);
+  return {acc,cross,sink,spd,aln,dr,bk,total:Math.round(acc+cross+sink+spd+aln+dr+bk),e};}
 function coachFlight(){const c=[],P=profile;
   if(stats.engine){c.push(stats.vgCap===null?`Never stabilized at best glide (${(P.vbg*KT).toFixed(0)} KIAS). First action after a failure: pitch for Vg — every knot off Vg costs range.`:stats.vgCap<=10?`Best glide captured in ${stats.vgCap.toFixed(0)} s — crisp. You traded the extra cruise speed for height.`:`Best glide took ${stats.vgCap.toFixed(0)} s to capture. Aim for < 10 s: pitch up, let it slow, then hold Vg.`);
+    if(chk){const r=chkResult();c.push(`Cause: ${r.cause}.`);c.push(r.ok?`C — checklist ✓: ${r.restarted?'run in order until the restart':'all items in POH order'}, after Vg was set.`:!r.aviateFirst?'C — you started the checklist before best glide was set. Aviate first: Airspeed (A) and a field (B), then the checklist (C).':!r.allDone?`C — checklist incomplete (${r.n} of 5 items). Flow through it: fuel shutoff ON → selector BOTH → pump ON → mixture RICH → ignition BOTH.`:'C — items were done out of POH order. Use the checklist order so nothing gets skipped under stress.');}
     c.push(stats.trimmed?`You re-trimmed for Vg — good; a trimmed duck frees your brain for picking the field.`:`You never re-trimmed for Vg (trim was still near cruise). Hold the pitch, then trim the pressure out (TRIM ▲ / ]).`);}
   if(stats.tGlide>5){const pct=stats.tVg/stats.tGlide*100;c.push(pct>65?`Nice speed discipline: ${pct.toFixed(0)}% of the glide within ±5 kt of Vg (${(P.vbg*KT).toFixed(0)} KIAS).`:`Only ${pct.toFixed(0)}% of the glide was within ±5 kt of Vg (${(P.vbg*KT).toFixed(0)} KIAS). Trim for Vg first, then manage the path with turns, flaps and slips — not by pitching off speed.`);}
   if(stats.maxLo>150)c.push(`You got ${stats.maxLo.toFixed(0)} ft below the bread trail at one point. Low is the dangerous side: tighten the pattern / turn toward the target earlier; you can always dump extra height later.`);
@@ -933,7 +1005,7 @@ function finishLanding(){
   $('rScore').textContent=sc.total;$('rStars').textContent='★'.repeat(stars)+'☆'.repeat(3-stars);$('rCrumbs').textContent=`🍞 ${stats.crumbs}/${stats.total} bread`;
   const rows=[['Touchdown vs. target',t.onTarget?`${t.f>=0?'+':''}${t.f.toFixed(0)} ft (window ${LEG.window[0]} to +${LEG.window[1]})`:'not in target pond',sc.acc],
     ['Centerline',t.onTarget?`${Math.abs(t.r).toFixed(0)} ft ${t.r>0?'right':'left'}`:'—',sc.cross],['Sink rate',`${t.vs.toFixed(0)} fpm`,sc.sink],
-    ['Touchdown speed',`${t.ias.toFixed(0)} KIAS (Vs ${t.vs0.toFixed(0)} w/ flaps ${t.flapN})`,sc.spd],['Alignment',`${t.align.toFixed(0)}° off landing heading`,sc.aln],['Bank',`${t.bank.toFixed(1)}°`,sc.bk]];
+    ['Touchdown speed',`${t.ias.toFixed(0)} KIAS (Vs ${t.vs0.toFixed(0)} w/ flaps ${t.flapN})`,sc.spd],['Nose alignment',`${t.align.toFixed(0)}° off the lane`,sc.aln],['Side drift',`${t.drift.toFixed(1)} kt`,sc.dr],['Bank',`${t.bank.toFixed(1)}°`,sc.bk]];
   $('rTable').innerHTML=rows.map(r=>`<tr><td>${r[0]}</td><td>${r[1]}</td><td>${Math.round(r[2])}</td></tr>`).join('');
   const c=[];if(t.onTarget){if(sc.e===0)c.push(`Inside the window — that's checkride-standard accuracy.`);
     else if(t.f<LEG.window[0])c.push(`Short by ${(LEG.window[0]-t.f).toFixed(0)} ft. Arrive a little higher on final, delay flaps until the landing is assured, and don't stretch the glide by pulling — that only gets you slower and steeper.`);
@@ -942,8 +1014,9 @@ function finishLanding(){
   if(t.vs>400)c.push(`Firm (${t.vs.toFixed(0)} fpm). In the last 20 ft, ease back progressively — ground effect will float you; hold it off.`);
   if(profile.flaps.length>1&&t.flapN!==profile.flaps[profile.flaps.length-1].n&&t.onTarget)c.push(`Touched down with flaps ${t.flapN}. Full flaps would have let you touch ~${((profile.vsF(0)-profile.vsF(profile.flaps.length-1))*KT).toFixed(0)} kt slower and steepen the approach — add them once the pond is assured.`);
   if(t.ias/t.vs0>1.3)c.push(`Fast at touchdown: ${t.ias.toFixed(0)} KIAS vs Vs ${t.vs0.toFixed(0)}. Excess speed = float = long. Hold the flare until the duck quits flying.`);
-  if(t.align>10)c.push(`Track was ${t.align.toFixed(0)}° off the landing lane at touchdown${W.wind.kt>5?` — with ${W.wind.kt} kt of wind, correct for drift (crab, then align)`:''}.`);
-  if(t.bank>5)c.push(`Wings not level (${t.bank.toFixed(0)}°). Roll out before the flare.`);
+  if(t.drift>=3)c.push(`Side drift ${t.drift.toFixed(1)} kt at touchdown — sideways load on the gear. Lower the upwind wing (bank into the wind) until the flight-path marker stops sliding off the centerline.`);
+  if(t.align>5)c.push(`Nose ${t.align.toFixed(0)}° off the lane at touchdown (still crabbed). In the flare, rudder the nose onto the centerline and hold the wing low — the RUDDER bar or Z / X.`);
+  if(t.bank>8)c.push(`${t.bank.toFixed(0)}° of bank at touchdown — a little upwind-wing-low is right in a crosswind, but this much risks a wingtip.`);
   c.push(...coachFlight());
   legScores[legIdx]={score:sc.total,stars};$('rLesson').classList.add('hide');
   if(LES&&LES.st.kind!=='drill'){let pass;if(LES.w==='islands'&&LES.st.id==='ck'){if(!t.onTarget)pass=false;else if(legIdx<W.legs.length-1)pass=null;else pass=legScores.reduce((a,b)=>a+(b?b.score:0),0)/W.legs.length>=800;}
@@ -969,18 +1042,19 @@ function quack(){if(!AC||!SAVE.set.snd)return;for(let k=0;k<2;k++){const t0=AC.c
   bp.type='bandpass';bp.frequency.value=1100;bp.Q.value=4;g.gain.setValueAtTime(.0001,t0);g.gain.exponentialRampToValueAtTime(.35,t0+.02);g.gain.exponentialRampToValueAtTime(.001,t0+.18);o.connect(bp).connect(g).connect(AC.destination);o.start(t0);o.stop(t0+.2);}}
 function sfx(k){if(!AC||!SAVE.set.snd)return;if(k==='coin'){beep(988,.08,'square',.08);setTimeout(()=>beep(1319,.18,'square',.08),70);}
   else if(k==='splash'||k==='crash'){const s=AC.createBufferSource();s.buffer=AC._noise;const f=AC.createBiquadFilter();f.type=k==='crash'?'lowpass':'highpass';f.frequency.value=k==='crash'?500:1200;const g=AC.createGain();g.gain.setValueAtTime(.5,AC.currentTime);g.gain.exponentialRampToValueAtTime(.001,AC.currentTime+.8);s.connect(f).connect(g).connect(AC.destination);s.start();s.stop(AC.currentTime+.9);}
+  else if(k==='vroom'){const o=AC.createOscillator(),g2=AC.createGain();o.type='sawtooth';o.frequency.setValueAtTime(40,AC.currentTime);o.frequency.exponentialRampToValueAtTime(95,AC.currentTime+1.2);g2.gain.setValueAtTime(.18,AC.currentTime);g2.gain.exponentialRampToValueAtTime(.001,AC.currentTime+1.6);o.connect(g2).connect(AC.destination);o.start();o.stop(AC.currentTime+1.7);}
   else if(k==='sputter'){[0,180,330,520,640,900].forEach((d,i)=>setTimeout(()=>beep(70+i*4,.12,'sawtooth',.18),d));}
   else if(k==='win'){[523,659,784,1047].forEach((f,i)=>setTimeout(()=>beep(f,.15,'square',.07),i*110));}else if(k==='ok'){[523,659].forEach((f,i)=>setTimeout(()=>beep(f,.15,'square',.07),i*110));}}
 
 /* ---------------- HUD ---------------- */
 const mini=$('mini'),mctx=mini.getContext('2d');
-function showHUD(on){document.body.classList.toggle('tapes',!!SAVE.set.tapes);$('bCam').textContent='CAM · '+CAMN[camMode];if(!on){const m=$('cfiMsg');if(m)m.classList.add('hide');}['hud','ctl','topbtns'].forEach(id=>$(id).classList.toggle('hide',!on));$('bBoost').classList.toggle('hide',!ZEN());}
+function showHUD(on){document.body.classList.toggle('flying',!!on);document.body.classList.toggle('tapes',!!SAVE.set.tapes);$('bCam').textContent='CAM · '+CAMN[camMode];if(!on){const m=$('cfiMsg');if(m)m.classList.add('hide');}['hud','ctl','topbtns'].forEach(id=>$(id).classList.toggle('hide',!on));$('bBoost').classList.toggle('hide',!ZEN());}
 let toastT=0;function toast(msg,ms){const t=$('toast');t.textContent=msg;t.style.opacity=1;clearTimeout(toastT);toastT=setTimeout(()=>t.style.opacity=0,ms||1200);}
 function show(id){['menu','brief','pause','result'].forEach(o=>$(o).classList.toggle('hide',o!==id));}
 function hideAll(){['menu','brief','pause','result'].forEach(o=>$(o).classList.add('hide'));}
 let hudT=0;
 function updateHUD(dt){
-  hudT+=dt;if(hudT<.06)return;hudT=0;const s=ph,P=profile,ty=W.ponds[LEG.pond].y,T=LEG.target;
+  hudT+=dt;if(hudT<.06)return;hudT=0;const s=ph,P=profile,ty=legY(LEG),T=LEG.target;
   const ias=s.IAS*KT,vg=P.vbg*KT,vs0=P.vsF(s.flap)*KT;
   const tg=tgtSpeed(P,s.flap)*KT;
   $('ias').textContent=ias.toFixed(0);$('ias').style.color=ias<vs0*1.1?'#ff6a6a':Math.abs(ias-tg)<=5?'#7CFF6B':'#fff';
@@ -990,9 +1064,10 @@ function updateHUD(dt){
   const vsi=s.vel.y*FPM;$('vsi').textContent=(vsi>0?'+':'')+vsi.toFixed(0);
   const dist=Math.hypot(s.pos.x-T[0],s.pos.z-T[1]);$('dist').textContent=dist>1852*.5?(dist/1852).toFixed(2)+' nm':(dist*FT).toFixed(0)+' ft';
   const need=hT>1?((PATH&&pathOff<600)?pathRem:dist)/(hT/FT):99;const have=P.ldCfg(s.flap);$('req').textContent=need>60?'—':need.toFixed(1)+':1';$('have').textContent=have.toFixed(1)+':1';$('req').style.color=need<have*.9?'#7CFF6B':need<have?'#ffd84a':'#ff6a6a';
-  const w=W.wind;$('wnd').textContent=`${String(w.from).padStart(3,'0')}°/${w.kt}`;
-  $('task').textContent=(W.free==='engine'?'ENGINE OUT · ':W.free==='sky'?'☁️ ':'')+(W.legs.length>1?`Leg ${legIdx+1}/${W.legs.length} · `:'')+(LEG.fixedStartFt?'Power-off 180 · ':'')+`${W.ponds[LEG.pond].name} · land ${LEG.window[0]} to +${LEG.window[1]} ft`;
-  if(W.free){bestT+=.06;if(bestT>1){bestT=0;pickBest();}const pe=$('pathdev');pe.textContent=`🎯 ${W.ponds[LEG.pond].name} · ${need<have*.9?'reachable':need<have?'marginal':'out of reach'}`;pe.style.background=need<have*.9?'rgba(40,140,60,.75)':need<have?'rgba(170,130,0,.8)':'rgba(190,40,40,.75)';
+  const w=W.wind,xw=w.kt*Math.sin((w.from*D2R)-LEG.hdg);$('wnd').textContent=`${String(w.from).padStart(3,'0')}°/${w.kt}${Math.abs(xw)>=1?` X${Math.abs(xw).toFixed(0)}${xw>0?'R':'L'}`:''}`;
+  $('rudKnob').style.left=(50+inp.rud*44)+'%';$('ball').style.left=(50+clamp(ph.ballY*6,-1,1)*40)+'%';
+  $('task').textContent=(W.free==='engine'?'ENGINE OUT · ':W.free==='sky'?'☁️ ':'')+(W.legs.length>1?`Leg ${legIdx+1}/${W.legs.length} · `:'')+(LEG.fixedStartFt?'Power-off 180 · ':'')+`${legName(LEG)} · land ${LEG.window[0]} to +${LEG.window[1]} ft`;
+  if(W.free){bestT+=.06;if(bestT>1){bestT=0;pickBest();}const pe=$('pathdev');pe.textContent=`🎯 ${legName(LEG)} · ${need<have*.9?'reachable':need<have?'marginal':'out of reach'}`;pe.style.background=need<have*.9?'rgba(40,140,60,.75)':need<have?'rgba(170,130,0,.8)':'rgba(190,40,40,.75)';
     if(stats.engine){if(stats.vgCap===null&&Math.abs(ias-vg)<=5)stats.vgCap=s.t;if(Math.abs(s.trim-P.aTrim)<1)stats.trimmed=true;}}
   else{
   const pd=PATH.dense;let bi=pathIdx,bd=1e18;for(let i=Math.max(0,pathIdx-30);i<Math.min(pd.length,pathIdx+60);i++){const d=(pd[i].x-s.pos.x)**2+(pd[i].z-s.pos.z)**2;if(d<bd){bd=d;bi=i;}}
@@ -1006,11 +1081,12 @@ function updateHUD(dt){
   if(SAVE.set.tapes)drawTapes(ias,hT,vsi,tg);
 }
 function drawMini(need,have){
-  const c=mctx,Wd=320,s=ph,T=LEG.target,ty=W.ponds[LEG.pond].y;c.clearRect(0,0,Wd,Wd);
+  const c=mctx,Wd=320,s=ph,T=LEG.target,ty=legY(LEG);c.clearRect(0,0,Wd,Wd);
   const dist=Math.hypot(s.pos.x-T[0],s.pos.z-T[1]),range=clamp(dist*1.25,1200,7000),sc=150/range,cx=160,cy=160;
   const X=x=>cx+(x-s.pos.x)*sc,Y=z=>cy+(z-s.pos.z)*sc;
   c.save();c.beginPath();c.arc(cx,cy,156,0,6.283);c.clip();
   c.fillStyle=W.fluid&&W.fluid.type==='lava'?'rgba(255,90,20,.25)':W.fluid?'rgba(30,140,255,.25)':'rgba(60,170,60,.25)';c.fillRect(0,0,Wd,Wd);
+  if(W.runways)for(const rw of W.runways){c.save();c.translate(X(rw.cx),Y(rw.cz));c.rotate(rw.hdg);c.fillStyle='#d0d4da';c.fillRect(-Math.max(2,rw.wid*sc),-rw.len*sc/2,Math.max(4,rw.wid*sc*2),rw.len*sc);c.restore();}
   if(W.islands)for(const is of W.islands){c.fillStyle='rgba(120,220,90,.85)';c.beginPath();c.arc(X(is.x),Y(is.z),Math.max(3,is.r*sc),0,6.283);c.fill();}
   for(const p of W.ponds){c.save();c.translate(X(p.cx),Y(p.cz));c.rotate(p.hdg);c.beginPath();c.ellipse(0,0,Math.max(2,p.b*sc),Math.max(3,p.a*sc),0,0,6.283);c.fillStyle='#3ab0ff';c.fill();c.restore();}
   if(PATH){c.setLineDash([6,6]);c.strokeStyle='rgba(255,255,255,.8)';c.lineWidth=2;c.beginPath();PATH.dense.forEach((d,i)=>i?c.lineTo(X(d.x),Y(d.z)):c.moveTo(X(d.x),Y(d.z)));c.stroke();c.setLineDash([]);}
@@ -1049,7 +1125,7 @@ function drawTapes(ias,hT,vsi,tg){const s=ph,P=profile,dtt=Math.max(.02,s.t-pvT)
     const bh=30*d;g.fillStyle='#000';g.strokeStyle='#fff';g.lineWidth=1.5*d;g.beginPath();g.moveTo(2*d,cy-bh/2);g.lineTo(x0-12*d,cy-bh/2);g.lineTo(x0-3*d,cy);g.lineTo(x0-12*d,cy+bh/2);g.lineTo(2*d,cy+bh/2);g.closePath();g.fill();g.stroke();
     g.fillStyle=ias<vsDyn*1.1?'#ff6a6a':'#fff';g.font=`bold ${20*d}px system-ui`;g.textAlign='center';g.fillText(ias.toFixed(0),(x0-10*d)/2+2*d,cy+d);
     g.fillStyle='rgba(0,0,0,.55)';g.fillRect(0,0,w,16*d);g.fillRect(0,h-16*d,w,16*d);g.fillStyle='#ff2bd6';g.font=`bold ${11*d}px system-ui`;g.fillText(`TGT ${tg.toFixed(0)}`,w/2,8*d);g.fillStyle='#fff';g.fillText(`GS ${(Math.hypot(s.vel.x,s.vel.z)*KT).toFixed(0)}`,w/2,h-8*d);}
-  {const {g,w,h,d}=fitC($('altTape'));g.clearRect(0,0,w,h);const vw=20*d,tw=w-vw,ppf=h/1000,cy=h/2,Y=a=>cy-(a-hT)*ppf,ty=W.ponds[LEG.pond].y;
+  {const {g,w,h,d}=fitC($('altTape'));g.clearRect(0,0,w,h);const vw=20*d,tw=w-vw,ppf=h/1000,cy=h/2,Y=a=>cy-(a-hT)*ppf,ty=legY(LEG);
     const tG=((s.sf?s.sf.y:ty)-ty)*FT,yg=Y(tG);if(yg<h){g.fillStyle='rgba(150,90,40,.9)';g.fillRect(0,Math.max(0,yg),tw,h-Math.max(0,yg));g.strokeStyle='rgba(255,220,160,.6)';g.lineWidth=d;for(let k=-h;k<h;k+=10*d){g.beginPath();g.moveTo(k,Math.max(0,yg)+0);g.lineTo(k+h,Math.max(0,yg)+h);g.stroke();}}
     g.strokeStyle='#fff';g.fillStyle='#fff';g.lineWidth=1.5*d;g.font=`bold ${12*d}px system-ui`;g.textAlign='left';g.textBaseline='middle';
     for(let a=Math.floor((hT-560)/50)*50;a<=hT+560;a+=50){const y=Y(a);g.beginPath();g.moveTo(0,y);g.lineTo((a%100?6:11)*d,y);g.stroke();if(a%100===0)g.fillText(a,14*d,y);}
@@ -1064,7 +1140,7 @@ function drawTapes(ias,hT,vsi,tg){const s=ph,P=profile,dtt=Math.max(.02,s.t-pvT)
     g.fillStyle='rgba(0,0,0,.55)';g.fillRect(0,0,w,16*d);g.fillRect(0,h-16*d,w,16*d);g.font=`bold ${11*d}px system-ui`;g.fillStyle='#fff';g.fillText('HAT FT',w/2,8*d);g.fillStyle='#7CFF6B';g.fillText(`AGL ${(Math.max(0,s.hS)*FT).toFixed(0)}`,w/2,h-8*d);}
 }
 /* ---------------- profile (approach-plate side view) ---------------- */
-function drawProfile(need,have){const c=mctx,Wd=320,s=ph,P=profile,T=LEG.target,ty=W.ponds[LEG.pond].y;c.clearRect(0,0,Wd,Wd);
+function drawProfile(need,have){const c=mctx,Wd=320,s=ph,P=profile,T=LEG.target,ty=legY(LEG);c.clearRect(0,0,Wd,Wd);
   c.fillStyle='#fffdf4';c.beginPath();c.roundRect?c.roundRect(0,0,Wd,Wd,28):c.rect(0,0,Wd,Wd);c.fill();
   const onPath=PATH&&pathOff<600,rem=onPath?pathRem:Math.hypot(s.pos.x-T[0],s.pos.z-T[1]),h=s.pos.y-ty;
   const xr=Math.max(800,rem*1.15+200),yr=Math.max(150,h*1.25+60),X=d=>300-(d/xr)*270,Yy=a=>270-(a/yr)*230;
@@ -1095,7 +1171,7 @@ function updateVisuals(dt){
   if(state==='settle'||state==='result'){fb.set(s.vel.x,0,s.vel.z);if(fb.lengthSq()<.01)fb.set(F2(LEG.hdg)[0],0,F2(LEG.hdg)[1]);fb.normalize();ub.set(0,1,0);r1.crossVectors(fb,ub).normalize();}
   mtx.makeBasis(r1,ub,fb.clone().negate());qd.setFromRotationMatrix(mtx);
   duck.position.copy(s.pos);duck.quaternion.slerp(qd,state==='fly'?1:.1);
-  u.g.rotation.y=-s.slip*.25*Math.sign(s.bank||1);
+  u.g.rotation.y=(state==='fly'?s.beta:0)*D2R;
   const fa=s.flapAnim;u.flaps.forEach(fp=>fp.rotation.x=fa*.7);u.feet.visible=fa>.05||state!=='fly';u.feet.scale.setScalar(Math.max(.3,fa));
   const flapT=s.boost?Math.sin(performance.now()*.025)*.6:0;u.wings.forEach((w,i)=>{const sx=i?1:-1;w.rotation.z=sx*(4*D2R+flapT)-sx*(state==='fly'?0:.3);});
   // beads
@@ -1125,7 +1201,7 @@ function updateVisuals(dt){
   // projected markers
   const fpvEl=$('fpv'),tgEl=$('tgt');
   if(state==='fly'){projV.copy(s.vel).normalize().multiplyScalar(800).add(camera.position);placeMarker(fpvEl,projV);
-    const T=LEG.target;projV.set(T[0],W.ponds[LEG.pond].y+1,T[1]);placeMarker(tgEl,projV);$('tgtd').textContent=(Math.hypot(s.pos.x-T[0],s.pos.z-T[1])*FT>3000?(Math.hypot(s.pos.x-T[0],s.pos.z-T[1])/1852).toFixed(1)+'nm':(Math.hypot(s.pos.x-T[0],s.pos.z-T[1])*FT).toFixed(0)+'ft');}else{fpvEl.style.display='none';tgEl.style.display='none';}
+    const T=LEG.target;projV.set(T[0],legY(LEG)+1,T[1]);placeMarker(tgEl,projV);$('tgtd').textContent=(Math.hypot(s.pos.x-T[0],s.pos.z-T[1])*FT>3000?(Math.hypot(s.pos.x-T[0],s.pos.z-T[1])/1852).toFixed(1)+'nm':(Math.hypot(s.pos.x-T[0],s.pos.z-T[1])*FT).toFixed(0)+'ft');}else{fpvEl.style.display='none';tgEl.style.display='none';}
 }
 function placeMarker(el,p){const v=p.clone().project(camera);if(v.z>1||v.z<-1||Math.abs(v.x)>1.2||Math.abs(v.y)>1.2){el.style.display='none';return;}el.style.display='';el.style.left=((v.x+1)/2*innerWidth)+'px';el.style.top=((1-v.y)/2*innerHeight)+'px';}
 
@@ -1143,6 +1219,22 @@ function updateReplay(dt){rp.t+=dt*rp.speed;const f=rp.t/.1,i=Math.floor(f);if(i
   camera.updateProjectionMatrix();sky.position.copy(camera.position);
   ripples.forEach(m=>{m.userData.t+=dt;const t=m.userData.t;if(t<0)return;m.scale.setScalar(1+t*12);m.material.opacity=Math.max(0,.9-t*.45);});
   $('rpInfo').textContent=`REPLAY ${rp.speed}× · ${(rp.t).toFixed(0)} / ${(rec.length*.1).toFixed(0)} s · ${['chase','side','tower'][camMode]}`;}
+
+/* ---------------- engine restart checklist (C172S POH) ---------------- */
+const CHK=[{k:'as',t:'Airspeed — 68 KIAS',auto:true},{k:'shut',t:'Fuel shutoff valve — ON (push full in)'},{k:'sel',t:'Fuel selector — BOTH'},{k:'pump',t:'Aux fuel pump — ON'},{k:'mix',t:'Mixture — RICH'},{k:'ign',t:'Ignition — BOTH (START if prop stopped)'}];
+const CAUSE={shut:'the fuel shutoff valve had been bumped OFF — pushing it in fixed it',sel:'the selector was on the empty LEFT tank — BOTH fixed it',pump:'fuel pressure dropped (vapor) — the aux pump fixed it',mix:'the mixture had been pulled lean — RICH fixed it',ign:'the ignition switch was knocked to OFF — BOTH fixed it',mech:'mechanical failure (oil pressure gone) — no restart was possible; the forced landing was the only option'};
+let chk=null;
+function chkReset(cause){const on=W.free==='engine'&&profile.id==='mallard';$('chk').classList.remove('mini');$('chk').classList.toggle('hide',!on);if(!on){chk=null;return;}
+  chk={cause,done:{},order:[],restartAt:null,firstManual:null};$('chkList').innerHTML=CHK.map((c,i)=>`<li data-k="${c.k}">${i+1}. ${c.t}</li>`).join('');
+  [...$('chkList').children].forEach(li=>li.onclick=()=>chkTap(li.dataset.k));}
+function chkTap(k){if(!chk||state!=='fly'||chk.done[k])return;const c=CHK.find(x=>x.k===k);if(c.auto)return;chk.done[k]=ph.t;chk.order.push(k);if(chk.firstManual===null)chk.firstManual=ph.t;beep(880,.05);
+  $('chkList').querySelector(`[data-k="${k}"]`).classList.add('ok');if(CHK.every(c=>chk.done[c.k]!==undefined))setTimeout(()=>$('chk').classList.add('mini'),2500);
+  if(k===chk.cause&&!ph.eng){chk.restartAt=ph.t+2.5;toast('Cough… cough…',1500);}}
+function chkStep(){if(!chk)return;const ias=ph.IAS*KT;if(!chk.done.as&&Math.abs(ias-profile.vbg*KT)<=5){chk.done.as=ph.t;chk.order.unshift('as');const li=$('chkList').querySelector('[data-k="as"]');if(li)li.classList.add('ok');}
+  if(chk.restartAt!==null&&ph.t>=chk.restartAt&&!ph.eng){ph.eng=1;setTimeout(()=>$('chk').classList.add('mini'),2500);chk.restartAt=null;sfx('vroom');toast('🔊 Engine\'s back — partial power!',2200);say('restart','Engine\'s back with partial power. Don\'t trust it: land at the nearest suitable pond — a precautionary landing.',0,true);}}
+function chkResult(){if(!chk)return null;const man=CHK.filter(c=>!c.auto).map(c=>c.k),done=man.filter(k=>chk.done[k]!==undefined),restarted=!!ph.eng||chk.order.includes(chk.cause)&&chk.cause!=='mech';
+  const needed=restarted?man.slice(0,man.indexOf(chk.cause)+1):man,allDone=needed.every(k=>chk.done[k]!==undefined),inOrder=needed.every((k,i)=>i===0||chk.done[k]>=chk.done[needed[i-1]]);
+  const aviateFirst=stats.vgCap!==null&&chk.firstManual!==null&&chk.firstManual>=stats.vgCap;return {ok:allDone&&inOrder&&aviateFirst,allDone,inOrder,aviateFirst,restarted,cause:CAUSE[chk.cause],n:done.length};}
 
 /* ---------------- Air Work drills ---------------- */
 function startDrill(id){const v=W.valley,z=-5400;drill=null;startFree({launch:[v.cxz(z),v.floorZ(z)+1300,z,v.vh(z)*R2D]});
@@ -1184,16 +1276,19 @@ function say(key,text,cool,prio){if(!SAVE.set.cfi)return false;const now=ph.t;if
   if(SAVE.set.voice&&SAVE.set.snd&&window.speechSynthesis){try{if(prio)speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(text.replace(/[▲▼—…]/g,' '));u.rate=1.1;u.pitch=1.25;speechSynthesis.speak(u);}catch(e){}}return true;}
 function recFlaps(hT,need){const P=profile,n=P.flaps.length-1;if(n===0)return 0;const cap=hT>1100?0:hT>800?1:hT>500?Math.min(2,n):n;let r=0;for(let f=1;f<=cap;f++)if(need<P.ldCfg(f)*.8)r=f;return r;}
 function runCoach(dt){
-  if(!SAVE.set.cfi)return;const s=ph,P=profile,ias=s.IAS*KT,tg=tgtSpeed(P,s.flap)*KT,agl=Math.max(0,s.hS)*FT,ty=W.ponds[LEG.pond].y,h=s.pos.y-ty,hT=h*FT,T=LEG.target;
+  if(!SAVE.set.cfi)return;const s=ph,P=profile,ias=s.IAS*KT,tg=tgtSpeed(P,s.flap)*KT,agl=Math.max(0,s.hS)*FT,ty=legY(LEG),h=s.pos.y-ty,hT=h*FT,T=LEG.target;
   const dist=PATH&&pathOff<600?pathRem:Math.hypot(s.pos.x-T[0],s.pos.z-T[1]),need=h>1?dist/h:99,have=P.ldCfg(s.flap),fn=P.flaps[s.flap].n;
   if(s.t<1.5){if(W.free==='engine')say('start',`Engine's quiet — your duck. Nose up gently to ${(P.vbg*KT).toFixed(0)} knots, then trim off the pressure and pick a pond in the green ring.`,999,true);
-    else if(LEG.fixedStartFt)say('start',`Power's out abeam. Hold ${(P.vbg*KT).toFixed(0)} knots, turn base when the pond's about 45 degrees behind you. Flaps only once it's made.`,999,true);
+    else if(LEG.fixedStartFt)say('start',`Power's out abeam. Hold ${(P.vbg*KT).toFixed(0)} knots, turn base when the ${LEG.rwy!==undefined?'touchdown spot':'pond'}'s about 45 degrees behind you. Flaps only once it's made.`,999,true);
     else if(W.free==='sky'&&!drill)say('start',`Free soaring — I'm off your right wing. Look for lift on the windward slopes and under the puffy clouds; land on any lake when you're ready.`,999,true);
     else if(TUN)say('start',`Warp tunnel! I'll meet you at the breakout. Hold ${(profile.vbg*KT).toFixed(0)} knots, small early banks into each curve, stay on the bread.`,999,true);
     else say('start',`Your duck. She's trimmed for ${(P.vbg*KT).toFixed(0)} knots — phone at neutral holds it. Follow the bread trail; I'm on the glidepath off your right wing.`,999,true);return;}
   if(s.CLlin>HORN*s.CLm){say('stall','Stall horn! Ease forward — lower the nose.',4,true);return;}
   if(agl>160)coach.alt={};
   const overW=s.sf&&s.sf.type!=='land';
+  if(agl>25&&agl<320&&dist<1400&&W.wind.kt>=5){const R2v=R2(LEG.hdg),lat=(s.vel.x*R2v[0]+s.vel.z*R2v[1])*KT,ne=wrapPi(s.noseHdg-LEG.hdg)*R2D;
+    if(Math.abs(lat)>2.5)say('drift',`Drifting ${lat>0?'right':'left'} — lower the ${lat>0?'left':'right'} wing a touch to stop it.`,8);
+    else if(agl<110&&Math.abs(ne)>6)say('decrab',`Still crabbed ${Math.abs(ne).toFixed(0)} degrees — ${ne>0?'left':'right'} rudder to line the nose up, wing low into the wind.`,8);}
   if(agl<130&&dist<1500){const calls=[[100,`One hundred.${ias>tg+8?' Fast — ease the nose up a bit.':''}${s.flap<P.flaps.length-1&&P.flaps.length>1?' Full flaps if it\'s made.':''}`],[50,'Fifty. Wings level, keep the aim point steady.'],[25,'Round out — start easing back.'],[10,'Hold it off… hold it off… keep easing back.']];
     for(const [th,tx] of calls){if(agl<th&&!coach.alt[th]){coach.alt[th]=1;say('alt'+th,tx,0,true);break;}}return;}
   if(ias<tg-6)coach.slowT+=dt;else coach.slowT=0;if(ias>tg+7)coach.fastT+=dt;else coach.fastT=0;
@@ -1218,7 +1313,7 @@ function updateCFI(dt){if(!cfiDuck)return;const on=SAVE.set.cfi&&state==='fly'&&
   cfTarget.set(s.pos.x-tz*lat+tx*fw,y,s.pos.z+tx*lat+tz*fw);
   if(cfiSnap){cfiDuck.position.copy(cfTarget);cfiSnap=false;}else cfiDuck.position.lerp(cfTarget,1-Math.exp(-dt*3));
   cfQ.setFromAxisAngle(UP,Math.atan2(-tx,-tz));cfiDuck.quaternion.slerp(cfQ,1-Math.exp(-dt*3));
-  const ty=W.ponds[LEG.pond].y,h=s.pos.y-ty,T=LEG.target,dist=PATH&&pathOff<600?pathRem:Math.hypot(s.pos.x-T[0],s.pos.z-T[1]);
+  const ty=legY(LEG),h=s.pos.y-ty,T=LEG.target,dist=PATH&&pathOff<600?pathRem:Math.hypot(s.pos.x-T[0],s.pos.z-T[1]);
   const rf=recFlaps(h*FT,h>1?dist/h:99),fa=rf/Math.max(1,profile.flaps.length-1),u=cfiDuck.userData;
   u.flaps.forEach(fp=>fp.rotation.x=lerp(fp.rotation.x,fa*.7,dt*2));u.feet.visible=fa>.05;
 }
@@ -1228,10 +1323,10 @@ let last=performance.now(),accum=0;const DT=1/120;
 function loop(now){requestAnimationFrame(loop);let dt=Math.min(.05,(now-last)/1000);last=now;if(!W)return;
   if(state==='fly'){readInputs(dt);accum+=dt;while(accum>=DT){physStep(DT);accum-=DT;if(TUN)tunnelStep();checkContacts();if(state!=='fly')break;
       const s=ph;if(s.CLlin>HORN*s.CLm){if(!s._sw){stats.stallW++;s._sw=true;}}else s._sw=false;stats.maxBank=Math.max(stats.maxBank,Math.abs(s.bank));
-      if(s.pos.y-W.ponds[LEG.pond].y>150){stats.tGlide+=DT;if(Math.abs(s.IAS-profile.vbg)*KT<=5)stats.tVg+=DT;}}
-    if(state==='fly'){updateHUD(dt);if(drill)runDrill(dt);else runCoach(dt);}
+      if(s.pos.y-legY(LEG)>150){stats.tGlide+=DT;if(Math.abs(s.IAS-profile.vbg)*KT<=5)stats.tVg+=DT;}}
+    if(state==='fly'){updateHUD(dt);chkStep();if(drill)runDrill(dt);else runCoach(dt);}
     if(AC&&windG){windG.gain.value=clamp((ph.IAS-10)/40,0,1)*.12*(SAVE.set.snd?1:0);hornG.gain.value=(ph.CLlin>HORN*ph.CLm&&(now%400<250))?.05:0;}}
-  else if(state==='settle'){settleT+=dt;const s=ph;const k=Math.exp(-dt*(td.type==='land'?1.6:.7));s.vel.x*=k;s.vel.z*=k;s.pos.addScaledVector(s.vel,dt);s.pos.y=surfaceAt(s.pos.x,s.pos.z,s.pos.y+1).y;
+  else if(state==='settle'){settleT+=dt;const s=ph;const k=Math.exp(-dt*(td.type==='land'?1.6:td.type==='rwy'?1.1:.7));s.vel.x*=k;s.vel.z*=k;s.pos.addScaledVector(s.vel,dt);s.pos.y=surfaceAt(s.pos.x,s.pos.z,s.pos.y+1).y;
     recAcc+=dt;if(recAcc>=.1&&rec.length<9000){recAcc=0;const q=duck.quaternion;rec.push([s.pos.x,s.pos.y,s.pos.z,q.x,q.y,q.z,q.w,s.flapAnim]);}
     if(AC){hornG.gain.value=0;windG.gain.value*=.95;}if(settleT>3.2)finishLanding();}
   else if(AC&&hornG){hornG.gain.value=0;windG.gain.value*=.9;}
@@ -1304,7 +1399,7 @@ $('stampRes').textContent=`Build ${BUILD_ID} · shipped ${BUILT_UTC}`;
 loadWorld(selW);duck.visible=false;
 const menuSpin=()=>{if(state==='menu'){const t=performance.now()*.00005;camera.position.set(bd.x+Math.cos(t)*1400,bd.y+320,bd.z+Math.sin(t)*1400);camera.lookAt(bd.x,bd.y,bd.z);camera.fov=62;camera.updateProjectionMatrix();sky.position.copy(camera.position);}requestAnimationFrame(menuSpin);};menuSpin();
 renderMenu();show('menu');requestAnimationFrame(loop);
-window.__duck={ph,PROFILES,WORLDS,get state(){return state},get td(){return td},startLeg,inp,surfaceAt:(x,z,y)=>surfaceAt(x,z,y),get PATH(){return PATH},physStep,checkContacts,get stats(){return stats},get TUN(){return TUN},tunnelStep:()=>tunnelStep(),get drill(){return drill},runDrill:(dt)=>runDrill(dt),get LES(){return LES},startDrill,SAVE,startFree,get LEG(){return LEG},get W(){return W},startReplay,get rec(){return rec},get lastCrash(){return lastCrash}};
+window.__duck={ph,PROFILES,WORLDS,get state(){return state},get td(){return td},startLeg,inp,surfaceAt:(x,z,y)=>surfaceAt(x,z,y),get PATH(){return PATH},physStep,checkContacts,get stats(){return stats},get chk(){return chk},chkStep:()=>chkStep(),updHUD:(dt)=>{hudT=1;updateHUD(dt);},chkTap,chkResult:()=>chkResult(),get TUN(){return TUN},tunnelStep:()=>tunnelStep(),get drill(){return drill},runDrill:(dt)=>runDrill(dt),get LES(){return LES},startDrill,SAVE,startFree,get LEG(){return LEG},get W(){return W},startReplay,get rec(){return rec},get lastCrash(){return lastCrash}};
 })();
 
 </script>

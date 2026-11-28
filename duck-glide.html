@@ -6,10 +6,10 @@
 <meta name="theme-color" content="#049cd8">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="build-id" content="DUCK-20261128-1451Z">
-<meta name="built-utc" content="2026-11-28T14:51:35Z">
+<meta name="build-id" content="DUCK-20261128-1457Z">
+<meta name="built-utc" content="2026-11-28T14:57:38Z">
 <title>Duck Glide — Fly Good, Land Gooder</title>
-<!-- Build DUCK-20261128-1451Z · shipped 2026-11-28T14:51:35Z · Three.js r128 (MIT) from vendor/ · fully offline -->
+<!-- Build DUCK-20261128-1457Z · shipped 2026-11-28T14:57:38Z · Three.js r128 (MIT) from vendor/ · fully offline -->
 <style>
 :root{--red:#e52521;--yel:#fbd000;--blu:#049cd8;--grn:#43b047;--ink:#1b1b2f;--card:#fffdf4}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none}
@@ -325,7 +325,7 @@ label.ck{display:flex;align-items:center;gap:6px;font-weight:700;font-size:13px}
 <script>
 (function(){
 'use strict';
-const BUILD_ID='DUCK-20261128-1451Z', BUILT_UTC='2026-11-28T14:51:35Z';
+const BUILD_ID='DUCK-20261128-1457Z', BUILT_UTC='2026-11-28T14:57:38Z';
 const KT=1.943844, FT=3.28084, FPM=196.8504, D2R=Math.PI/180, R2D=180/Math.PI, G=9.80665, RHO0=1.225;
 const clamp=(v,a,b)=>v<a?a:v>b?b:v, lerp=(a,b,t)=>a+(b-a)*t;
 const smooth=(a,b,x)=>{const t=clamp((x-a)/(b-a),0,1);return t*t*(3-2*t);};
@@ -733,7 +733,8 @@ function fillet(pts,rad){const out=[pts[0]];for(let i=1;i<pts.length-1;i++){cons
     for(let k=0;k<=10;k++){const s=k/10,u=1-s;out.push([u*u*p0[0]+2*u*s*b[0]+s*s*p2[0],u*u*p0[1]+2*u*s*b[1]+s*s*p2[1]]);}}
   out.push(pts[pts.length-1]);return out;}
 function buildPath(leg,prefixPt){
-  let pts=leg.pts.slice();if(prefixPt)pts=[prefixPt].concat(pts);if(leg.fillet)pts=fillet(pts,210);
+  const tr=profile.vbg*profile.vbg/(G*Math.tan(30*D2R)),k=leg.noScale?1:clamp(tr/216,.65,1.35),T0=leg.target||[0,0];
+  let pts=leg.pts.map(p=>[T0[0]+(p[0]-T0[0])*k,T0[1]+(p[1]-T0[1])*k]);if(prefixPt)pts=[prefixPt].concat(pts);if(leg.fillet)pts=fillet(pts,Math.max(120,tr));
   {const aim=Math.max(0,floatM(profile)-100/FT),n=pts.length,a=pts[n-2],b=pts[n-1],L=Math.hypot(b[0]-a[0],b[1]-a[1]);if(L>aim+40)pts[n-1]=[b[0]-(b[0]-a[0])/L*aim,b[1]-(b[1]-a[1])/L*aim];}
   const dense=[];let s=0;for(let i=0;i<pts.length-1;i++){const a=pts[i],b=pts[i+1],L=Math.hypot(b[0]-a[0],b[1]-a[1]),n=Math.max(1,Math.ceil(L/15));
     for(let k=0;k<n;k++){const t=k/n;dense.push({x:lerp(a[0],b[0],t),z:lerp(a[1],b[1],t),s:s+L*t});}s+=L;}
@@ -862,7 +863,7 @@ function resetFlight(pos,dir,ias,trimA){
 function newStats(total){return {f20:null,ias20:null,h0:null,L0:null,tVg:0,tGlide:0,maxHi:0,maxLo:0,stallW:0,maxBank:0,crumbs:0,total,vgCap:null,trimmed:false,engine:W.free==='engine',start:performance.now()};}
 function buildTunnel(exitY){const tp=W.tunnelPlan,R=tp.R;
   const c2=new THREE.CatmullRomCurve3(tp.pts.map(p=>new V3(p[0],0,p[1])),false,'centripetal'),N=600,pp=c2.getSpacedPoints(N);let Lt=0;for(let i=1;i<pp.length;i++)Lt+=pp[i].distanceTo(pp[i-1]);
-  const pts=[];pp.forEach((p,i)=>{const sA=Lt*i/N,y=exitY+(Lt-sA)/7+12*Math.sin(sA/Lt*Math.PI*6)*smooth(0,300,sA)*(1-smooth(Lt-300,Lt,sA));pts.push(new V3(p.x,y,p.z));});
+  const pts=[];pp.forEach((p,i)=>{const sA=Lt*i/N,y=exitY+(Lt-sA)/clamp(profile.LD*.78,6,14)+12*Math.sin(sA/Lt*Math.PI*6)*smooth(0,300,sA)*(1-smooth(Lt-300,Lt,sA));pts.push(new V3(p.x,y,p.z));});
   const curve=new THREE.CatmullRomCurve3(pts,false,'centripetal');const dense=curve.getSpacedPoints(Math.ceil(Lt/5));
   if(tunGrp)scene.remove(tunGrp);tunGrp=new THREE.Group();
   const segs=Math.ceil(Lt/6),inG=new THREE.TubeGeometry(curve,segs,R,20,false),nc=inG.attributes.position.count,cols=new Float32Array(nc*3),greens=[C(0x2fd24a),C(0x1f9e38),C(0x7be86a)];
@@ -1092,7 +1093,7 @@ function finishLanding(){
   $('rCoach').innerHTML=c.map(x=>`<li>${x}</li>`).join('');
   const more=W.free?!drill:legIdx<W.legs.length-1&&t.onTarget;$('rNext').classList.toggle('hide',!more);$('rNext').textContent=W.free==='engine'?'NEW FAILURE ▶':W.free==='sky'?'FLAP UP & EXPLORE ▶':'FLAP UP → NEXT ISLAND';$('rReplay').classList.toggle('hide',rec.length<10);
   if(!more&&W.legs.length>1&&!W.free){const tot=legScores.reduce((a,b)=>a+(b?b.score:0),0);$('rCoach').innerHTML+=`<li><b>Archipelago total: ${tot} / ${W.legs.length*1000}</b></li>`;}
-  if(!SAVE.set.zen){SAVE.crumbs+=stats.crumbs;const key=W.id;const tot=W.legs.length>1&&!W.free?(more?null:legScores.reduce((a,b)=>a+(b?b.score:0),0)/W.legs.length):sc.total;
+  if(!SAVE.set.zen){SAVE.crumbs+=stats.crumbs;const key=W.id+'.'+profile.id;const tot=W.legs.length>1&&!W.free?(more?null:legScores.reduce((a,b)=>a+(b?b.score:0),0)/W.legs.length):sc.total;
     if(tot!==null){const st=tot>=850?3:tot>=650?2:tot>=400?1:0;const b=SAVE.best[key]||{score:0,stars:0};if(tot>b.score)SAVE.best[key]={score:Math.round(tot),stars:st,prof:profile.id};}persist();}
   sfx(stars>=2?'win':'ok');show('result');
 }
@@ -1481,7 +1482,7 @@ function loop(now){requestAnimationFrame(loop);let dt=Math.min(.05,(now-last)/10
 let selW=WORLDS.find(w=>w.id===SAVE.set.world)||WORLDS[0],lastPrefix=null;
 function renderMenu(){
   const lesson=SAVE.set.mode==='lesson';[...$('modeSeg').children].forEach(b=>{b.classList.toggle('on',b.dataset.v===SAVE.set.mode);b.onclick=()=>{SAVE.set.mode=b.dataset.v;persist();renderMenu();};});
-  $('worlds').innerHTML=WORLDS.map(w=>{const b=SAVE.best[w.id],L=LS[w.id];const lp=lesson&&L?`<small style="display:block;font-weight:700">🎓 ${L.filter(st=>pr(w.id,st.id).done).length}/${L.length}${pr(w.id,L[L.length-1].id).done?' 🏅':''}${unlocked(w.id,curIdx(w.id))?'':' 🔒'}</small>`:'';return `<div class="wc${w===selW?' sel':''}" data-id="${w.id}" style="background:${w.col}"><b>${w.name}</b><small>${lesson&&w.ltag?w.ltag:w.tag}</small>${lp}<span class="stars">${b?'★'.repeat(b.stars)+'☆'.repeat(3-b.stars)+` <small style="display:inline">${b.score}</small>`:'☆☆☆'}</span></div>`;}).join('');
+  $('worlds').innerHTML=WORLDS.map(w=>{const b=SAVE.best[w.id+'.'+profile.id],L=LS[w.id];const lp=lesson&&L?`<small style="display:block;font-weight:700">🎓 ${L.filter(st=>pr(w.id,st.id).done).length}/${L.length}${pr(w.id,L[L.length-1].id).done?' 🏅':''}${unlocked(w.id,curIdx(w.id))?'':' 🔒'}</small>`:'';return `<div class="wc${w===selW?' sel':''}" data-id="${w.id}" style="background:${w.col}"><b>${w.name}</b><small>${lesson&&w.ltag?w.ltag:w.tag}</small>${lp}<span class="stars">${b?'★'.repeat(b.stars)+'☆'.repeat(3-b.stars)+` <small style="display:inline">${b.score}</small>`:'☆☆☆'}</span></div>`;}).join('');
   [...document.querySelectorAll('.wc')].forEach(el=>el.onclick=()=>{clearScn();const nw=WORLDS.find(w=>w.id===el.dataset.id);if(nw===selW)return;selW=nw;SAVE.set.world=selW.id;persist();renderMenu();if(state==='menu'){loadWorld(selW);duck.visible=false;}});
   $('profSeg').innerHTML=Object.values(PROFILES).map(p=>`<button data-v="${p.id}" class="${p===profile?'on':''}">${p.name}</button>`).join('');
   [...$('profSeg').children].forEach(b=>b.onclick=()=>{profile=PROFILES[b.dataset.v];SAVE.set.prof=profile.id;persist();renderMenu();});

@@ -22,7 +22,8 @@ Single-file, offline-capable HTML flight-training tools. GitHub Pages serves the
 - Lessons: each world has a mastery ladder; stages pass on repetition (3 in a row or 3 of last 4), and the checkride needs 2 in a row. Air Work (best-glide hold, trim, slow flight, approach & flare at altitude) unlocks Mallard Meadow, which unlocks the rest.
 - Instruments: G1000-style speed and altitude tapes, CFI-duck wingman with spoken callouts, chase / duck-eye / tower cameras, and an approach-plate profile view (tap the minimap).
 - Ducks: Mallard 172 (C172-like glide, about 9:1, Vg 63 KIAS), Teal Cub (no flaps, so slip), Glider Goose (sailplane, airbrakes).
-- Point-mass lift/drag physics with stall, ISA density, ground effect, flaps/slip drag, gusts, thermals and ridge lift. Tuned to be realistic, but it's a game: use the POH for numbers.
+- Point-mass lift/drag physics with stall, ISA density, ground effect, flaps/slip drag, gusts, thermals and ridge lift.
+- Model limits (read before using it with students): Mallard numbers match the Cessna 172S POH at 2,550 lb (Vg 68, Vs1 48, Vs0 40 KIAS, about 9:1, approach speeds 65 / 63 / 61 KIAS). Speeds are shown as KIAS with no instrument or position error. The stall horn sounds about 5–6 kt above stall. There are no pitch dynamics or flap balloon; turns are always coordinated, and the slip adds drag only, so there is no crosswind or crab technique. Water stands in for a runway (not seaplane technique). Auto-trim is a game aid and is off for checkrides. The engine-restart checklist is not simulated. Tolerances follow the Commercial ACS (power-off 180: 0 to +200 ft; short field: 0 to +100 ft; slow flight just above the stall warning). The game supplements dual instruction and the POH; it doesn't replace them.
 - Build `DUCK-YYYYMMDD-HHMMZ` is stamped in the menu, pause and results screens and in the page's meta tags.
 
 ## Self-hosted libraries (`vendor/`)

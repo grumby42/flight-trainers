@@ -6,10 +6,10 @@
 <meta name="theme-color" content="#049cd8">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="build-id" content="DUCK-20261128-1440Z">
-<meta name="built-utc" content="2026-11-28T14:40:35Z">
+<meta name="build-id" content="DUCK-20261128-1451Z">
+<meta name="built-utc" content="2026-11-28T14:51:35Z">
 <title>Duck Glide — Fly Good, Land Gooder</title>
-<!-- Build DUCK-20261128-1440Z · shipped 2026-11-28T14:40:35Z · Three.js r128 (MIT) from vendor/ · fully offline -->
+<!-- Build DUCK-20261128-1451Z · shipped 2026-11-28T14:51:35Z · Three.js r128 (MIT) from vendor/ · fully offline -->
 <style>
 :root{--red:#e52521;--yel:#fbd000;--blu:#049cd8;--grn:#43b047;--ink:#1b1b2f;--card:#fffdf4}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none}
@@ -227,6 +227,7 @@ label.ck{display:flex;align-items:center;gap:6px;font-weight:700;font-size:13px}
     </div>
     <button class="btn r" id="bGo" style="width:100%;height:60px;font-size:20px">BRIEFING ▶</button>
     <button class="btn" id="bInst" style="width:100%;margin-top:8px">🧑‍✈️ INSTRUCTOR · build &amp; share a scenario</button>
+    <button class="btn y" id="bFixes" style="width:100%;margin-top:8px">🔧 FIX-IT DRILLS · practice one control at a time</button>
     <details><summary><b>How to fly</b></summary>
       <div class="kv" style="margin-top:6px">
         <b>Tilt</b><span>Hold the phone sideways like a yoke. Tilt left/right = bank. Tilt top toward you = nose up (slower), away = nose down (faster). Tap LEVEL to re-zero.</span>
@@ -275,6 +276,17 @@ label.ck{display:flex;align-items:center;gap:6px;font-weight:700;font-size:13px}
   </div>
 </div>
 
+<!-- FIX-IT -->
+<div class="ov hide" id="fixes">
+  <div class="card" style="max-width:640px">
+    <h1>Fix-it drills</h1>
+    <div class="sub">Each drill locks the controls you already fly well (the autopilot flies them) and leaves you only the one to fix. Pass 3 in a row, then take it back to a full flight.</div>
+    <p class="sub" id="fixTrend"></p>
+    <div class="lad" id="fixList"></div>
+    <div class="opts"><button class="btn" id="fxBack">◀ MENU</button></div>
+  </div>
+</div>
+
 <!-- PAUSE -->
 <div class="ov dim hide" id="pause">
   <div class="card" style="max-width:420px">
@@ -298,6 +310,7 @@ label.ck{display:flex;align-items:center;gap:6px;font-weight:700;font-size:13px}
     <ul class="coach" id="rCoach"></ul>
     <div class="opts">
       <button class="btn g hide" id="rNext">FLAP UP → NEXT ISLAND</button>
+      <button class="btn y hide" id="rFix">🔧 FIX IT</button>
       <button class="btn r hide" id="rLesson">NEXT LESSON ▶</button>
       <button class="btn g hide" id="rReplay">▶ REPLAY</button>
       <button class="btn" id="rRetry">RETRY</button>
@@ -312,7 +325,7 @@ label.ck{display:flex;align-items:center;gap:6px;font-weight:700;font-size:13px}
 <script>
 (function(){
 'use strict';
-const BUILD_ID='DUCK-20261128-1440Z', BUILT_UTC='2026-11-28T14:40:35Z';
+const BUILD_ID='DUCK-20261128-1451Z', BUILT_UTC='2026-11-28T14:51:35Z';
 const KT=1.943844, FT=3.28084, FPM=196.8504, D2R=Math.PI/180, R2D=180/Math.PI, G=9.80665, RHO0=1.225;
 const clamp=(v,a,b)=>v<a?a:v>b?b:v, lerp=(a,b,t)=>a+(b-a)*t;
 const smooth=(a,b,x)=>{const t=clamp((x-a)/(b-a),0,1);return t*t*(3-2*t);};
@@ -349,6 +362,8 @@ for(const k in PROFILES){const p=PROFILES[k];p.AR=p.b*p.b/p.S;p.k=1/(Math.PI*p.e
   p.ldCfg=f=>{const fl=p.flaps[f],cl=p.CLbg+fl.dCL;return cl/(p.CD0+fl.dCD+p.k*cl*cl);};}
 
 const HORN=.78;
+function ldApp(P){const n=P.flaps.length-1,v=(P.app?P.app[n]/KT:Math.min(P.vbg,1.3*P.vsF(n))),cl=2*P.m*G/(RHO0*P.S*v*v),fl=P.flaps[n];return cl/(P.CD0+fl.dCD+P.k*cl*cl);}
+function floatM(P,hw){const n=P.flaps.length-1,va=(P.app?P.app[n]/KT:Math.min(P.vbg,1.3*P.vsF(n))),vt=1.05*P.vsF(n),ldge=P.ldCfg(n)*1.5;return .48*Math.max(0,(va*va-vt*vt)/(2*G/ldge))*clamp(1-(hw||0)/((va+vt)/2),.3,1.5);}
 const tgtSpeed=(P,f)=>P.app?P.app[f]/KT:f===0?P.vbg:Math.min(P.vbg,1.3*P.vsF(f));
 const trimFor=(P,f,v)=>{const cl=2*P.m*G/(RHO0*P.S*v*v);return clamp((cl-P.flaps[f].dCL)/P.CLa*R2D+P.a0,P.a0+1,P.aStall-1);};
 /* ---------------- geometry helpers for worlds ---------------- */
@@ -383,7 +398,7 @@ function earthPaint(snowLine,sandLevelFn){return (h,sl,x,z,n)=>{
 function nearestPondY(ponds,fluid){return (x,z)=>{let y=fluid?fluid.y:-1e9;for(const p of ponds){if(pondE(p,x,z)<2.2)y=Math.max(y,p.y);}return y;};}
 
 function W_meadow(){
-  const T=[0,0],h=0,ponds=[mkPond(T,h,420,130,340,10,'Mallard Pond'),mkPond([-1700,-900],0.6,180,90,0,14,'Lily Pond'),mkPond([1900,1600],2.1,220,100,0,12,'Frog Pond')];
+  const T=[0,0],h=0,ponds=[mkPond(T,h,420,130,270,10,'Mallard Pond'),mkPond([-1700,-900],0.6,180,90,0,14,'Lily Pond'),mkPond([1900,1600],2.1,220,100,0,12,'Frog Pond')];
   const base=(x,z)=>{const d=Math.hypot(x,z);return 13+30*fbm(x/650,z/650,1)*smooth(450,2600,d);};
   return {id:'meadow',name:'Mallard Meadow',tag:'Tutorial · straight-in final',col:'#43b047',elevFt:800,size:12000,cx:0,cz:1200,edgeH:26,base,ponds,fluid:null,
     sky:{top:0x3d9bff,bot:0xcdf0ff,fog:0xcdf0ff,near:2200,far:11000},palette:earthPaint(1e9,nearestPondY(ponds,null)),
@@ -393,7 +408,7 @@ function W_meadow(){
       task:'Straight-in final over the meadow. Trim hands-off for best glide, ride the bread trail down, then flare and touch the bullseye.'}]};
 }
 function W_cattail(){
-  const T=[0,0],h=90*D2R,s=-1,P=850,D=500,Fl=550,ponds=[mkPond(T,h,330,95,270,8,'Cattail Pond')];
+  const T=[0,0],h=90*D2R,s=-1,P=850,D=500,Fl=550,ponds=[mkPond(T,h,330,95,180,8,'Cattail Pond')];
   const base=(x,z)=>9.5+6*fbm(x/500,z/500,3);
   return {id:'cattail',name:'Cattail Commons',tag:'Power-off 180° accuracy (commercial ACS)',col:'#049cd8',elevFt:650,size:10000,cx:0,cz:0,edgeH:12,base,ponds,fluid:null,
     sky:{top:0x2f8fff,bot:0xd8f4ff,fog:0xd8f4ff,near:2200,far:10000},palette:earthPaint(1e9,nearestPondY(ponds,null)),
@@ -403,7 +418,7 @@ function W_cattail(){
       task:'Power-off 180: you are on left downwind, 1000 ft AGL, about to be abeam the bullseye. Engine is out. Plan base and final to touch down 0 to +200 ft past the target.'}]};
 }
 function W_tarn(){
-  const T=[0,0],h=180*D2R,s=-1,ponds=[mkPond(T,h,760,380,640,0,'Alpine Tarn')],L=[ponds[0].cx,ponds[0].cz];
+  const T=[0,0],h=180*D2R,s=-1,ponds=[mkPond(T,h,760,380,610,0,'Alpine Tarn')],L=[ponds[0].cx,ponds[0].cz];
   const base=(x,z)=>{const dl=Math.hypot(x-L[0],z-L[1]);return 3+25*fbm(x/500,z/500,7)+980*smooth(1950,3700,dl)*(.5+.75*ridged(x/1400,z/1400,9));};
   return {id:'tarn',name:'Alpine Tarn',tag:'Mountain lake · spiral descent · 6,800 ft density altitude',col:'#7a6cff',elevFt:6800,size:11000,cx:L[0],cz:L[1],edgeH:760,base,ponds,fluid:null,
     sky:{top:0x2a7dff,bot:0xe4f6ff,fog:0xdcefff,near:2500,far:12000},palette:earthPaint(560,nearestPondY(ponds,null)),
@@ -413,17 +428,17 @@ function W_tarn(){
       task:'High over a lake ringed by peaks. Spiral down over the water (left turns) and roll out on final. Thin air: true airspeed is ~10% higher than indicated, so your groundspeed and turn radius grow. Ridges make lift upwind, sink downwind.'}]};
 }
 function W_hollow(){
-  const T=[0,0],h=330*D2R,s=1,ponds=[mkPond(T,h,170,70,130,30,'Pinecone Pond')];
+  const T=[0,0],h=330*D2R,s=1,ponds=[mkPond(T,h,200,70,80,30,'Pinecone Pond')];
   const base=(x,z)=>31+16*fbm(x/600,z/600,13)*smooth(300,1500,Math.hypot(x,z));
-  return {id:'hollow',name:'Pinecone Hollow',tag:'Short field · 80 ft pines · land within +100 ft',col:'#2b7a2e',elevFt:1100,size:10000,cx:0,cz:0,edgeH:40,base,ponds,fluid:null,
-    sky:{top:0x3d9bff,bot:0xe8fff0,fog:0xd8f4e8,near:2000,far:9500},palette:(()=>{const e=earthPaint(1e9,nearestPondY(ponds,null));return (h2,sl,x,z,n)=>{const p=ponds[0];const big={...p,a:p.a+75,b:p.b+55};return pondE(big,x,z)>1&&Math.hypot(x,z)<2300?mixc(PAL.forest,PAL.dgrass,n):e(h2,sl,x,z,n);};})(),
+  return {id:'hollow',name:'Pinecone Hollow',tag:'Short field · 50-ft obstacle · land within +100 ft',col:'#2b7a2e',elevFt:1100,size:10000,cx:0,cz:0,edgeH:40,base,ponds,fluid:null,
+    sky:{top:0x3d9bff,bot:0xe8fff0,fog:0xd8f4e8,near:2000,far:9500},palette:(()=>{const e=earthPaint(1e9,nearestPondY(ponds,null));return (h2,sl,x,z,n)=>{const p=ponds[0];const big={...p,a:p.a+110,b:p.b+60};return pondE(big,x,z)>1&&Math.hypot(x,z)<2300?mixc(PAL.forest,PAL.dgrass,n):e(h2,sl,x,z,n);};})(),
     wind:{from:330,kt:4,gust:.15},ridgeK:0,thermals:[[1200,1300,1.4,130]],
-    trees:{kind:'forest',r:2100,spacing:30,seed:31,clear:{p:0,da:75,db:55}},clouds:22,
+    trees:{kind:'forest',r:2100,spacing:30,seed:31,clear:{p:0,da:110,db:60},maxTree:16},clouds:22,
     legs:[{target:T,hdg:h,pond:0,pts:patternPts(T,h,s,650,450,430),fillet:true,window:[0,100],marginFt:80,
-      task:'Tiny pond walled by ~80 ft pines (right traffic). Clear the trees, then go to full flaps and slip to dump height. Commercial short-field standard: touch down 0 to +100 ft past the target.'}]};
+      task:'Small pond walled by 50-ft pines — the ACS short-field obstacle (right traffic). Clear the trees, then full flaps, a slow final and a forward slip to get down; remember the float. Commercial short-field standard: touch down 0 to +100 ft past the target.'}]};
 }
 function W_ember(){
-  const Cc=[0,0],h=45*D2R,s=-1,T=at(Cc,h,-250,0),ponds=[mkPond(T,h,330,125,250,150,'Caldera Lagoon')];
+  const Cc=[0,0],h=45*D2R,s=-1,T=at(Cc,h,-180,0),ponds=[mkPond(T,h,330,125,180,150,'Caldera Lagoon')];
   const base=(x,z)=>{const r=Math.hypot(x-Cc[0],z-Cc[1]);const floor=152+10*fbm(x/300,z/300,41);const plain=-10+32*fbm(x/420,z/420,43);
     let hb;if(r<900)hb=floor;else if(r<1150)hb=lerp(floor,340,smooth(900,1150,r));else hb=lerp(340,plain,smooth(1150,2800,r));
     return hb+40*fbm(x/200,z/200,45)*smooth(800,950,r)*(1-smooth(1450,1700,r));};
@@ -439,7 +454,7 @@ function W_ember(){
       task:'Glide in over lava fields (thermals rise off the lava — use them!), cross the caldera rim with margin, fly a tight left pattern inside and land in the cool lagoon.'}]};
 }
 function W_islands(){
-  const h=220*D2R,I=[[0,0],[3400,-1800],[600,-4600]],T=I.map(c=>at(c,h,-150,0)),ponds=T.map((t,i)=>mkPond(t,h,260,105,150,3,'Lagoon '+(i+1)));
+  const h=220*D2R,I=[[0,0],[3400,-1800],[600,-4600]],T=I.map(c=>at(c,h,-110,0)),ponds=T.map((t,i)=>mkPond(t,h,260,105,110,3,'Lagoon '+(i+1)));
   const base=(x,z)=>{let v=-22;for(const c of I){const d=Math.hypot(x-c[0],z-c[1]);const m=1-smooth(0,820,d);v=Math.max(v,-22+Math.pow(m,1.2)*95+m*28*fbm(x/260,z/260,61));}return v;};
   const sandY=nearestPondY(ponds,{y:0});
   return {id:'islands',name:'Sunny Archipelago',tag:'Island hopping · 3 lagoons · relaunch & chain',col:'#00b5c8',elevFt:0,size:14000,cx:1700,cz:-2300,edgeH:-22,base,ponds,fluid:{y:0,type:'sea'},
@@ -509,7 +524,7 @@ function W_valley(){
     legs:[{task:'Stress-free soaring down a mountain valley. Ride ridge lift on the windward (west-facing) slopes and thermals under the clouds; surf through clouds, thread the golden rings, swoop low over picnics (+3 🍞), and land on any lake. FLAP UP to keep going.',window:[0,300]}]};
 }
 function W_tunnel(){
-  const T=[0,0],h=0,ponds=[mkPond(T,h,380,140,300,20,'Rainbow Pond')],E=[-1800,2600];
+  const T=[0,0],h=0,ponds=[mkPond(T,h,380,140,230,20,'Rainbow Pond')],E=[-1800,2600];
   const base=(x,z)=>22+40*fbm(x/700,z/700,121)*smooth(300,1800,Math.hypot(x,z))+8*fbm(x/200,z/200,123);
   const r=rng(321),cloudVols=[];for(let i=0;i<24;i++){const f=r(),x=lerp(E[0],-900,f)+(r()-.5)*1400,z=lerp(E[1],-300,f)+(r()-.5)*900;cloudVols.push([x,380+r()*330,z,60+r()*55]);}
   return {id:'tunnel',name:'Rainbow Tunnel',tag:'Start high · thread the warp tunnel · break out through the clouds',col:'linear-gradient(120deg,#e52521,#fbd000 35%,#43b047 65%,#049cd8)',elevFt:700,size:12000,cx:-900,cz:2000,edgeH:30,base,ponds,fluid:null,
@@ -641,7 +656,7 @@ function buildTrees(w){
     if(W.runways)for(const rw of W.runways){const [f,r]=rwyLoc(rw,x,z);if(Math.abs(f)<rw.len/2+450&&Math.abs(r)<rw.wid/2+160)return false;}
     if(T.clear){const p=w.ponds[T.clear.p];if(pondE({...p,a:p.a+T.clear.da,b:p.b+T.clear.db},x,z)<1)return false;}return true;};
   if(T.kind==='forest'){for(let x=-T.r;x<T.r;x+=T.spacing)for(let z=-T.r;z<T.r;z+=T.spacing){const xx=x+(r()-.5)*T.spacing*.8,zz=z+(r()-.5)*T.spacing*.8;
-      if(Math.hypot(xx,zz)>T.r||r()<.2||!ok(xx,zz))continue;const ht=22+r()*7;list.push({x:xx,z:zz,y:Hn(xx,zz),h:ht,r:4.5+r()*1.5,kind:'pine'});}}
+      if(Math.hypot(xx,zz)>T.r||r()<.2||!ok(xx,zz))continue;const ht=T.maxTree?T.maxTree-2+r()*2:22+r()*7;list.push({x:xx,z:zz,y:Hn(xx,zz),h:ht,r:4.5+r()*1.5,kind:'pine'});}}
   else{let tries=0;while(list.length<T.n&&tries<T.n*12){tries++;const a=r()*6.2832,d=Math.sqrt(r())*T.r;const x=w.cx+Math.cos(a)*d,z=w.cz+Math.sin(a)*d;if(!ok(x,z))continue;
       const k=T.kind,ht=k==='pine'?16+r()*12:k==='palm'?11+r()*6:k==='mush'?9+r()*8:9+r()*7;list.push({x,z,y:Hn(x,z),h:ht,r:k==='palm'?3.5:k==='mush'?6:5+r()*2,kind:k});}}
   treeGrid=new Map();for(const t of list){t.top=t.y+t.h;const k=Math.floor(t.x/40)+','+Math.floor(t.z/40);if(!treeGrid.has(k))treeGrid.set(k,[]);treeGrid.get(k).push(t);}
@@ -719,11 +734,12 @@ function fillet(pts,rad){const out=[pts[0]];for(let i=1;i<pts.length-1;i++){cons
   out.push(pts[pts.length-1]);return out;}
 function buildPath(leg,prefixPt){
   let pts=leg.pts.slice();if(prefixPt)pts=[prefixPt].concat(pts);if(leg.fillet)pts=fillet(pts,210);
+  {const aim=Math.max(0,floatM(profile)-100/FT),n=pts.length,a=pts[n-2],b=pts[n-1],L=Math.hypot(b[0]-a[0],b[1]-a[1]);if(L>aim+40)pts[n-1]=[b[0]-(b[0]-a[0])/L*aim,b[1]-(b[1]-a[1])/L*aim];}
   const dense=[];let s=0;for(let i=0;i<pts.length-1;i++){const a=pts[i],b=pts[i+1],L=Math.hypot(b[0]-a[0],b[1]-a[1]),n=Math.max(1,Math.ceil(L/15));
     for(let k=0;k<n;k++){const t=k/n;dense.push({x:lerp(a[0],b[0],t),z:lerp(a[1],b[1],t),s:s+L*t});}s+=L;}
   const last=pts[pts.length-1];dense.push({x:last[0],z:last[1],s});
   const ty=legY(leg),Gg=profile.LD*.85,Gf=profile.ldCfg(profile.flaps.length-1)*.95,Lf=Math.min(600,s*.3);
-  for(const d of dense){d.rem=s-d.s;let y=ty+1.2+(d.rem<=Lf?d.rem/Gf:Lf/Gf+(d.rem-Lf)/Gg);const sf=surfaceAt(d.x,d.z);let ob=sf.y;const tr=treeTopAt(d.x,d.z,12);if(tr)ob=Math.max(ob,tr.top);
+  for(const d of dense){d.rem=s-d.s;let y=ty+1.2+(leg.glide?d.rem/leg.glide:d.rem<=Lf?d.rem/Gf:Lf/Gf+(d.rem-Lf)/Gg);const sf=surfaceAt(d.x,d.z);let ob=sf.y;const tr=treeTopAt(d.x,d.z,12);if(tr)ob=Math.max(ob,tr.top);
     const mg=Math.min(14,d.rem/10);y=Math.max(y,ob+mg);d.y=y;}
   for(let i=dense.length-2;i>=0;i--)dense[i].y=Math.max(dense[i].y,dense[i+1].y);
   return {dense,len:s};
@@ -843,7 +859,7 @@ function resetFlight(pos,dir,ias,trimA){
   traceLine.geometry.setDrawRange(0,0);ripples.forEach(r=>scene.remove(r));ripples=[];
   duck.userData.inner.scale.setScalar(profile.b);duck.visible=true;cfiDuck.userData.inner.scale.setScalar(profile.b);cfiSnap=true;pathDev=0;pathOff=1e9;pathRem=1e9;resetCoach();state='fly';showHUD(true);
 }
-function newStats(total){return {tVg:0,tGlide:0,maxHi:0,maxLo:0,stallW:0,maxBank:0,crumbs:0,total,vgCap:null,trimmed:false,engine:W.free==='engine',start:performance.now()};}
+function newStats(total){return {f20:null,ias20:null,h0:null,L0:null,tVg:0,tGlide:0,maxHi:0,maxLo:0,stallW:0,maxBank:0,crumbs:0,total,vgCap:null,trimmed:false,engine:W.free==='engine',start:performance.now()};}
 function buildTunnel(exitY){const tp=W.tunnelPlan,R=tp.R;
   const c2=new THREE.CatmullRomCurve3(tp.pts.map(p=>new V3(p[0],0,p[1])),false,'centripetal'),N=600,pp=c2.getSpacedPoints(N);let Lt=0;for(let i=1;i<pp.length;i++)Lt+=pp[i].distanceTo(pp[i-1]);
   const pts=[];pp.forEach((p,i)=>{const sA=Lt*i/N,y=exitY+(Lt-sA)/7+12*Math.sin(sA/Lt*Math.PI*6)*smooth(0,300,sA)*(1-smooth(Lt-300,Lt,sA));pts.push(new V3(p.x,y,p.z));});
@@ -876,15 +892,16 @@ function tunnelStep(){const tn=TUN;if(!tn||tn.out)return;const s=ph,P=tn.pts;let
     if(vr>0){s.vel.x-=ux*vr*1.6;s.vel.y-=uy*vr*1.6;s.vel.z-=uz*vr*1.6;}s.vel.multiplyScalar(.93);
     if(s.t-bonkT>.6){bonkT=s.t;stats.bonks++;beep(140,.12,'square',.2);toast(`Bonk! 🦆💫 (${stats.bonks})`,700);}}}
 function startLeg(i,fromPt){chk=null;$('chk').classList.add('hide');if(W.tunnelPlan)return startTunnelLeg();
-  if(SCN&&SCN.wind){W.wind.from=SCN.wind.from;W.wind.kt=SCN.wind.kt;W.wind.gust=SCN.wind.gust;}
+  if(FIX&&FIX.F.wind!=='def'){const hd=W.legs[0].hdg*R2D;if(FIX.F.wind==='calm'){W.wind.kt=0;W.wind.gust=0;}else{W.wind.from=Math.round(((hd+(Math.random()<.5?-1:1)*(65+Math.random()*25))+360)%360/10)*10;W.wind.kt=13+Math.round(Math.random()*3);W.wind.gust=.15;}}
+  else if(SCN&&SCN.wind){W.wind.from=SCN.wind.from;W.wind.kt=SCN.wind.kt;W.wind.gust=SCN.wind.gust;}
   else if(W.legs[i]&&W.legs[i].randWind){const hd=W.legs[i].hdg*R2D,sd=Math.random()<.5?-1:1;W.wind.from=Math.round((hd+sd*(30+Math.random()*45)+360)%360/10)*10;W.wind.kt=Math.round(8+Math.random()*9);W.wind.gust=.3;}
   if(W.free)return startFree(fromPt||null);
-  legIdx=i;LEG=W.legs[i];if(targetGrp)scene.remove(targetGrp);windsocks=[];targetGrp=makeTarget(LEG);scene.add(targetGrp);
+  legIdx=i;LEG=(FIX&&FIX.leg)?FIX.leg:W.legs[i];if(targetGrp)scene.remove(targetGrp);windsocks=[];targetGrp=makeTarget(LEG);scene.add(targetGrp);
   PATH=buildPath(LEG,LEG.prefix?(fromPt||null):null);placeBeads(PATH);
   const d0=PATH.dense[0],d1=PATH.dense[Math.min(4,PATH.dense.length-1)],ty=legY(LEG);
   let y=LEG.fixedStartFt?ty+LEG.fixedStartFt/FT:d0.y+(LEG.marginFt||0)/FT;
   resetFlight(tmp3.set(d0.x,y,d0.z),new V3(d1.x-d0.x,0,d1.z-d0.z).normalize(),profile.vbg,profile.aTrim);
-  stats=newStats(beadMeshes.length);
+  stats=newStats(beadMeshes.length);stats.h0=ph.pos.y-legY(LEG);stats.L0=PATH.len;fixS={maxDev:0,pI:null,i:0};
   toast(LEG.fixedStartFt?'Engine out! Abeam soon…':'Glide!',1600);
 }
 /* free-flight worlds (Engine Out!, Cloud Kingdom) */
@@ -910,7 +927,7 @@ function startFree(arg){
     const h=L[3]*D2R;resetFlight(tmp3.set(L[0],L[1],L[2]),new V3(Math.sin(h),0,-Math.cos(h)),P.vbg,P.aTrim);stats=newStats(ringMeshes.length*5+(W.cloudVols?W.cloudVols.length:0)+(W.picnics?W.picnics.length*3:0));if(!drill)toast(W.valley?'🏔️ Soar the valley!':'☁️ Free flight!',1500);}
   legIdx=0;LEG=freeLegs[0];pickBest(true);bestT=0;
 }
-function retry(){hideAll();$('rLesson').classList.add('hide');if(drill){startDrill(drill.id);return;}if(W.free)startFree(lastFree);else startLeg(legIdx,lastPrefix);}
+function retry(){hideAll();$('rLesson').classList.add('hide');if(FIX){startFix(FIX.id);return;}if(drill){startDrill(drill.id);return;}if(W.free)startFree(lastFree);else startLeg(legIdx,lastPrefix);}
 
 /* ---------------- input ---------------- */
 const inp={rud:0,rudK:0,rudT:null,pitch:0,bank:0,slip:0,keys:{},tilt:{ok:false,g:new V3(),f:new V3(),n0:null,sgn:1,roll:0,pitch:0},touch:{id:null,x0:0,y0:0,dx:0,dy:0},bankK:0,pitchK:0,boost:false,pad:null};
@@ -936,7 +953,7 @@ addEventListener('pointerup',endTouch);addEventListener('pointercancel',endTouch
 function hold(id,on,off,rep){const b=$(id);let iv=0;b.addEventListener('pointerdown',e=>{e.preventDefault();b.classList.add('on');on();if(rep){clearInterval(iv);iv=setInterval(on,rep);}});['pointerup','pointerleave','pointercancel'].forEach(ev=>b.addEventListener(ev,()=>clearInterval(iv)));['pointerup','pointerleave','pointercancel'].forEach(ev=>b.addEventListener(ev,()=>{b.classList.remove('on');off&&off();}));}
 let slipBtn=false;hold('bSlip',()=>slipBtn=true,()=>slipBtn=false);let boostBtn=false;hold('bBoost',()=>boostBtn=true,()=>boostBtn=false);
 hold('bFu',()=>setFlap(-1));hold('bFd',()=>setFlap(1));hold('bTu',()=>trim(1),null,140);hold('bTd',()=>trim(-1),null,140);
-$('bCam').onclick=()=>cycleCam();$('chk').querySelector('b').onclick=()=>$('chk').classList.toggle('mini');$('mini').addEventListener('pointerdown',e=>{e.stopPropagation();SAVE.set.mapProf=!SAVE.set.mapProf;persist();toast(SAVE.set.mapProf?'Profile view':'Map view',700);});$('bRetry').onclick=()=>{if(state==='fly'||state==='settle')retry();};$('bMenu').onclick=()=>{if(state==='fly'||state==='settle'){state='menu';drill=null;hideAll();showHUD(false);if(cfiDuck)cfiDuck.visible=false;show('menu');renderMenu();}};$('bCal').onclick=()=>{calibrate();inp.bankK=0;toast('Level set',800);};$('bPause').onclick=()=>togglePause();
+$('bCam').onclick=()=>cycleCam();$('chk').querySelector('b').onclick=()=>$('chk').classList.toggle('mini');$('mini').addEventListener('pointerdown',e=>{e.stopPropagation();SAVE.set.mapProf=!SAVE.set.mapProf;persist();toast(SAVE.set.mapProf?'Profile view':'Map view',700);});$('bRetry').onclick=()=>{if(state==='fly'||state==='settle')retry();};$('bMenu').onclick=()=>{if(state==='fly'||state==='settle'){state='menu';drill=null;FIX=null;hideAll();showHUD(false);if(cfiDuck)cfiDuck.visible=false;show('menu');renderMenu();}};$('bCal').onclick=()=>{calibrate();inp.bankK=0;toast('Level set',800);};$('bPause').onclick=()=>togglePause();
 let padPrev={};
 {const tr=$('rudTrack');let pid=null;const setR=e=>{const r=tr.getBoundingClientRect();inp.rudT=clamp(((e.clientX-r.left)/r.width)*2-1,-1,1);};
   tr.addEventListener('pointerdown',e=>{e.preventDefault();e.stopPropagation();pid=e.pointerId;tr.setPointerCapture(pid);setR(e);});tr.addEventListener('pointermove',e=>{if(e.pointerId===pid)setR(e);});
@@ -967,7 +984,7 @@ const CAMN=['CHASE','DUCK-EYE','TOWER'];function cycleCam(){camMode=(camMode+1)%
 
 /* ---------------- physics ---------------- */
 function physStep(dt){
-  const P=profile,s=ph;s.t+=dt;
+  const P=profile,s=ph;s.t+=dt;if(FIX)apApply(dt);
   // bank
   const bc=inp.bank;s.bank+=clamp(bc-s.bank,-P.roll*dt,P.roll*dt);
   if(s.stalled&&!ZEN())s.bank+=s.drop*dt;
@@ -1028,7 +1045,7 @@ function checkContacts(){
 function crash(title,why){if(drill&&!ZEN()){lastCrash={title};return drillEnd(false,title+' '+why);}lastCrash={title,x:ph.pos.x,y:ph.pos.y,z:ph.pos.z,rem:PATH&&PATH.dense[pathIdx]?PATH.dense[pathIdx].rem:-1,sf:surfaceAt(ph.pos.x,ph.pos.z)};if(ZEN()){toast('Oops! 🌸 Zen respawn',1500);setTimeout(()=>{if(state==='crashing')retry();},500);state='crashing';return;}
   state='crashed';splash(ph.pos,true);sfx('crash');showHUD(false);
   $('rTitle').textContent=title;$('rScore').textContent='0';$('rStars').textContent='☆☆☆';$('rCrumbs').textContent=`🍞 ${stats.crumbs}/${stats.total}`;
-  $('rLesson').classList.add('hide');const ll=LES?lessonLine(false):'';$('rTable').innerHTML='';$('rCoach').innerHTML=(ll?`<li>${ll}</li>`:'')+`<li>${why}</li>`+coachFlight().map(x=>`<li>${x}</li>`).join('');$('rNext').classList.toggle('hide',W.free!=='engine');$('rNext').textContent='NEW FAILURE ▶';$('rReplay').classList.toggle('hide',rec.length<10);show('result');}
+  $('rLesson').classList.add('hide');const ll=LES?lessonLine(false):'';const fl=FIX?fixLine(false):'';if(!FIX&&!ZEN())logErrors(errTags(null));$('rTable').innerHTML='';$('rCoach').innerHTML=(ll?`<li>${ll}</li>`:'')+(fl?`<li>${fl}</li>`:'')+`<li>${why}</li>`+trendLines().map(x=>`<li>${x}</li>`).join('')+coachFlight().map(x=>`<li>${x}</li>`).join('');$('rNext').classList.toggle('hide',W.free!=='engine');$('rNext').textContent='NEW FAILURE ▶';$('rReplay').classList.toggle('hide',rec.length<10);show('result');}
 function scoreTD(t){const lo=LEG.window[0],hi=LEG.window[1];
   const e=t.f<lo?lo-t.f:t.f>hi?t.f-hi:0;const acc=t.onTarget?400*Math.max(0,1-e/300):0,cross=t.onTarget?100*Math.max(0,1-Math.abs(t.r)/120):0;
   const sink=150*clamp((700-t.vs)/500,0,1),ratio=t.ias/t.vs0,spd=150*(ratio<=1.15?1:clamp(1-(ratio-1.15)/.35,0,1));
@@ -1069,6 +1086,9 @@ function finishLanding(){
   legScores[legIdx]={score:sc.total,stars};$('rLesson').classList.add('hide');
   if(LES&&LES.st.kind!=='drill'){let pass;if(LES.w==='islands'&&LES.st.id==='ck'){if(!t.onTarget)pass=false;else if(legIdx<W.legs.length-1)pass=null;else pass=legScores.reduce((a,b)=>a+(b?b.score:0),0)/W.legs.length>=800;}
     else pass=!!LES.st.test(t,sc);if(pass!==null)c.unshift(lessonLine(pass));else c.unshift(`<b>🎓 ${LES.st.name}</b>: leg ${legIdx+1} made — keep hopping.`);}
+  if(FIX)c.unshift(fixLine(!!FIX.F.test(t,sc)));
+  else if(!ZEN()&&!drill){logErrors(errTags(t));}
+  c.push(...trendLines());const lc=levelCheck(t);if(lc.length)c.push('<b>Is it you or the level?</b><ul class="coach">'+lc.map(x=>`<li>${x}</li>`).join('')+'</ul>');
   $('rCoach').innerHTML=c.map(x=>`<li>${x}</li>`).join('');
   const more=W.free?!drill:legIdx<W.legs.length-1&&t.onTarget;$('rNext').classList.toggle('hide',!more);$('rNext').textContent=W.free==='engine'?'NEW FAILURE ▶':W.free==='sky'?'FLAP UP & EXPLORE ▶':'FLAP UP → NEXT ISLAND';$('rReplay').classList.toggle('hide',rec.length<10);
   if(!more&&W.legs.length>1&&!W.free){const tot=legScores.reduce((a,b)=>a+(b?b.score:0),0);$('rCoach').innerHTML+=`<li><b>Archipelago total: ${tot} / ${W.legs.length*1000}</b></li>`;}
@@ -1098,8 +1118,8 @@ function sfx(k){if(!AC||!SAVE.set.snd)return;if(k==='coin'){beep(988,.08,'square
 const mini=$('mini'),mctx=mini.getContext('2d');
 function showHUD(on){document.body.classList.toggle('flying',!!on);document.body.classList.toggle('tapes',!!SAVE.set.tapes);$('bCam').textContent='CAM · '+CAMN[camMode];if(!on){const m=$('cfiMsg');if(m)m.classList.add('hide');}['hud','ctl','topbtns'].forEach(id=>$(id).classList.toggle('hide',!on));$('bBoost').classList.toggle('hide',!ZEN());}
 let toastT=0;function toast(msg,ms){const t=$('toast');t.textContent=msg;t.style.opacity=1;clearTimeout(toastT);toastT=setTimeout(()=>t.style.opacity=0,ms||1200);}
-function show(id){['menu','brief','pause','result','inst'].forEach(o=>$(o).classList.toggle('hide',o!==id));}
-function hideAll(){['menu','brief','pause','result','inst'].forEach(o=>$(o).classList.add('hide'));}
+function show(id){['menu','brief','pause','result','inst','fixes'].forEach(o=>$(o).classList.toggle('hide',o!==id));}
+function hideAll(){['menu','brief','pause','result','inst','fixes'].forEach(o=>$(o).classList.add('hide'));}
 let hudT=0;
 function updateHUD(dt){
   hudT+=dt;if(hudT<.06)return;hudT=0;const s=ph,P=profile,ty=legY(LEG),T=LEG.target;
@@ -1300,6 +1320,65 @@ function chkResult(){if(!chk)return null;const S=chk.S,man=S.restart.filter(c=>!
   const aviateFirst=stats.vgCap!==null&&chk.firstManual!==null&&chk.firstManual>=stats.vgCap,sec=S.secure.filter(c=>chk.sdone[c.k]!==undefined).length;
   return {ok:allDone&&inOrder&&aviateFirst,allDone,inOrder,aviateFirst,restarted,cause:chk.cause==='mech'?MECH:S.causes[chk.cause],n:done.length,N:man.length,flow:man.map(k=>S.restart.find(c=>c.k===k).t.replace(' — ',' ')).join(' → '),sec,secN:S.secure.length,secShown:chk.secure};}
 
+/* ---------------- error trends, fix-it drills, level check ---------------- */
+let FIX=null,fixS={maxDev:0,pI:null,i:0};
+const FIXES={
+ speed:{name:'Final speed & touchdown',you:'PITCH only',auto:'heading, rudder, full flaps',world:'xwind',wind:'calm',desc:'Straight-in final. The autopilot flies the ground track and sets full flaps; you fly pitch only. Hold Tgt ±4 kt from 300 ft down to 50 ft, then flare and touch down on the runway at ≤ 1.12× stall speed.',lock:{bank:1,rud:1,flaps:1},test:t=>t.onTarget&&fixS.maxDev<=4&&t.ias<=t.vs0*1.12&&t.vs<450},
+ flare:{name:'Flare & hold-off',you:'PITCH below 30 ft',auto:'everything above 30 ft',world:'xwind',wind:'calm',desc:'The autopilot flies the whole final on speed with full flaps. At 30 ft it hands you pitch: round out, hold it off, and touch down under 250 fpm at ≤ 1.15× stall speed.',lock:{bank:1,rud:1,flaps:1,pitchAbove:30},test:t=>t.onTarget&&t.vs<250&&t.ias<=t.vs0*1.15},
+ xwind:{name:'Crosswind kill',you:'BANK + RUDDER',auto:'pitch, speed, flaps, flare',world:'xwind',wind:'xw',desc:'A 13–16 kt crosswind on a straight-in final. The autopilot holds speed and flares; you fly bank and rudder. Track the centerline, then go wing-low: touch down on the runway with < 2 kt drift and the nose within 4°.',lock:{pitch:1,flaps:1},test:t=>t.onTarget&&t.drift<2&&t.align<=4},
+ energy:{name:'Energy with drag only',you:'FLAPS + SLIP',auto:'pitch/speed, ground track, flare',world:'cattail',wind:'def',desc:'A power-off 180. The autopilot holds speed and flies the ground track; you manage energy with flaps and SLIP only. Stay within 150 ft low / 250 ft high of the bread trail and touch down 0 to +200 ft.',lock:{pitch:1,bank:1},test:(t,sc)=>t.onTarget&&sc.e===0&&stats.maxLo<=150&&stats.maxHi<=250},
+ glide:{name:'Best-glide hold (Air Work)',you:'everything',auto:'—',air:'glide',desc:'Air Work drill: settle on best glide and hold it ±5 kt for 30 s.'},
+ slow:{name:'Slow flight (Air Work)',you:'everything',auto:'—',air:'slow',desc:'Air Work drill: fly just above the stall horn without setting it off, then turn 90°.'}};
+const TAGFIX={fast:'speed',float:'speed',hard:'flare',drift:'xwind',crab:'xwind',high:'energy',low:'energy',longE:'energy',short:'energy',noflaps:'energy',vg:'glide',stall:'slow',crash:'energy'};
+const TAGTXT={fast:'too fast at touchdown',float:'long from floating',hard:'hard touchdowns',drift:'side drift at touchdown',crab:'touching down crabbed',high:'high on the bread trail',low:'low on the bread trail',longE:'long from arriving high',short:'landing short',noflaps:'landing without full flaps',vg:'loose best-glide speed',stall:'stall warnings',crash:'crashes'};
+function errTags(t){const P=profile,g=[];if(stats.maxLo>150)g.push('low');if(stats.maxHi>350)g.push('high');if(stats.tGlide>5&&stats.tVg/stats.tGlide<.65)g.push('vg');if(stats.stallW>2)g.push('stall');
+  if(!t){g.push('crash');return g;}
+  if(t.ias/t.vs0>1.25)g.push('fast');if(t.vs>400)g.push('hard');if(t.drift>=3)g.push('drift');if(t.align>5)g.push('crab');
+  if(t.onTarget&&LEG.window){if(t.f<LEG.window[0])g.push('short');else if(t.f>LEG.window[1])g.push(stats.f20!==null&&stats.f20<LEG.window[1]?'float':'longE');}
+  if(P.flaps.length>1&&t.onTarget&&t.flapN!==P.flaps[P.flaps.length-1].n)g.push('noflaps');return g;}
+function logErrors(tags){const E=SAVE.err||(SAVE.err={h:[]});E.h.push(tags);if(E.h.length>12)E.h.shift();persist();}
+function trends(){const h=((SAVE.err||{}).h||[]).slice(-6);if(h.length<3)return [];const n={};h.forEach(ts=>new Set(ts).forEach(x=>n[x]=(n[x]||0)+1));
+  return Object.entries(n).filter(([k,v])=>v/h.length>=.5).sort((a,b)=>b[1]-a[1]).map(([k,v])=>({k,v,n:h.length,fix:TAGFIX[k]}));}
+function trendLines(){const tr=trends();const btn=$('rFix');btn.classList.add('hide');if(!tr.length||FIX)return [];const top=tr[0];btn.textContent='🔧 FIX IT: '+FIXES[top.fix].name;btn.onclick=()=>startFix(top.fix);btn.classList.remove('hide');
+  return [`<b>Pattern spotted</b> over your last ${top.n} flights: ${tr.slice(0,3).map(x=>`${TAGTXT[x.k]} (${x.v}/${x.n})`).join(', ')}. Repetition makes it a habit, not luck — the <b>FIX IT</b> drill isolates it: the autopilot flies everything else; you fly ${FIXES[top.fix].you}.`];}
+function fixLine(pass){const st={id:FIX.id,rule:[3,3]},r=recordAttempt('fix',st,pass);return `<b>🔧 Fix-it · ${FIXES[FIX.id].name}: ${pass?'pass ✓':'not yet'}</b> — ${dots('fix',st)} (need 3 in a row)${r.newly?' — <b>🏅 Fixed!</b> Take it back to a full flight and see if it stays fixed.':''}`;}
+function startFix(id){const F=FIXES[id];clearScn();LES=null;drill=null;FIX=null;hideAll();$('rFix').classList.add('hide');
+  if(F.air){selW=WORLDS.find(w=>w.id==='valley');loadWorld(selW);const i=LS.valley.findIndex(st=>st.id===F.air);LES={w:'valley',i,st:LS.valley[i]};startDrill(F.air);return;}
+  const w=WORLDS.find(x=>x.id===F.world);selW=w;FIX={id,F};if(F.world==='xwind'){const L0=w.legs[0];FIX.leg={target:L0.target,hdg:L0.hdg,rwy:0,pts:straightPts(L0.target,L0.hdg,1500),fillet:false,window:[0,200],marginFt:0,glide:ldApp(profile)*.97,task:F.desc};}
+  loadWorld(w);legScores=[];lastPrefix=null;camMode=0;startLeg(0);toast('🔧 '+F.name+' — you fly '+F.you,2600);}
+function apApply(dt){const L=FIX.F.lock,s=ph,P=profile,ias=s.IAS*KT,agl=Math.max(0,s.hS)*FT;
+  if(L.flaps)s.flap=P.flaps.length-1;
+  if(L.bank&&PATH){const D=PATH.dense;let i=fixS.i;for(let k=0;k<40&&i<D.length-1;k++){if(Math.hypot(D[i+1].x-s.pos.x,D[i+1].z-s.pos.z)<Math.hypot(D[i].x-s.pos.x,D[i].z-s.pos.z))i++;else break;}fixS.i=i;
+    const a=D[Math.max(0,i-1)],b=D[Math.min(D.length-1,i+2)],ph2=Math.atan2(b.x-a.x,-(b.z-a.z)),xte=(s.pos.x-a.x)*Math.cos(ph2)+(s.pos.z-a.z)*Math.sin(ph2);
+    const j=Math.min(D.length-3,i+10),c=D[Math.max(0,j)],d2=D[Math.max(1,j+2)],ahead=j>i?Math.atan2(d2.x-c.x,-(d2.z-c.z)):ph2,turnFF=wrapPi(ahead-ph2)*.5;
+    const want=ph2+turnFF-Math.atan(xte/90),e=wrapPi(want-Math.atan2(s.vel.x,-s.vel.z));inp.bank=clamp(e*R2D*2.2,-30,30)*(agl<12?.35:1);}
+  if(L.rud){let r=0;if(W.wind.kt>2&&agl<15){r=clamp(-wrapPi(s.noseHdg-LEG.hdg)*R2D/8,-1,1);}inp.rud=r;}
+  const tg=tgtSpeed(P,s.flap)*KT,pitchAuto=L.pitch||(L.pitchAbove&&agl>L.pitchAbove);
+  if(pitchAuto){if(L.pitch&&agl<30){const tS=Math.max(.5,(agl/FT)*.3);fixS.fp=(fixS.fp||.15)+(-s.vel.y-tS)*dt*.6;inp.pitch=clamp(fixS.fp+(-s.vel.y-tS)*.2,0,1);}else{fixS.fp=null;const dI=fixS.pI===null?0:(ias-fixS.pI)/dt;fixS.pI=ias;inp.pitch=clamp((ias-tg)*.03+dI*.02,-.5,.5);}}
+  else fixS.pI=null;}
+function trackFlight(){const s=ph,P=profile,agl=Math.max(0,s.hS)*FT,T=LEG.target,F=F2(LEG.hdg),d=Math.hypot(s.pos.x-T[0],s.pos.z-T[1]);
+  if(stats.f20===null&&agl<20&&d<1500){stats.f20=((s.pos.x-T[0])*F[0]+(s.pos.z-T[1])*F[1])*FT;stats.ias20=s.IAS*KT;}
+  if(FIX&&agl<300&&agl>50&&d<2500)fixS.maxDev=Math.max(fixS.maxDev,Math.abs(s.IAS*KT-tgtSpeed(P,s.flap)*KT));
+  if(FIX){$('task').textContent=`🔧 ${FIX.F.name} · YOU: ${FIX.F.you} · auto: ${FIX.F.auto}`;}}
+function levelCheck(t){const P=profile,L=LEG,out=[];if(!L||!t)return out;const n=P.flaps.length-1,vapp=tgtSpeed(P,n),vs0=P.vsF(n),vapK=vapp*KT;
+  const hw=W.wind.kt/KT*Math.cos(W.wind.from*D2R-L.hdg),xw=W.wind.kt*Math.sin(W.wind.from*D2R-L.hdg);
+  const floatFt=Math.round(floatM(P,hw)*FT/10)*10;
+  out.push(`Float budget: from a ${vapK.toFixed(0)}-kt ${P.flaps[n].n} approach${Math.abs(hw)>1?` with ${Math.abs(hw*KT).toFixed(0)} kt of ${hw>0?'headwind':'tailwind'}`:''}, expect roughly ${floatFt} ft of float from round-out to touchdown. Aim that far short of the spot — the bread trail already ends about ${Math.max(0,floatFt-100)} ft before it (your aim point).`);
+  if(stats.f20!==null&&t.onTarget){const fl=Math.round(t.f-stats.f20),x=Math.round(stats.f20);let v=`You crossed 20 ft at ${x>=0?'+':''}${x} ft from the spot at ${stats.ias20.toFixed(0)} kt and floated ${fl} ft.`;
+    if(t.f>L.window[1])v+=stats.f20>L.window[1]-floatFt*.3?' Verdict: long because you <b>arrived high/late</b> — an energy (path) issue, not the flare.':fl>floatFt*1.3?` Verdict: long mostly from <b>float</b> — ${stats.ias20.toFixed(0)} kt into the flare vs ${vapK.toFixed(0)} target.`:' Verdict: slightly long — move your aim point back a little.';
+    else if(t.f<L.window[0])v+=' Verdict: <b>short</b> — you ran out of energy before the spot; arrive a little higher and hold off the last notch of flaps until it is made.';
+    out.push(v);}
+  if(stats.h0&&stats.L0){const need=stats.L0/stats.h0,maxLD=P.ldCfg(0),cl=2*P.m*G/(RHO0*P.S*vapp*vapp),fl=P.flaps[n],minLD=cl/(P.CD0+fl.dCD+P.k*cl*cl+P.slipCD*1.44);
+    out.push(`Energy budget: this start needs an average of ${need.toFixed(1)}:1 along the trail. Your duck can fly anywhere from ${minLD.toFixed(1)}:1 (full ${fl.n} + slip) to ${maxLD.toFixed(1)}:1 (clean at Vg) → ${need>maxLD?'<b>not reachable even at best glide</b> — landing short here was the level, not you':need<minLD?'<b>more height than full drag can burn</b> — you must add distance (extend, S-turn); being high is built in otherwise':'<b>achievable</b> — the outcome is in your hands'}.`);}
+  if(L.rwy!==undefined&&Math.abs(xw)>=3){const demo=P.id==='archer'?17:P.id==='mallard'?15:null;if(demo)out.push(`Crosswind component ${Math.abs(xw).toFixed(0)} kt vs ${demo} kt maximum demonstrated for this airplane — ${Math.abs(xw)>demo?'<b>beyond demonstrated</b>: part of the difficulty is the level':'within demonstrated: drift or crab here is technique, not the level'}.`);}
+  if(W.wind.gust>=.2&&W.wind.kt>=8){const gf=Math.round(W.wind.kt*W.wind.gust);out.push(`Gusts of about ${gf} kt: a common technique adds half the gust factor to approach speed (≈${Math.round(vapK+gf/2)} kt), so some speed scatter here is the weather.`);}
+  if(t.ias/t.vs0>1.25)out.push('Touchdown speed is always yours to control — no level forces a fast touchdown. Hold the flare until the duck stops flying.');
+  if(t.vs>400)out.push('Sink rate at touchdown is technique too: the round-out sets it, not the level.');
+  return out;}
+function renderFixes(){const tr=trends(),rec=new Set(tr.map(x=>x.fix));$('fixList').innerHTML=Object.entries(FIXES).map(([id,F])=>`<div class="st" data-id="${id}"><div><b>${rec.has(id)?'⭐ ':''}🔧 ${F.name}</b><small>${F.desc}<br>You: <b>${F.you}</b> · Autopilot: ${F.auto}</small></div><span class="dots">${F.air?'':dots('fix',{id,rule:[3,3]})}</span></div>`).join('');
+  [...$('fixList').children].forEach(d=>d.onclick=()=>startFix(d.dataset.id));
+  $('fixTrend').innerHTML=tr.length?`Recent pattern: ${tr.map(x=>`${TAGTXT[x.k]} (${x.v}/${x.n})`).join(', ')} — ⭐ marks the drill for it.`:'No repeating error yet (needs 3+ logged flights). Any drill is open anyway.';}
+
 /* ---------------- Air Work drills ---------------- */
 function startDrill(id){const v=W.valley,z=-5400;drill=null;startFree({launch:[v.cxz(z),v.floorZ(z)+1300,z,v.vh(z)*R2D]});
   drill={id,phase:0,band:0,t:0,flareT:0,turned:0,lastH:null,pIas:null,lim:id==='approach'?160:120,note:''};const P=profile;
@@ -1388,7 +1467,7 @@ function loop(now){requestAnimationFrame(loop);let dt=Math.min(.05,(now-last)/10
   if(state==='fly'){readInputs(dt);accum+=dt;while(accum>=DT){physStep(DT);accum-=DT;if(TUN)tunnelStep();checkContacts();if(state!=='fly')break;
       const s=ph;if(s.CLlin>HORN*s.CLm){if(!s._sw){stats.stallW++;s._sw=true;}}else s._sw=false;stats.maxBank=Math.max(stats.maxBank,Math.abs(s.bank));
       if(s.pos.y-legY(LEG)>150){stats.tGlide+=DT;if(Math.abs(s.IAS-profile.vbg)*KT<=5)stats.tVg+=DT;}}
-    if(state==='fly'){updateHUD(dt);chkStep();if(drill)runDrill(dt);else runCoach(dt);}
+    if(state==='fly'){updateHUD(dt);chkStep();trackFlight();if(drill)runDrill(dt);else if(!FIX)runCoach(dt);}
     if(AC&&windG){windG.gain.value=clamp((ph.IAS-10)/40,0,1)*.12*(SAVE.set.snd?1:0);hornG.gain.value=(ph.CLlin>HORN*ph.CLm&&(now%400<250))?.05:0;}}
   else if(state==='settle'){settleT+=dt;const s=ph;const k=Math.exp(-dt*(td.type==='land'?1.6:td.type==='rwy'?1.1:.7));s.vel.x*=k;s.vel.z*=k;s.pos.addScaledVector(s.vel,dt);s.pos.y=surfaceAt(s.pos.x,s.pos.z,s.pos.y+1).y;
     recAcc+=dt;if(recAcc>=.1&&rec.length<9000){recAcc=0;const q=duck.quaternion;rec.push([s.pos.x,s.pos.y,s.pos.z,q.x,q.y,q.z,q.w,s.flapAnim]);}
@@ -1448,7 +1527,7 @@ $('bFly').onclick=async()=>{audio();if(AC&&AC.state==='suspended')AC.resume();
   if(SAVE.set.ctl==='tilt'){await askMotion();await new Promise(r=>setTimeout(r,250));calibrate();if(!inp.tilt.ok)toast('No tilt sensor — try Touch stick',2500);}
   try{if(matchMedia('(pointer:coarse)').matches&&document.documentElement.requestFullscreen&&!document.fullscreenElement){await document.documentElement.requestFullscreen();if(screen.orientation&&screen.orientation.lock)screen.orientation.lock('landscape').catch(()=>{});}}catch(e){}
   try{if(navigator.wakeLock)navigator.wakeLock.request('screen').catch(()=>{});}catch(e){}
-  hideAll();pickLesson();drill=null;loadWorld(selW);legScores=[];lastPrefix=null;camMode=0;if(LES&&LES.st.kind==='drill')startDrill(LES.st.id);else startLeg(0);};
+  hideAll();pickLesson();drill=null;FIX=null;loadWorld(selW);legScores=[];lastPrefix=null;camMode=0;if(LES&&LES.st.kind==='drill')startDrill(LES.st.id);else startLeg(0);};
 $('rLesson').onclick=()=>{hideAll();brief();};
 /* ---- instructor mode: scenario links (v1; a future version adds legs[] for cross-country challenges) ---- */
 const esc=t=>String(t).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -1463,7 +1542,7 @@ function instForm(){const P=PROFILES[$('iP').value]||profile,S=CHKS[P.id];$('iC'
 function openInst(){$('iW').innerHTML=WORLDS.map(w=>`<option value="${w.id}">${esc(w.name)}</option>`).join('');$('iW').value=selW.id;$('iP').innerHTML=Object.values(PROFILES).map(p=>`<option value="${p.id}">${esc(p.name)}</option>`).join('');$('iP').value=profile.id;
   SCNseed=0;instForm();show('inst');}
 ['iW','iP','iWm','iWf','iWk','iWg','iA','iC','iSame','iN'].forEach(id=>{$(id).addEventListener('input',instForm);$(id).addEventListener('change',instForm);});
-$('bInst').onclick=openInst;$('iBack').onclick=()=>{show('menu');renderMenu();};
+$('bInst').onclick=openInst;$('bFixes').onclick=()=>{renderFixes();show('fixes');};$('fxBack').onclick=()=>{show('menu');renderMenu();};$('iBack').onclick=()=>{show('menu');renderMenu();};
 $('iShare').onclick=async()=>{const u=instForm();try{if(navigator.share){await navigator.share({title:'Duck Glide scenario',text:$('iN').value||'Fly this scenario',url:u});return;}}catch(e){}
   try{await navigator.clipboard.writeText(u);toast('Link copied 📋',1500);}catch(e){$('iLink').select();toast('Select & copy the link',1500);}};
 $('iFly').onclick=()=>{applyScn(scnFromForm());brief();};
@@ -1471,10 +1550,10 @@ function applyScn(sc){const w=WORLDS.find(x=>x.id===sc.w),p=PROFILES[sc.p];if(!w
 function clearScn(){if(!SCN)return;SCN=null;try{history.replaceState(null,'',location.href.split('#')[0]);}catch(e){}}
 
 function togglePause(){if(state==='fly'){state='paused';showHUD(false);$('stampPause').textContent=`Build ${BUILD_ID} · shipped ${BUILT_UTC}`;show('pause');}else if(state==='paused'){hideAll();state='fly';showHUD(true);last=performance.now();if(SAVE.set.ctl==='tilt')calibrate();}}
-$('pResume').onclick=togglePause;$('pRetry').onclick=retry;$('pMenu').onclick=()=>{state='menu';drill=null;hideAll();showHUD(false);show('menu');renderMenu();};
+$('pResume').onclick=togglePause;$('pRetry').onclick=retry;$('pMenu').onclick=()=>{state='menu';drill=null;FIX=null;hideAll();showHUD(false);show('menu');renderMenu();};
 $('rRetry').onclick=retry;$('rReplay').onclick=startReplay;$('rpExit').onclick=endReplay;$('rpSpd').onclick=()=>{rp.speed=rp.speed===4?1:rp.speed===1?8:4;};$('rpCam').onclick=()=>{camMode=(camMode+1)%3;};
 $('rNext').onclick=()=>{hideAll();drill=null;if(W.free==='engine'){startFree(null);return;}if(W.free==='sky'){const p=td?td.pos:ph.pos;startFree({launch:[p.x,p.y+450,p.z,Math.random()*360]});toast('Flap flap flap! 🦆',1200);return;}lastPrefix=[td.pos.x,td.pos.z];startLeg(legIdx+1,lastPrefix);toast('Flap flap flap! 🦆',1200);};
-$('rMenu').onclick=()=>{state='menu';drill=null;hideAll();show('menu');renderMenu();};
+$('rMenu').onclick=()=>{state='menu';drill=null;FIX=null;hideAll();show('menu');renderMenu();};
 $('rWorld').onclick=()=>{const i=WORLDS.indexOf(W);selW=WORLDS[(i+1)%WORLDS.length];SAVE.set.world=selW.id;persist();brief();};
 document.addEventListener('visibilitychange',()=>{if(document.hidden&&state==='fly')togglePause();});
 $('stampRes').textContent=`Build ${BUILD_ID} · shipped ${BUILT_UTC}`;
@@ -1484,7 +1563,7 @@ loadWorld(selW);duck.visible=false;
 const menuSpin=()=>{if(state==='menu'){const t=performance.now()*.00005;camera.position.set(bd.x+Math.cos(t)*1400,bd.y+320,bd.z+Math.sin(t)*1400);camera.lookAt(bd.x,bd.y,bd.z);camera.fov=62;camera.updateProjectionMatrix();sky.position.copy(camera.position);}requestAnimationFrame(menuSpin);};menuSpin();
 renderMenu();show('menu');requestAnimationFrame(loop);
 try{const m=location.hash.match(/^#s=([A-Za-z0-9_-]+)/);if(m){const sc=b64d(m[1]);if(sc&&sc.v===1&&applyScn(sc)){if(W!==selW){loadWorld(selW);duck.visible=false;}renderMenu();brief();}}}catch(e){console.warn('bad scenario link',e);}
-window.__duck={ph,PROFILES,WORLDS,get state(){return state},get td(){return td},startLeg,inp,surfaceAt:(x,z,y)=>surfaceAt(x,z,y),get PATH(){return PATH},physStep,checkContacts,get stats(){return stats},get SCN(){return SCN},b64e,get chk(){return chk},chkStep:()=>chkStep(),updHUD:(dt)=>{hudT=1;updateHUD(dt);},chkTap,chkResult:()=>chkResult(),get TUN(){return TUN},tunnelStep:()=>tunnelStep(),get drill(){return drill},runDrill:(dt)=>runDrill(dt),get LES(){return LES},startDrill,SAVE,startFree,get LEG(){return LEG},get W(){return W},startReplay,get rec(){return rec},get lastCrash(){return lastCrash}};
+window.__duck={ph,PROFILES,WORLDS,get state(){return state},get td(){return td},startLeg,inp,surfaceAt:(x,z,y)=>surfaceAt(x,z,y),get PATH(){return PATH},physStep,checkContacts,get stats(){return stats},startFix,get FIX(){return FIX},trends:()=>trends(),levelCheck:t=>levelCheck(t),get SCN(){return SCN},b64e,get chk(){return chk},chkStep:()=>chkStep(),updHUD:(dt)=>{hudT=1;updateHUD(dt);},chkTap,chkResult:()=>chkResult(),get TUN(){return TUN},tunnelStep:()=>tunnelStep(),get drill(){return drill},runDrill:(dt)=>runDrill(dt),get LES(){return LES},startDrill,SAVE,startFree,get LEG(){return LEG},get W(){return W},startReplay,get rec(){return rec},get lastCrash(){return lastCrash}};
 })();
 
 </script>

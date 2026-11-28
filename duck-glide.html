@@ -6,10 +6,10 @@
 <meta name="theme-color" content="#049cd8">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="build-id" content="DUCK-20261128-0001Z">
-<meta name="built-utc" content="2026-11-28T00:01:45Z">
+<meta name="build-id" content="DUCK-20261128-0009Z">
+<meta name="built-utc" content="2026-11-28T00:09:52Z">
 <title>Duck Glide — Fly Good, Land Gooder</title>
-<!-- Build DUCK-20261128-0001Z · shipped 2026-11-28T00:01:45Z · Three.js r128 (MIT) from vendor/ · fully offline -->
+<!-- Build DUCK-20261128-0009Z · shipped 2026-11-28T00:09:52Z · Three.js r128 (MIT) from vendor/ · fully offline -->
 <style>
 :root{--red:#e52521;--yel:#fbd000;--blu:#049cd8;--grn:#43b047;--ink:#1b1b2f;--card:#fffdf4}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none}
@@ -70,6 +70,10 @@ h2{margin:6px 0 8px;font-size:20px;color:var(--blu)}
 .seg button{border:0;background:#fff;padding:8px 10px;font:700 13px system-ui;color:var(--blu)}
 .seg button.on{background:var(--blu);color:#fff}
 .foot{font-size:11px;color:#777;margin-top:10px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px}
+.lad{margin-top:10px;background:#fff;border-radius:14px;padding:8px 10px;border:2px dashed #049cd8}
+.st{display:flex;justify-content:space-between;align-items:center;padding:6px 8px;border-radius:10px;cursor:pointer;gap:8px;margin-top:4px}
+.st.sel{background:#e6f6ff;outline:2px solid #049cd8}.st.lock{opacity:.45}.st small{display:block;font-weight:400;color:#555;font-size:12px}
+.dots{white-space:nowrap;font-size:15px;letter-spacing:2px;color:#049cd8}
 table.bd{width:100%;border-collapse:collapse;font-size:14px;margin:6px 0}
 table.bd td{padding:4px 6px;border-bottom:1px dashed #ccc}
 table.bd td:last-child{text-align:right;font-weight:700}
@@ -170,7 +174,9 @@ label.ck{display:flex;align-items:center;gap:6px;font-weight:700;font-size:13px}
     <h1>🦆 Duck Glide</h1>
     <div class="sub">Fly good, land gooder. Engine-out glide &amp; landing practice — no engine, just energy.</div>
     <h2>1 · Pick a pond</h2>
+    <div class="seg" id="modeSeg" style="margin-bottom:8px"><button data-v="lesson">🎓 Lessons</button><button data-v="free">🕊️ Free practice</button></div>
     <div id="worlds"></div>
+    <div id="ladder"></div>
     <h2>2 · Pick your duck</h2>
     <div class="seg" id="profSeg"></div>
     <div id="profInfo" class="sub" style="margin-top:6px"></div>
@@ -238,6 +244,7 @@ label.ck{display:flex;align-items:center;gap:6px;font-weight:700;font-size:13px}
     <ul class="coach" id="rCoach"></ul>
     <div class="opts">
       <button class="btn g hide" id="rNext">FLAP UP → NEXT ISLAND</button>
+      <button class="btn r hide" id="rLesson">NEXT LESSON ▶</button>
       <button class="btn g hide" id="rReplay">▶ REPLAY</button>
       <button class="btn" id="rRetry">RETRY</button>
       <button class="btn y" id="rWorld">NEXT POND</button>
@@ -251,7 +258,7 @@ label.ck{display:flex;align-items:center;gap:6px;font-weight:700;font-size:13px}
 <script>
 (function(){
 'use strict';
-const BUILD_ID='DUCK-20261128-0001Z', BUILT_UTC='2026-11-28T00:01:45Z';
+const BUILD_ID='DUCK-20261128-0009Z', BUILT_UTC='2026-11-28T00:09:52Z';
 const KT=1.943844, FT=3.28084, FPM=196.8504, D2R=Math.PI/180, R2D=180/Math.PI, G=9.80665, RHO0=1.225;
 const clamp=(v,a,b)=>v<a?a:v>b?b:v, lerp=(a,b,t)=>a+(b-a)*t;
 const smooth=(a,b,x)=>{const t=clamp((x-a)/(b-a),0,1);return t*t*(3-2*t);};
@@ -410,12 +417,52 @@ function W_sky(){
     wind:{from:270,kt:5,gust:.15},ridgeK:0,thermals:th,trees:{kind:'palm',n:120,r:6000,minPond:1.6,seed:93,landMin:3,landMax:60},clouds:70,
     legs:[{task:'Stress-free open sky. Ride thermals (look under the puffy clouds), fly through golden rings for bread, and land on any floating island pond. FLAP UP after each landing to keep exploring. Zen rules: no crashes, wing-flap boost on B / FLAP WINGS.',window:[0,300]}]};
 }
-const WORLDS=[W_meadow(),W_cattail(),W_tarn(),W_hollow(),W_ember(),W_islands(),W_engine(),W_sky()];
+function W_valley(){
+  const cxz=z=>1100*Math.sin(z/2600)+350*Math.sin(z/850+1),dcx=z=>1100/2600*Math.cos(z/2600)+350/850*Math.cos(z/850+1),STEPS=[-3000,-500,2500];
+  const floorZ=z=>260-.018*(z+6000)-STEPS.reduce((a,q)=>a+30*smooth(q-30,q+30,z),0),vh=z=>Math.atan2(dcx(z),-1);
+  const base=(x,z)=>{const d=Math.abs(x-cxz(z)),fl=floorZ(z),pass=1-.55*Math.exp(-(((z-1200)/520)**2))-.5*Math.exp(-(((z+4200)/480)**2));
+    return fl+7*fbm(x/300,z/300,101)*smooth(60,300,d)-2.2*(1-smooth(0,26,d))+700*smooth(380,1700,d)*(.5+.55*ridged(x/1500,z/1500,103))*pass;};
+  const ponds=[-4200,-1700,1000,4200].map((z,i)=>mkPond([cxz(z),z],vh(z),360,150,0,floorZ(z)-.5,['Trout Lake','Heron Mere','Willow Tarn','Lantern Lake'][i]));
+  const r=rng(777),orchards=[[-5000,-4650,1],[-2450,-1980,-1],[250,620,1],[3300,3800,-1],[4750,5250,1]];
+  const picnics=[[-3980,-1],[-1480,1],[1230,-1],[4420,1],[-700,1]].map(([z,sd])=>[cxz(z)+sd*235,z]);
+  const cloudVols=[];for(let i=0;i<16;i++){const z=-5200+i*700;cloudVols.push([cxz(z)+(r()-.5)*700,floorZ(z)+380+r()*450,z,70+r()*50]);}
+  const rings=[];for(let i=0;i<22;i++){const z=-5000+i*470;rings.push([cxz(z)+(r()-.5)*400,floorZ(z)+130+r()*380,z,Math.PI-vh(z)]);}
+  const th=[];for(let i=0;i<10;i++){const c=cloudVols[i*1.5|0];th.push([c[0],c[2],2+r()*1.4,150]);}
+  return {id:'valley',name:'Zephyr Valley',tag:'Zen soaring · passes, orchards, waterfalls, picnics, cloud surfing',ltag:'🎓 Air Work drills up high · then free soaring',col:'#ff6fa8',elevFt:1500,size:13000,cx:0,cz:0,edgeH:700,base,ponds,fluid:null,free:'sky',zen:true,
+    valley:{cxz,floorZ,vh,STEPS},orchards,picnics,cloudVols,rings,launch:[cxz(-5600),floorZ(-5600)+750,-5600,vh(-5600)*R2D],
+    sky:{top:0x3d9bff,bot:0xffe9f2,fog:0xf6eaf2,near:2600,far:12500},palette:earthPaint(980,nearestPondY(ponds,null)),
+    wind:{from:270,kt:11,gust:.2},ridgeK:1,thermals:th,trees:{kind:'pine',n:1800,r:6500,minPond:1.8,seed:111},clouds:18,
+    legs:[{task:'Stress-free soaring down a mountain valley. Ride ridge lift on the windward (west-facing) slopes and thermals under the clouds; surf through clouds, thread the golden rings, swoop low over picnics (+3 🍞), and land on any lake. FLAP UP to keep going.',window:[0,300]}]};
+}
+const WORLDS=[W_valley(),W_meadow(),W_cattail(),W_tarn(),W_hollow(),W_ember(),W_islands(),W_engine(),W_sky()];
+
+/* ---------------- lessons / mastery ---------------- */
+const DRILLS={glide:'Best-glide hold',trim:'Trim it hands-off',slow:'Slow flight',approach:'Approach & flare'};
+const DRILLBRIEF={glide:'You start a little fast. Settle on best glide and hold it ±5 kt for 30 seconds straight — let trim do the holding.',
+  trim:'You start at cruise, trimmed for cruise. Pitch up to best glide, then tap TRIM until the phone at LEVEL (no pressure) holds it ±4 kt for 10 seconds.',
+  slow:'Full flaps, then slow to just above stall (Vs+2 to Vs+9 kt) without the horn. Hold it 15 s, then turn 90° at 10–20° bank staying in the band. Stall = fail.',
+  approach:'Configure like a final approach: each flap notch, stabilize on its Tgt speed ±5 kt for 5 s. Then practice the flare: ease back smoothly to the stall horn, taking 6 s or more, without stalling.'};
+const CK=(min,extra,test)=>({id:'ck',name:'Checkride',ck:true,rule:[2,2],desc:`Score ${min}+ with touchdown inside the window${extra||''}`,test:test||((t,sc)=>t.onTarget&&sc.total>=min&&sc.e===0)});
+const LS={
+ valley:[{id:'glide',kind:'drill',name:'Best-glide hold',desc:'Hold best glide ±5 kt for 30 s straight',rule:[3,3]},
+   {id:'trim',kind:'drill',name:'Trim it hands-off',desc:'From cruise: slow to Vg, trim until neutral holds it ±4 kt for 10 s',rule:[3,3]},
+   {id:'slow',kind:'drill',name:'Slow flight',desc:'Full flaps at Vs+2–9 kt, no horn: 15 s, then a 90° turn at 10–20° bank'},
+   {id:'approach',kind:'drill',name:'Approach & flare at altitude',desc:'Each flap notch stable on Tgt ±5 kt for 5 s, then a smooth ≥ 6 s flare to the horn, no stall'}],
+ meadow:[{id:'path',name:'Ride the trail',desc:'Within 150 ft low / 250 ft high of the bread trail, land in the pond',test:t=>t.onTarget&&stats.maxLo<=150&&stats.maxHi<=250},
+   {id:'flare',name:'Flare',desc:'In the pond at ≤ 1.15× stall speed, < 300 fpm, bank < 5°',test:t=>t.onTarget&&t.ias<=t.vs0*1.15&&t.vs<300&&t.bank<5},CK(850)],
+ cattail:[{id:'make',name:'Make the pond',desc:'Power-off 180 that lands in the pond',test:t=>t.onTarget},{id:'window',name:'In the window',desc:'Touch down 0 to +200 ft past the target',test:(t,sc)=>t.onTarget&&sc.e===0},CK(850)],
+ tarn:[{id:'spiral',name:'Spiral down',desc:'Never more than 150 ft below the trail; land in the tarn',test:t=>t.onTarget&&stats.maxLo<=150},CK(800)],
+ hollow:[{id:'clear',name:'Clear the pines',desc:'Land in the pond',test:t=>t.onTarget},{id:'short',name:'Short field',desc:'0 to +100 ft past the target at ≤ 1.15× stall speed',test:(t,sc)=>t.onTarget&&sc.e===0&&t.ias<=t.vs0*1.15},CK(850)],
+ ember:[{id:'rim',name:'Cross the rim',desc:'Land in the caldera lagoon',test:t=>t.onTarget},CK(800)],
+ islands:[{id:'hop',name:'Lagoon hops',desc:'Each leg that lands in its lagoon is a pass',test:t=>t.onTarget},{id:'ck',name:'Archipelago checkride',ck:true,rule:[2,2],desc:'All 3 legs in their lagoons, averaging 800+',test:()=>null}],
+ engine:[{id:'abc',name:'A is for Airspeed',desc:'Best glide within 10 s of the failure, then re-trimmed',rule:[3,3],test:()=>stats.vgCap!==null&&stats.vgCap<=10&&stats.trimmed},
+   {id:'pond',name:'Make a pond',desc:'Land in any pond',test:t=>t.onTarget},CK(750,' with the ABCs met',(t,sc)=>t.onTarget&&sc.total>=750&&sc.e===0&&stats.vgCap!==null&&stats.vgCap<=10)]};
+const ruleOf=st=>st.rule||[3,4];
 
 /* ---------------- persistence ---------------- */
 const SKEY='duckglide.v1';
-let SAVE={best:{},crumbs:0,set:{prof:'mallard',ctl:/Mobi|Android|iPhone|iPad/i.test(navigator.userAgent)?'tilt':'keys',sens:1,invP:false,invR:false,zen:false,snd:true,world:'meadow',cfi:true,voice:true,atrim:true}};
-try{const s=JSON.parse(localStorage.getItem(SKEY));if(s){SAVE.best=s.best||{};SAVE.crumbs=s.crumbs||0;Object.assign(SAVE.set,s.set||{});}}catch(e){}
+let SAVE={best:{},crumbs:0,prog:{},set:{mode:'lesson',stage:{},prof:'mallard',ctl:/Mobi|Android|iPhone|iPad/i.test(navigator.userAgent)?'tilt':'keys',sens:1,invP:false,invR:false,zen:false,snd:true,world:'meadow',cfi:true,voice:true,atrim:true}};
+try{const s=JSON.parse(localStorage.getItem(SKEY));if(s){SAVE.best=s.best||{};SAVE.crumbs=s.crumbs||0;SAVE.prog=s.prog||{};Object.assign(SAVE.set,s.set||{});}}catch(e){}
 function persist(){try{localStorage.setItem(SKEY,JSON.stringify(SAVE));}catch(e){}}
 
 /* ---------------- world runtime ---------------- */
@@ -423,7 +470,26 @@ let W=null, Hfn=null, treeGrid=null, profile=PROFILES[SAVE.set.prof]||PROFILES.m
 function makeH(w){return (x,z)=>{let h=carve(w.base(x,z),x,z,w.ponds);const d=Math.max(Math.abs(x-w.cx),Math.abs(z-w.cz));return lerp(h,w.edgeH,smooth(w.size*.4,w.size*.5,d));};}
 function islandAt(x,z){if(!W.islands)return null;for(const is of W.islands){const d=Math.hypot(x-is.x,z-is.z);if(d<is.r)return {is,d};}return null;}
 function inIsland(x,y,z){const il=islandAt(x,z);if(!il)return false;const is=il.is;return y<is.top-14&&y>is.top-is.depth*(1-il.d/is.r);}
-const ZEN=()=>SAVE.set.zen||!!(W&&W.zen);
+const ZEN=()=>!LES&&(SAVE.set.zen||!!(W&&W.zen));
+let LES=null,drill=null;
+const pr=(w,id)=>SAVE.prog[w+'.'+id]||(SAVE.prog[w+'.'+id]={h:[],done:false});
+function dots(w,st){const m=ruleOf(st)[1],h=pr(w,st.id).h.slice(-m);let o='';for(let i=0;i<m-h.length;i++)o+='○';return o+h.map(x=>x?'●':'✕').join('');}
+function recordAttempt(w,st,pass){const p=pr(w,st.id);p.h.push(pass?1:0);if(p.h.length>30)p.h.shift();const [n,m]=ruleOf(st),last=p.h.slice(-m);
+  const ok=n===m?last.length>=n&&last.every(x=>x):last.filter(x=>x).length>=n;let newly=false;if(ok&&!p.done){p.done=true;newly=true;if(SAVE.set.stage)delete SAVE.set.stage[w];}persist();return {newly,done:p.done};}
+function unlocked(w,i){const L=LS[w];if(!L||i<0)return false;if(i>0&&!pr(w,L[i-1].id).done)return false;if(w==='valley')return true;
+  if(w==='meadow'){if(i===0)return pr('valley','glide').done&&pr('valley','trim').done;if(L[i].ck)return pr('valley','slow').done&&pr('valley','approach').done;return true;}
+  return i>0||pr('meadow','ck').done;}
+function lockReason(w,i){const L=LS[w];if(i>0&&!pr(w,L[i-1].id).done)return 'Finish the stage above first.';
+  if(w==='meadow')return i===0?'Unlock: master the Air Work glide & trim drills (Zephyr Valley).':'Unlock: master the Air Work slow-flight & approach drills.';
+  return 'Unlock: earn the Mallard Meadow checkride 🏅.';}
+function curIdx(w){const L=LS[w];if(!L)return -1;const sv=(SAVE.set.stage||{})[w];if(sv!==undefined&&sv<L.length)return sv;const i=L.findIndex(st=>!pr(w,st.id).done);return i<0?L.length-1:i;}
+function ruleTxt(st){const [n,m]=ruleOf(st);return n===m?`${n} in a row`:`${n} of last ${m}`;}
+function lessonLine(pass){if(!LES)return '';const r=recordAttempt(LES.w,LES.st,pass);const L=LS[LES.w],ni=LES.i+1;
+  let x=`<b>🎓 ${LES.st.name}: ${pass?'pass ✓':'not yet'}</b> — ${dots(LES.w,LES.st)} (need ${ruleTxt(LES.st)})`;
+  if(r.newly){x+=` — <b>🏅 Mastered!</b>`;if(ni<L.length&&unlocked(LES.w,ni)){x+=` Next: ${L[ni].name}.`;$('rLesson').classList.remove('hide');}
+    else if(LES.st.ck)x+=` ${WORLDS.find(w=>w.id===LES.w).name} complete.`;else if(LES.w==='valley'&&ni>=L.length)x+=' Air Work complete — Mallard Meadow checkride unlocked.';else if(LES.w==='valley'&&LES.st.id==='trim')x+=' Mallard Meadow lessons are open.';}
+  else if(r.done&&ni<L.length&&unlocked(LES.w,ni)){$('rLesson').classList.remove('hide');}
+  return x;}
 function surfaceAt(x,z,y){if(y===undefined)y=Infinity;const il=islandAt(x,z);
   if(il&&y>il.is.top-14){const p=W.ponds[il.is.pond];if(pondE(p,x,z)<1)return {y:p.y,type:'pond',pond:il.is.pond};return {y:il.is.top+1.2,type:'land',isl:true};}
   const h=Hfn(x,z);for(let i=0;i<W.ponds.length;i++){const p=W.ponds[i];if(!p.sky&&p.y>h&&pondE(p,x,z)<1.05)return {y:p.y,type:'pond',pond:i};}
@@ -593,8 +659,8 @@ function loadWorld(w){
       const a=rr()*6.283,fall=new THREE.Mesh(new THREE.PlaneGeometry(16,is.depth*.9),fallM);fall.position.set(is.x+Math.cos(a)*is.r*1.02,is.top-is.depth*.45,is.z+Math.sin(a)*is.r*1.02);fall.rotation.y=-a+Math.PI/2;scene.add(fall);
       const bush=new THREE.SphereGeometry(1,7,5);for(let k=0;k<5;k++){const b2=rr()*6.283,dd=is.r*(.75+rr()*.2);const m=new THREE.Mesh(bush,new THREE.MeshLambertMaterial({color:[0x2fa83a,0xff7ad0,0x4cc84a][k%3],flatShading:true}));const sz=6+rr()*6;m.scale.set(sz,sz*.9,sz);m.position.set(is.x+Math.cos(b2)*dd,is.top+sz*.6,is.z+Math.sin(b2)*dd);scene.add(m);}}}
   if(w.rings){const g=new THREE.TorusGeometry(16,1.8,8,28);for(const rg of w.rings){const m=new THREE.Mesh(g,new THREE.MeshLambertMaterial({color:0xffcc22,emissive:0x775500,flatShading:true}));m.position.set(rg[0],rg[1],rg[2]);m.rotation.y=rg[3];m.userData={got:false};scene.add(m);ringMeshes.push(m);}}
-  buildTrees(w);buildClouds(w);
-  if(w.legs[0].target){bd.x=w.legs[0].target[0];bd.z=w.legs[0].target[1];bd.y=w.ponds[w.legs[0].pond].y;}else if(w.free==='sky'){bd.x=0;bd.z=0;bd.y=700;}else{bd.x=w.ponds[0].cx;bd.z=w.ponds[0].cz;bd.y=w.ponds[0].y;}
+  buildTrees(w);buildClouds(w);buildValleyDecor(w);
+  if(w.valley){bd.x=w.valley.cxz(0);bd.z=0;bd.y=w.valley.floorZ(0)+520;}else if(w.legs[0].target){bd.x=w.legs[0].target[0];bd.z=w.legs[0].target[1];bd.y=w.ponds[w.legs[0].pond].y;}else if(w.free==='sky'){bd.x=0;bd.z=0;bd.y=700;}else{bd.x=w.ponds[0].cx;bd.z=w.ponds[0].cz;bd.y=w.ponds[0].y;}
   duck=makeDuck(profile);scene.add(duck);
   cfiDuck=makeDuck({...profile,id:'cfi',col:{body:0x2a6cff,head:0xffffff,wing:0xdbe8ff,tip:0xe52521,beak:0xff8a00}});
   {const gog=new THREE.Mesh(new THREE.BoxGeometry(.13,.03,.03),new THREE.MeshLambertMaterial({color:0x111111}));gog.position.set(0,.095,-.29);cfiDuck.userData.g.add(gog);
@@ -603,12 +669,43 @@ function loadWorld(w){
   const tg=new THREE.BufferGeometry();tg.setAttribute('position',new THREE.BufferAttribute(new Float32Array(3*3000),3));tg.setDrawRange(0,0);
   traceLine=new THREE.Line(tg,new THREE.LineBasicMaterial({color:0xff3b8a}));traceLine.frustumCulled=false;scene.add(traceLine);
 }
-let targetGrp=null;
+let targetGrp=null,cloudHit=new Set(),picHit=new Set(),inCloud=false;
+function buildValleyDecor(w){if(!w.valley)return;const v=w.valley,L=(c)=>new THREE.MeshLambertMaterial({color:c,flatShading:true});
+  // river ribbon
+  const pos=[];for(let z=-6400;z<6400;z+=40){const z2=z+40,a=[v.cxz(z),v.floorZ(z)-.4,z],b=[v.cxz(z2),v.floorZ(z2)-.4,z2];
+    if(w.ponds.some(p=>pondE(p,a[0],a[2])<1.15||pondE(p,b[0],b[2])<1.15))continue;const n1=[1,-v.vh(z)],hw=14;
+    const nx=a=>{const t=Math.atan2(1,(v.cxz(a+1)-v.cxz(a-1))/2);return [Math.sin(t),-Math.cos(t)];};const na=nx(z),nb=nx(z2);
+    const A1=[a[0]+na[0]*hw,a[1],a[2]+na[1]*hw],A2=[a[0]-na[0]*hw,a[1],a[2]-na[1]*hw],B1=[b[0]+nb[0]*hw,b[1],b[2]+nb[1]*hw],B2=[b[0]-nb[0]*hw,b[1],b[2]-nb[1]*hw];
+    pos.push(...A1,...B1,...A2,...A2,...B1,...B2);}
+  const rg=new THREE.BufferGeometry();rg.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));rg.computeVertexNormals();
+  scene.add(new THREE.Mesh(rg,new THREE.MeshPhongMaterial({color:0x2fb0ff,shininess:90,side:THREE.DoubleSide})));
+  for(const q of v.STEPS){const f=new THREE.Mesh(new THREE.PlaneGeometry(32,36),new THREE.MeshBasicMaterial({color:0xdff6ff,transparent:true,opacity:.85,side:THREE.DoubleSide}));
+    f.position.set(v.cxz(q),v.floorZ(q)+2,q);f.rotation.y=-v.vh(q);scene.add(f);
+    const mist=new THREE.Mesh(new THREE.SphereGeometry(14,10,8),new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:.45,depthWrite:false}));mist.position.set(v.cxz(q+25),v.floorZ(q+30)+3,q+25);scene.add(mist);}
+  // orchards (collidable)
+  const ot=[];for(const [z0,z1,sd] of w.orchards)for(let z=z0;z<=z1;z+=16)for(let d=180;d<=330;d+=16){const x=v.cxz(z)+sd*d;if(surfaceAt(x,z).type!=='land')continue;ot.push({x,z,y:Hfn(x,z),h:6+((x*7+z)%3+3)%3*.6,r:4,kind:'orch'});}
+  if(ot.length){const tg=new THREE.CylinderGeometry(.12,.18,1,5);tg.translate(0,.5,0);const cg=new THREE.SphereGeometry(1,7,5);cg.translate(0,.9,0);
+    const tm=new THREE.InstancedMesh(tg,L(0x8a5a2b),ot.length),cm=new THREE.InstancedMesh(cg,L(0xffffff),ot.length),m=new THREE.Matrix4(),q=new THREE.Quaternion(),sc=new V3(),p=new V3(),col=new THREE.Color(),cs=[0xffb6d9,0xfff0f6,0xff8fc7,0x9be86a];
+    ot.forEach((t,i)=>{p.set(t.x,t.y-.3,t.z);sc.set(2.4,t.h,2.4);m.compose(p,q,sc);tm.setMatrixAt(i,m);sc.set(t.r,t.h*.75,t.r);m.compose(p,q,sc);cm.setMatrixAt(i,m);col.setHex(cs[i%cs.length]);cm.setColorAt(i,col);
+      t.top=t.y+t.h;const k=Math.floor(t.x/40)+','+Math.floor(t.z/40);if(!treeGrid)treeGrid=new Map();if(!treeGrid.has(k))treeGrid.set(k,[]);treeGrid.get(k).push(t);});scene.add(tm,cm);}
+  // picnics
+  const cv=document.createElement('canvas');cv.width=cv.height=64;const cx=cv.getContext('2d');for(let i=0;i<8;i++)for(let j=0;j<8;j++){cx.fillStyle=(i+j)%2?'#ffffff':'#e52521';cx.fillRect(i*8,j*8,8,8);}
+  const tex=new THREE.CanvasTexture(cv);
+  for(const [x,z] of w.picnics){const y=Hfn(x,z);const bl=new THREE.Mesh(new THREE.PlaneGeometry(16,16),new THREE.MeshLambertMaterial({map:tex}));bl.rotation.x=-Math.PI/2;bl.position.set(x,y+.25,z);scene.add(bl);
+    const tb=new THREE.Mesh(new THREE.BoxGeometry(6,1.2,3),L(0x9a6a3a));tb.position.set(x+11,y+1,z);scene.add(tb);
+    const um=new THREE.Mesh(new THREE.ConeGeometry(5,2.2,10),L(0xfbd000));um.position.set(x+11,y+5,z);scene.add(um);const pole=new THREE.Mesh(new THREE.CylinderGeometry(.15,.15,4.5,5),L(0xffffff));pole.position.set(x+11,y+2.6,z);scene.add(pole);
+    for(let k=0;k<3;k++){const dk=new THREE.Mesh(new THREE.SphereGeometry(.9,8,6),L(0xffd21a));dk.position.set(x-4+k*3,y+1,z+5);scene.add(dk);}}
+  // surfable clouds
+  const g=new THREE.SphereGeometry(1,8,6),mat=new THREE.MeshLambertMaterial({color:0xffffff,flatShading:true,emissive:0x666677}),rr=rng(31);
+  const im=new THREE.InstancedMesh(g,mat,w.cloudVols.length*7),m=new THREE.Matrix4(),q=new THREE.Quaternion(),sc=new V3(),p=new V3();let k=0;
+  for(const c of w.cloudVols)for(let j=0;j<7;j++){const r=c[3]*(.45+rr()*.4);p.set(c[0]+(rr()-.5)*c[3]*1.1,c[1]+(rr()-.4)*c[3]*.4,c[2]+(rr()-.5)*c[3]*1.1);sc.set(r,r*.75,r);m.compose(p,q,sc);im.setMatrixAt(k++,m);}
+  scene.add(im);
+}
 function resetFlight(pos,dir,ias,trimA){
   ph.pos.copy(pos);const alt=W.elevFt/FT+pos.y,rho=RHO0*Math.pow(1-2.25577e-5*alt,4.2559),tas=ias*Math.sqrt(RHO0/rho);
   ph.vel.copy(dir).multiplyScalar(tas);ph.vel.y=ias>profile.vbg*1.1?0:-tas/profile.LD;{const sf=surfaceAt(ph.pos.x,ph.pos.z,ph.pos.y);windAt(ph.pos,ph.pos.y-sf.y,0,tmp2);ph.vel.x+=tmp2.x;ph.vel.z+=tmp2.z;}
   ph.trim=trimA;ph.alpha=trimA;ph.bank=0;ph.slip=0;ph.flap=0;ph.flapAnim=0;ph.stalled=false;ph.drop=0;ph.energy=1;ph.t=0;
-  pathIdx=0;trace=[];rec=[];recAcc=0;td=null;inp.bankK=0;
+  pathIdx=0;trace=[];rec=[];recAcc=0;td=null;inp.bankK=0;cloudHit=new Set();picHit=new Set();$('rLesson').classList.add('hide');
   traceLine.geometry.setDrawRange(0,0);ripples.forEach(r=>scene.remove(r));ripples=[];
   duck.userData.inner.scale.setScalar(profile.b);duck.visible=true;cfiDuck.userData.inner.scale.setScalar(profile.b);cfiSnap=true;pathDev=0;pathOff=1e9;pathRem=1e9;resetCoach();state='fly';showHUD(true);
 }
@@ -641,10 +738,10 @@ function startFree(arg){
     resetFlight(tmp3.set(sc.x,gy+sc.agl/FT,sc.z),new V3(Math.sin(h),0,-Math.cos(h)),vcr,cl/P.CLa*R2D+P.a0);
     stats=newStats(0);sfx('sputter');toast(`💥 ENGINE FAILURE! #${sc.id}`,2600);setTimeout(()=>{if(state==='fly')toast(`Pitch for ${(P.vbg*KT).toFixed(0)} kt · trim · pick a pond`,2600);},2700);}
   else{const L=arg&&arg.launch?arg.launch:W.launch;lastFree={launch:L};freeTargets();ringMeshes.forEach(m=>{m.userData.got=false;m.material.color.setHex(0xffcc22);m.scale.setScalar(1);});
-    const h=L[3]*D2R;resetFlight(tmp3.set(L[0],L[1],L[2]),new V3(Math.sin(h),0,-Math.cos(h)),P.vbg,P.aTrim);stats=newStats(ringMeshes.length*5);toast('☁️ Free flight!',1500);}
+    const h=L[3]*D2R;resetFlight(tmp3.set(L[0],L[1],L[2]),new V3(Math.sin(h),0,-Math.cos(h)),P.vbg,P.aTrim);stats=newStats(ringMeshes.length*5+(W.cloudVols?W.cloudVols.length:0)+(W.picnics?W.picnics.length*3:0));if(!drill)toast(W.valley?'🏔️ Soar the valley!':'☁️ Free flight!',1500);}
   legIdx=0;LEG=freeLegs[0];pickBest(true);bestT=0;
 }
-function retry(){hideAll();if(W.free)startFree(lastFree);else startLeg(legIdx,lastPrefix);}
+function retry(){hideAll();$('rLesson').classList.add('hide');if(drill){startDrill(drill.id);return;}if(W.free)startFree(lastFree);else startLeg(legIdx,lastPrefix);}
 
 /* ---------------- input ---------------- */
 const inp={pitch:0,bank:0,slip:0,keys:{},tilt:{ok:false,g:new V3(),f:new V3(),n0:null,sgn:1,roll:0,pitch:0},touch:{id:null,x0:0,y0:0,dx:0,dy:0},bankK:0,pitchK:0,boost:false,pad:null};
@@ -670,7 +767,7 @@ addEventListener('pointerup',endTouch);addEventListener('pointercancel',endTouch
 function hold(id,on,off,rep){const b=$(id);let iv=0;b.addEventListener('pointerdown',e=>{e.preventDefault();b.classList.add('on');on();if(rep){clearInterval(iv);iv=setInterval(on,rep);}});['pointerup','pointerleave','pointercancel'].forEach(ev=>b.addEventListener(ev,()=>clearInterval(iv)));['pointerup','pointerleave','pointercancel'].forEach(ev=>b.addEventListener(ev,()=>{b.classList.remove('on');off&&off();}));}
 let slipBtn=false;hold('bSlip',()=>slipBtn=true,()=>slipBtn=false);let boostBtn=false;hold('bBoost',()=>boostBtn=true,()=>boostBtn=false);
 hold('bFu',()=>setFlap(-1));hold('bFd',()=>setFlap(1));hold('bTu',()=>trim(1),null,140);hold('bTd',()=>trim(-1),null,140);
-$('bCam').onclick=()=>cycleCam();$('bRetry').onclick=()=>{if(state==='fly'||state==='settle')retry();};$('bMenu').onclick=()=>{if(state==='fly'||state==='settle'){state='menu';hideAll();showHUD(false);if(cfiDuck)cfiDuck.visible=false;show('menu');renderMenu();}};$('bCal').onclick=()=>{calibrate();inp.bankK=0;toast('Level set',800);};$('bPause').onclick=()=>togglePause();
+$('bCam').onclick=()=>cycleCam();$('bRetry').onclick=()=>{if(state==='fly'||state==='settle')retry();};$('bMenu').onclick=()=>{if(state==='fly'||state==='settle'){state='menu';drill=null;hideAll();showHUD(false);if(cfiDuck)cfiDuck.visible=false;show('menu');renderMenu();}};$('bCal').onclick=()=>{calibrate();inp.bankK=0;toast('Level set',800);};$('bPause').onclick=()=>togglePause();
 let padPrev={};
 function readInputs(dt){
   const k=inp.keys,sens=SAVE.set.sens;let pitch=0,bank=null,slip=(k[' ']||slipBtn)?1:0;
@@ -746,10 +843,10 @@ function checkContacts(){
     gs:gsv*KT,pos:s.pos.clone()};
   s.pos.y=sf.y;s.vel.y=0;state='settle';settleT=0;splash(s.pos,sf.type!=='land');quack();
 }
-function crash(title,why){lastCrash={title,x:ph.pos.x,y:ph.pos.y,z:ph.pos.z,rem:PATH&&PATH.dense[pathIdx]?PATH.dense[pathIdx].rem:-1,sf:surfaceAt(ph.pos.x,ph.pos.z)};if(ZEN()){toast('Oops! 🌸 Zen respawn',1500);setTimeout(()=>{if(state==='crashing')retry();},500);state='crashing';return;}
+function crash(title,why){if(drill&&!ZEN()){lastCrash={title};return drillEnd(false,title+' '+why);}lastCrash={title,x:ph.pos.x,y:ph.pos.y,z:ph.pos.z,rem:PATH&&PATH.dense[pathIdx]?PATH.dense[pathIdx].rem:-1,sf:surfaceAt(ph.pos.x,ph.pos.z)};if(ZEN()){toast('Oops! 🌸 Zen respawn',1500);setTimeout(()=>{if(state==='crashing')retry();},500);state='crashing';return;}
   state='crashed';splash(ph.pos,true);sfx('crash');showHUD(false);
   $('rTitle').textContent=title;$('rScore').textContent='0';$('rStars').textContent='☆☆☆';$('rCrumbs').textContent=`🍞 ${stats.crumbs}/${stats.total}`;
-  $('rTable').innerHTML='';$('rCoach').innerHTML=`<li>${why}</li>`+coachFlight().map(x=>`<li>${x}</li>`).join('');$('rNext').classList.toggle('hide',W.free!=='engine');$('rNext').textContent='NEW FAILURE ▶';$('rReplay').classList.toggle('hide',rec.length<10);show('result');}
+  $('rLesson').classList.add('hide');const ll=LES?lessonLine(false):'';$('rTable').innerHTML='';$('rCoach').innerHTML=(ll?`<li>${ll}</li>`:'')+`<li>${why}</li>`+coachFlight().map(x=>`<li>${x}</li>`).join('');$('rNext').classList.toggle('hide',W.free!=='engine');$('rNext').textContent='NEW FAILURE ▶';$('rReplay').classList.toggle('hide',rec.length<10);show('result');}
 function scoreTD(t){const lo=LEG.window[0],hi=LEG.window[1];
   const e=t.f<lo?lo-t.f:t.f>hi?t.f-hi:0;const acc=t.onTarget?400*Math.max(0,1-e/300):0,cross=t.onTarget?100*Math.max(0,1-Math.abs(t.r)/120):0;
   const sink=200*clamp((700-t.vs)/500,0,1),ratio=t.ias/t.vs0,spd=150*(ratio<=1.15?1:clamp(1-(ratio-1.15)/.35,0,1));
@@ -783,9 +880,11 @@ function finishLanding(){
   if(t.align>10)c.push(`Track was ${t.align.toFixed(0)}° off the landing lane at touchdown${W.wind.kt>5?` — with ${W.wind.kt} kt of wind, correct for drift (crab, then align)`:''}.`);
   if(t.bank>5)c.push(`Wings not level (${t.bank.toFixed(0)}°). Roll out before the flare.`);
   c.push(...coachFlight());
+  legScores[legIdx]={score:sc.total,stars};$('rLesson').classList.add('hide');
+  if(LES&&LES.st.kind!=='drill'){let pass;if(LES.w==='islands'&&LES.st.id==='ck'){if(!t.onTarget)pass=false;else if(legIdx<W.legs.length-1)pass=null;else pass=legScores.reduce((a,b)=>a+(b?b.score:0),0)/W.legs.length>=800;}
+    else pass=!!LES.st.test(t,sc);if(pass!==null)c.unshift(lessonLine(pass));else c.unshift(`<b>🎓 ${LES.st.name}</b>: leg ${legIdx+1} made — keep hopping.`);}
   $('rCoach').innerHTML=c.map(x=>`<li>${x}</li>`).join('');
-  legScores[legIdx]={score:sc.total,stars};
-  const more=W.free?true:legIdx<W.legs.length-1&&t.onTarget;$('rNext').classList.toggle('hide',!more);$('rNext').textContent=W.free==='engine'?'NEW FAILURE ▶':W.free==='sky'?'FLAP UP & EXPLORE ▶':'FLAP UP → NEXT ISLAND';$('rReplay').classList.toggle('hide',rec.length<10);
+  const more=W.free?!drill:legIdx<W.legs.length-1&&t.onTarget;$('rNext').classList.toggle('hide',!more);$('rNext').textContent=W.free==='engine'?'NEW FAILURE ▶':W.free==='sky'?'FLAP UP & EXPLORE ▶':'FLAP UP → NEXT ISLAND';$('rReplay').classList.toggle('hide',rec.length<10);
   if(!more&&W.legs.length>1&&!W.free){const tot=legScores.reduce((a,b)=>a+(b?b.score:0),0);$('rCoach').innerHTML+=`<li><b>Archipelago total: ${tot} / ${W.legs.length*1000}</b></li>`;}
   if(!SAVE.set.zen){SAVE.crumbs+=stats.crumbs;const key=W.id;const tot=W.legs.length>1&&!W.free?(more?null:legScores.reduce((a,b)=>a+(b?b.score:0),0)/W.legs.length):sc.total;
     if(tot!==null){const st=tot>=850?3:tot>=650?2:tot>=400?1:0;const b=SAVE.best[key]||{score:0,stars:0};if(tot>b.score)SAVE.best[key]={score:Math.round(tot),stars:st,prof:profile.id};}persist();}
@@ -883,6 +982,9 @@ function updateVisuals(dt){
   // beads
   const tnow=performance.now()*.003;for(const b of beadMeshes){if(b.userData.got){b.scale.multiplyScalar(.9);b.position.y+=dt*20;continue;}b.rotation.z=tnow;
     if(state==='fly'&&b.position.distanceToSquared(s.pos)<16*16){b.userData.got=true;stats.crumbs++;sfx('coin');}}
+  if(state==='fly'&&W.cloudVols){let inside=false;W.cloudVols.forEach((c,i)=>{const d=Math.hypot(s.pos.x-c[0],(s.pos.y-c[1])*1.4,s.pos.z-c[2]);if(d<c[3]*1.05){inside=true;if(!cloudHit.has(i)){cloudHit.add(i);stats.crumbs+=1;toast('☁️ Cloud surf! +1',700);}}});
+    if(inside!==inCloud){inCloud=inside;if(inside){scene.fog.near=1;scene.fog.far=110;scene.fog.color.setHex(0xffffff);}else{scene.fog.near=W.sky.near;scene.fog.far=W.sky.far;scene.fog.color.setHex(W.sky.fog);}}}
+  if(state==='fly'&&W.picnics)W.picnics.forEach((pc,i)=>{if(!picHit.has(i)&&Math.hypot(s.pos.x-pc[0],s.pos.z-pc[1])<75&&s.hS<45){picHit.add(i);stats.crumbs+=3;sfx('coin');quack();toast('🧺 Picnic flyby! +3 — the ducklings wave',1600);}});
   for(const m of ringMeshes){if(m.userData.got){if(m.scale.x>.05)m.scale.multiplyScalar(.95);continue;}if(state==='fly'&&m.position.distanceToSquared(s.pos)<15*15){m.userData.got=true;stats.crumbs+=5;sfx('coin');setTimeout(()=>sfx('coin'),140);toast('+5 🍞',600);}}
   ripples.forEach(m=>{m.userData.t+=dt;const t=m.userData.t;if(t<0)return;m.scale.setScalar(1+t*12);m.material.opacity=Math.max(0,.9-t*.45);});
   {const to=(W.wind.from+180)*D2R;for(const w of windsocks)w.userData.cg.rotation.y=-to+Math.PI;}
@@ -920,6 +1022,38 @@ function updateReplay(dt){rp.t+=dt*rp.speed;const f=rp.t/.1,i=Math.floor(f);if(i
   camera.updateProjectionMatrix();sky.position.copy(camera.position);
   ripples.forEach(m=>{m.userData.t+=dt;const t=m.userData.t;if(t<0)return;m.scale.setScalar(1+t*12);m.material.opacity=Math.max(0,.9-t*.45);});
   $('rpInfo').textContent=`REPLAY ${rp.speed}× · ${(rp.t).toFixed(0)} / ${(rec.length*.1).toFixed(0)} s · ${['chase','side','tower'][camMode]}`;}
+
+/* ---------------- Air Work drills ---------------- */
+function startDrill(id){const v=W.valley,z=-5400;drill=null;startFree({launch:[v.cxz(z),v.floorZ(z)+1300,z,v.vh(z)*R2D]});
+  drill={id,phase:0,band:0,t:0,flareT:0,turned:0,lastH:null,pIas:null,lim:id==='approach'?160:120,note:''};const P=profile;
+  if(id==='glide'){ph.vel.multiplyScalar(80/(P.vbg*KT));}
+  if(id==='trim'){const vcr=P.vcr/KT;ph.trim=trimFor(P,0,vcr);ph.alpha=ph.trim;ph.vel.multiplyScalar(vcr/P.vbg);ph.vel.y=0;}
+  stats=newStats(0);toast('🎓 '+DRILLS[id],1500);say('drill',DRILLBRIEF[id],999,true);}
+function runDrill(dt){const d=drill,s=ph,P=profile,ias=s.IAS*KT,n=P.flaps.length-1,agl=Math.max(0,s.hS)*FT,horn=s.CLlin>.9*s.CLm;let instr='',prog='';
+  d.t+=dt;
+  if(agl<1000)return drillEnd(false,'Below 1,000 ft AGL — air work needs room under you. Keep the drill straight down the valley, away from the ridges.');
+  if(s.stalled)return drillEnd(false,'Stalled. The horn is your limit — ease forward the moment you hear it.');
+  if(d.t>d.lim)return drillEnd(false,`Out of time (${d.lim} s).${d.note?' '+d.note:''}`);
+  if(d.id==='glide'){const tg=P.vbg*KT,ok=Math.abs(ias-tg)<=5;d.band=ok?d.band+dt:0;instr=`hold ${tg.toFixed(0)} ±5 kt`;prog=`⏱ ${d.band.toFixed(1)} / 30 s${ok?'':' · off speed'}`;if(d.band>=30)return drillEnd(true,'Held best glide for 30 s straight.');}
+  else if(d.id==='trim'){const tg=P.vbg*KT,hands=Math.abs(inp.pitch)<.12,ok=Math.abs(ias-tg)<=4&&hands&&s.flap===0;d.band=ok?d.band+dt:0;
+    instr=`slow to ${tg.toFixed(0)}, then TRIM until neutral holds it`;prog=`${ok?'hands-off ✓':!hands?(inp.pitch>0?'holding back → TRIM ▲':'holding forward → TRIM ▼'):'off speed'} · ${d.band.toFixed(1)} / 10 s`;
+    if(d.band>=10)return drillEnd(true,`Trimmed hands-off at best glide after ${d.t.toFixed(0)} s.`);}
+  else if(d.id==='slow'){const lo=P.vsF(n)*KT+2,hi=lo+7,ok=s.flap===n&&ias>=lo&&ias<=hi&&!horn;
+    if(d.phase===0){d.band=ok?d.band+dt:0;instr=`${n?'flaps '+P.flaps[n].n+', ':''}${lo.toFixed(0)}–${hi.toFixed(0)} kt, no horn`;prog=`⏱ ${d.band.toFixed(1)} / 15 s${horn?' · HORN — ease forward':''}`;
+      if(d.band>=15){d.phase=1;d.lastH=null;d.turned=0;say('slow2','Good. Now a ninety degree turn — ten to twenty degrees of bank, same speed band.',0,true);}}
+    else{const hd=Math.atan2(s.vel.x,-s.vel.z);if(d.lastH!==null&&ok&&Math.abs(s.bank)>=8&&Math.abs(s.bank)<=25)d.turned+=Math.abs(wrapPi(hd-d.lastH))*R2D;d.lastH=hd;if(Math.abs(s.bank)>25)d.note='Bank went past 25° — slow-flight turns stay shallow.';
+      instr=`turn 90° at 10–20° bank, ${lo.toFixed(0)}–${hi.toFixed(0)} kt`;prog=`↻ ${d.turned.toFixed(0)}° / 90°${!ok?' · out of band':Math.abs(s.bank)<8?' · bank more':Math.abs(s.bank)>25?' · too steep':''}`;
+      if(d.turned>=88)return drillEnd(true,'Slow flight: 15 s stabilized and a 90° turn, no stall.');}}
+  else if(d.id==='approach'){
+    if(d.phase<n){const f=d.phase+1,tg=tgtSpeed(P,f)*KT,ok=s.flap===f&&Math.abs(ias-tg)<=5&&Math.abs(inp.pitch)<.25;d.band=ok?d.band+dt:0;instr=`flaps ${P.flaps[f].n} → ${tg.toFixed(0)} kt, trimmed`;prog=`⏱ ${d.band.toFixed(1)} / 5 s${s.flap!==f?' · set flaps '+P.flaps[f].n:''}`;
+      if(d.band>=5){d.phase++;d.band=0;if(d.phase<n)say('ap'+d.phase,`Stable. Next notch — flaps ${P.flaps[d.phase+1].n}.`,0,true);else say('apf','All set. Now the flare: ease back smoothly — take at least six seconds to the horn.',0,true);}}
+    else{if(d.pIas!==null&&ias<d.pIas-.005)d.flareT+=dt;d.pIas=ias;instr='flare — ease back smoothly to the stall horn (≥ 6 s)';prog=`⏱ ${d.flareT.toFixed(1)} s bleeding speed · ${ias.toFixed(0)} kt`;
+      if(horn)return d.flareT>=6?drillEnd(true,`Smooth flare — ${d.flareT.toFixed(1)} s to the horn, no stall. That's the feel for the last 10 ft.`):drillEnd(false,`Too abrupt — horn after ${d.flareT.toFixed(1)} s. Ease back more slowly; aim for 6+ s.`);}}
+  $('task').textContent=`🎓 ${DRILLS[d.id]}: ${instr}`;const pe=$('pathdev');pe.textContent=prog;pe.style.background='rgba(42,108,255,.85)';
+}
+function drillEnd(pass,msg){const d=drill;state='result';showHUD(false);if(cfiDuck)cfiDuck.visible=false;$('rLesson').classList.add('hide');
+  $('rTitle').textContent=(pass?'✅ ':'❌ ')+DRILLS[d.id]+(pass?' — pass':' — not yet');$('rScore').textContent='';$('rStars').textContent='';$('rCrumbs').textContent=`${d.t.toFixed(0)} s`;$('rTable').innerHTML='';
+  const c=[msg];const ll=lessonLine(pass);if(ll)c.unshift(ll);$('rCoach').innerHTML=c.map(x=>`<li>${x}</li>`).join('');$('rNext').classList.add('hide');$('rReplay').classList.toggle('hide',rec.length<10);sfx(pass?'win':'ok');show('result');}
 
 /* ---------------- CFI duck (tutorial wingman) ---------------- */
 const coach={last:{},lastAny:-99,alt:{},slowT:0,fastT:0,holdT:0,hideT:0};
@@ -972,7 +1106,7 @@ function loop(now){requestAnimationFrame(loop);let dt=Math.min(.05,(now-last)/10
   if(state==='fly'){readInputs(dt);accum+=dt;while(accum>=DT){physStep(DT);accum-=DT;checkContacts();if(state!=='fly')break;
       const s=ph;if(s.CLlin>.9*s.CLm){if(!s._sw){stats.stallW++;s._sw=true;}}else s._sw=false;stats.maxBank=Math.max(stats.maxBank,Math.abs(s.bank));
       if(s.pos.y-W.ponds[LEG.pond].y>150){stats.tGlide+=DT;if(Math.abs(s.IAS-profile.vbg)*KT<=5)stats.tVg+=DT;}}
-    if(state==='fly'){updateHUD(dt);runCoach(dt);}
+    if(state==='fly'){updateHUD(dt);if(drill)runDrill(dt);else runCoach(dt);}
     if(AC&&windG){windG.gain.value=clamp((ph.IAS-10)/40,0,1)*.12*(SAVE.set.snd?1:0);hornG.gain.value=(ph.CLlin>.9*ph.CLm&&(now%400<250))?.05:0;}}
   else if(state==='settle'){settleT+=dt;const s=ph;const k=Math.exp(-dt*(td.type==='land'?1.6:.7));s.vel.x*=k;s.vel.z*=k;s.pos.addScaledVector(s.vel,dt);s.pos.y=surfaceAt(s.pos.x,s.pos.z,s.pos.y+1).y;
     recAcc+=dt;if(recAcc>=.1&&rec.length<9000){recAcc=0;const q=duck.quaternion;rec.push([s.pos.x,s.pos.y,s.pos.z,q.x,q.y,q.z,q.w,s.flapAnim]);}
@@ -985,21 +1119,31 @@ function loop(now){requestAnimationFrame(loop);let dt=Math.min(.05,(now-last)/10
 /* ---------------- menus ---------------- */
 let selW=WORLDS.find(w=>w.id===SAVE.set.world)||WORLDS[0],lastPrefix=null;
 function renderMenu(){
-  $('worlds').innerHTML=WORLDS.map(w=>{const b=SAVE.best[w.id];return `<div class="wc${w===selW?' sel':''}" data-id="${w.id}" style="background:${w.col}"><b>${w.name}</b><small>${w.tag}</small><span class="stars">${b?'★'.repeat(b.stars)+'☆'.repeat(3-b.stars)+` <small style="display:inline">${b.score}</small>`:'☆☆☆'}</span></div>`;}).join('');
+  const lesson=SAVE.set.mode==='lesson';[...$('modeSeg').children].forEach(b=>{b.classList.toggle('on',b.dataset.v===SAVE.set.mode);b.onclick=()=>{SAVE.set.mode=b.dataset.v;persist();renderMenu();};});
+  $('worlds').innerHTML=WORLDS.map(w=>{const b=SAVE.best[w.id],L=LS[w.id];const lp=lesson&&L?`<small style="display:block;font-weight:700">🎓 ${L.filter(st=>pr(w.id,st.id).done).length}/${L.length}${pr(w.id,L[L.length-1].id).done?' 🏅':''}${unlocked(w.id,curIdx(w.id))?'':' 🔒'}</small>`:'';return `<div class="wc${w===selW?' sel':''}" data-id="${w.id}" style="background:${w.col}"><b>${w.name}</b><small>${lesson&&w.ltag?w.ltag:w.tag}</small>${lp}<span class="stars">${b?'★'.repeat(b.stars)+'☆'.repeat(3-b.stars)+` <small style="display:inline">${b.score}</small>`:'☆☆☆'}</span></div>`;}).join('');
   [...document.querySelectorAll('.wc')].forEach(el=>el.onclick=()=>{const nw=WORLDS.find(w=>w.id===el.dataset.id);if(nw===selW)return;selW=nw;SAVE.set.world=selW.id;persist();renderMenu();if(state==='menu'){loadWorld(selW);duck.visible=false;}});
   $('profSeg').innerHTML=Object.values(PROFILES).map(p=>`<button data-v="${p.id}" class="${p===profile?'on':''}">${p.name}</button>`).join('');
   [...$('profSeg').children].forEach(b=>b.onclick=()=>{profile=PROFILES[b.dataset.v];SAVE.set.prof=profile.id;persist();renderMenu();});
   const p=profile;$('profInfo').textContent=`${p.like} · best glide ${(p.vbg*KT).toFixed(0)} KIAS · L/D ${p.LD.toFixed(1)}:1 · Vs clean ${(p.vsF(0)*KT).toFixed(0)} / dirty ${(p.vsF(p.flaps.length-1)*KT).toFixed(0)} KIAS · span ${p.b} m`;
   [...$('ctlSeg').children].forEach(b=>{b.classList.toggle('on',b.dataset.v===SAVE.set.ctl);b.onclick=()=>{SAVE.set.ctl=b.dataset.v;persist();renderMenu();};});
   $('sens').value=SAVE.set.sens;$('invP').checked=SAVE.set.invP;$('invR').checked=SAVE.set.invR;$('zen').checked=SAVE.set.zen;$('cfi').checked=SAVE.set.cfi;$('voice').checked=SAVE.set.voice;$('atrim').checked=SAVE.set.atrim;$('snd').checked=SAVE.set.snd;
+  renderLadder();
   $('stampMenu').textContent=`Build ${BUILD_ID} · shipped ${BUILT_UTC} · 🍞 lifetime ${SAVE.crumbs}`;
 }
+function renderLadder(){const el=$('ladder'),w=selW.id,L=LS[w];if(SAVE.set.mode!=='lesson'){el.innerHTML='';return;}
+  if(!L){el.innerHTML=`<div class="lad"><b>${selW.name}</b>: free flight only — no lessons here. 🌸</div>`;return;}
+  const ci=curIdx(w);el.innerHTML=`<div class="lad"><b>🎓 ${w==='valley'?'Air Work — drills flown high over Zephyr Valley':selW.name+' lessons'}</b>`+L.map((st,i)=>{const p=pr(w,st.id),u=unlocked(w,i);
+    return `<div class="st${i===ci?' sel':''}${u?'':' lock'}" data-i="${i}"><div><b>${p.done?'🏅':u?(st.ck?'🎖️':'▶'):'🔒'} ${st.name}</b><small>${st.desc} · pass: ${ruleTxt(st)}</small></div><span class="dots">${dots(w,st)}</span></div>`;}).join('')+
+    (unlocked(w,ci)?'':`<small>🔒 ${lockReason(w,ci)} FLY gives free practice meanwhile.</small>`)+'</div>';
+  [...el.querySelectorAll('.st')].forEach(d=>d.onclick=()=>{const i=+d.dataset.i;if(!unlocked(w,i)){toast(lockReason(w,i),2200);return;}SAVE.set.stage=SAVE.set.stage||{};SAVE.set.stage[w]=i;persist();renderLadder();});}
+function pickLesson(){LES=null;if(SAVE.set.mode!=='lesson'||!LS[selW.id])return;const i=curIdx(selW.id);if(unlocked(selW.id,i))LES={w:selW.id,i,st:LS[selW.id][i]};}
 $('sens').oninput=e=>{SAVE.set.sens=+e.target.value;persist();};
 ['invP','invR','zen','snd','cfi','voice','atrim'].forEach(id=>$(id).onchange=e=>{SAVE.set[id]=e.target.checked;persist();});
 function brief(){
-  const w=selW,p=profile,L=w.legs[0];$('bTitle').textContent=w.name;$('bTag').textContent=w.tag;
+  const w=selW,p=profile,L=w.legs[0];pickLesson();$('bTitle').textContent=w.name;$('bTag').textContent=w.tag;
+  const LL=SAVE.set.mode==='lesson'&&LS[w.id]?(LES?`<p style="background:#e6f6ff;border:2px solid #049cd8;border-radius:12px;padding:8px 10px">🎓 <b>Lesson: ${LES.st.name}</b> — ${LES.st.kind==='drill'?DRILLBRIEF[LES.st.id]:LES.st.desc}.<br>Pass rule: <b>${ruleTxt(LES.st)}</b> · progress ${dots(LES.w,LES.st)}${LES.st.kind==='drill'?' · flown from ~4,000 ft AGL, fail below 1,000 ft':''}</p>`:`<p style="background:#fff3d6;border:2px solid #fbd000;border-radius:12px;padding:8px 10px">🔒 ${lockReason(w.id,curIdx(w.id))} This flight is free practice.</p>`):'';
   const altM=w.elevFt/FT,rho=RHO0*Math.pow(1-2.25577e-5*altM,4.2559);
-  $('bBody').innerHTML=`<p><b>Task:</b> ${L.task}</p><div class="kv">
+  $('bBody').innerHTML=LL+`<p><b>${LES&&LES.st.kind==='drill'?'Where':'Task'}:</b> ${LES&&LES.st.kind==='drill'?'High over Zephyr Valley, pointed down the valley. Keep it straight-ish; the ridges are close.':L.task}</p><div class="kv">
     <b>Duck</b><span>${p.name} — ${p.like}</span>
     <b>Best glide</b><span>${(p.vbg*KT).toFixed(0)} KIAS (trimmed hands-off) · L/D ${p.LD.toFixed(1)}:1 → ~${(p.LD*1000/6076).toFixed(1)} nm per 1000 ft in still air</span>
     <b>Stall</b><span>${(p.vsF(0)*KT).toFixed(0)} KIAS clean · ${(p.vsF(p.flaps.length-1)*KT).toFixed(0)} KIAS ${p.flaps[p.flaps.length-1].n} (rises with bank)</span>
@@ -1013,7 +1157,7 @@ function brief(){
     <b>Flaps</b><span>${p.flaps.length>1?`None until the pond is <i>made</i> (Need well under Have). Then one notch at a time — each notch: nose slightly lower, slower target speed. Full ${p.flaps[p.flaps.length-1].n} on final.`:'None on this duck — forward SLIP is your drag.'} Still high with everything out? Hold SLIP.</span>
     <b>Flare</b><span>~100 ft: on speed, aim point (magenta ⊕) on the near edge of the bullseye. ~25 ft: round out (ease back). ~10 ft: hold it off, keep easing back as it slows. Touch at ~${(p.vsF(p.flaps.length-1)*KT).toFixed(0)}–${(p.vsF(p.flaps.length-1)*KT+5).toFixed(0)} kt with full ${p.flaps[p.flaps.length-1].n}, wings level, under 300 fpm.</span>
     <b>CFI duck</b><span>${SAVE.set.cfi?'ON — the blue duck with the red cap flies off your right wing <i>at the ideal glidepath height</i> (above you = you\'re low, below = high) with his flaps set where he\'d have them, and talks you through it.':'OFF (turn on in the menu)'}</span>
-    <b>Mode</b><span>${SAVE.set.zen||w.zen?'🌸 Zen — no crashes, B / FLAP WINGS gives a boost':'Training — crashes count, best score saved'}</span></div>`;
+    <b>Mode</b><span>${LES?'🎓 Lesson — Zen is off, crashes count':SAVE.set.zen||w.zen?'🌸 Zen — no crashes, B / FLAP WINGS gives a boost':'Training — crashes count, best score saved'}</span></div>`;
   $('bTilt').classList.toggle('hide',SAVE.set.ctl!=='tilt');show('brief');
 }
 $('bGo').onclick=()=>{audio();brief();};
@@ -1022,12 +1166,13 @@ $('bFly').onclick=async()=>{audio();if(AC&&AC.state==='suspended')AC.resume();
   if(SAVE.set.ctl==='tilt'){await askMotion();await new Promise(r=>setTimeout(r,250));calibrate();if(!inp.tilt.ok)toast('No tilt sensor — try Touch stick',2500);}
   try{if(matchMedia('(pointer:coarse)').matches&&document.documentElement.requestFullscreen&&!document.fullscreenElement){await document.documentElement.requestFullscreen();if(screen.orientation&&screen.orientation.lock)screen.orientation.lock('landscape').catch(()=>{});}}catch(e){}
   try{if(navigator.wakeLock)navigator.wakeLock.request('screen').catch(()=>{});}catch(e){}
-  hideAll();loadWorld(selW);legScores=[];lastPrefix=null;camMode=0;startLeg(0);};
+  hideAll();pickLesson();drill=null;loadWorld(selW);legScores=[];lastPrefix=null;camMode=0;if(LES&&LES.st.kind==='drill')startDrill(LES.st.id);else startLeg(0);};
+$('rLesson').onclick=()=>{hideAll();brief();};
 function togglePause(){if(state==='fly'){state='paused';showHUD(false);$('stampPause').textContent=`Build ${BUILD_ID} · shipped ${BUILT_UTC}`;show('pause');}else if(state==='paused'){hideAll();state='fly';showHUD(true);last=performance.now();if(SAVE.set.ctl==='tilt')calibrate();}}
-$('pResume').onclick=togglePause;$('pRetry').onclick=retry;$('pMenu').onclick=()=>{state='menu';hideAll();showHUD(false);show('menu');renderMenu();};
+$('pResume').onclick=togglePause;$('pRetry').onclick=retry;$('pMenu').onclick=()=>{state='menu';drill=null;hideAll();showHUD(false);show('menu');renderMenu();};
 $('rRetry').onclick=retry;$('rReplay').onclick=startReplay;$('rpExit').onclick=endReplay;$('rpSpd').onclick=()=>{rp.speed=rp.speed===4?1:rp.speed===1?8:4;};$('rpCam').onclick=()=>{camMode=(camMode+1)%3;};
-$('rNext').onclick=()=>{hideAll();if(W.free==='engine'){startFree(null);return;}if(W.free==='sky'){const p=td?td.pos:ph.pos;startFree({launch:[p.x,p.y+450,p.z,Math.random()*360]});toast('Flap flap flap! 🦆',1200);return;}lastPrefix=[td.pos.x,td.pos.z];startLeg(legIdx+1,lastPrefix);toast('Flap flap flap! 🦆',1200);};
-$('rMenu').onclick=()=>{state='menu';hideAll();show('menu');renderMenu();};
+$('rNext').onclick=()=>{hideAll();drill=null;if(W.free==='engine'){startFree(null);return;}if(W.free==='sky'){const p=td?td.pos:ph.pos;startFree({launch:[p.x,p.y+450,p.z,Math.random()*360]});toast('Flap flap flap! 🦆',1200);return;}lastPrefix=[td.pos.x,td.pos.z];startLeg(legIdx+1,lastPrefix);toast('Flap flap flap! 🦆',1200);};
+$('rMenu').onclick=()=>{state='menu';drill=null;hideAll();show('menu');renderMenu();};
 $('rWorld').onclick=()=>{const i=WORLDS.indexOf(W);selW=WORLDS[(i+1)%WORLDS.length];SAVE.set.world=selW.id;persist();brief();};
 document.addEventListener('visibilitychange',()=>{if(document.hidden&&state==='fly')togglePause();});
 $('stampRes').textContent=`Build ${BUILD_ID} · shipped ${BUILT_UTC}`;
@@ -1036,7 +1181,7 @@ $('stampRes').textContent=`Build ${BUILD_ID} · shipped ${BUILT_UTC}`;
 loadWorld(selW);duck.visible=false;
 const menuSpin=()=>{if(state==='menu'){const t=performance.now()*.00005;camera.position.set(bd.x+Math.cos(t)*1400,bd.y+320,bd.z+Math.sin(t)*1400);camera.lookAt(bd.x,bd.y,bd.z);camera.fov=62;camera.updateProjectionMatrix();sky.position.copy(camera.position);}requestAnimationFrame(menuSpin);};menuSpin();
 renderMenu();show('menu');requestAnimationFrame(loop);
-window.__duck={ph,PROFILES,WORLDS,get state(){return state},get td(){return td},startLeg,inp,surfaceAt:(x,z,y)=>surfaceAt(x,z,y),get PATH(){return PATH},physStep,checkContacts,get stats(){return stats},startFree,get LEG(){return LEG},get W(){return W},startReplay,get rec(){return rec},get lastCrash(){return lastCrash}};
+window.__duck={ph,PROFILES,WORLDS,get state(){return state},get td(){return td},startLeg,inp,surfaceAt:(x,z,y)=>surfaceAt(x,z,y),get PATH(){return PATH},physStep,checkContacts,get stats(){return stats},get drill(){return drill},runDrill:(dt)=>runDrill(dt),get LES(){return LES},startDrill,SAVE,startFree,get LEG(){return LEG},get W(){return W},startReplay,get rec(){return rec},get lastCrash(){return lastCrash}};
 })();
 
 </script>

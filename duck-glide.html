@@ -6,10 +6,10 @@
 <meta name="theme-color" content="#049cd8">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="build-id" content="DUCK-20261128-1501Z">
-<meta name="built-utc" content="2026-11-28T15:01:36Z">
+<meta name="build-id" content="DUCK-20261128-1506Z">
+<meta name="built-utc" content="2026-11-28T15:06:00Z">
 <title>Duck Glide — Fly Good, Land Gooder</title>
-<!-- Build DUCK-20261128-1501Z · shipped 2026-11-28T15:01:36Z · Three.js r128 (MIT) from vendor/ · fully offline -->
+<!-- Build DUCK-20261128-1506Z · shipped 2026-11-28T15:06:00Z · Three.js r128 (MIT) from vendor/ · fully offline -->
 <style>
 :root{--red:#e52521;--yel:#fbd000;--blu:#049cd8;--grn:#43b047;--ink:#1b1b2f;--card:#fffdf4}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none}
@@ -250,6 +250,9 @@ label.ck{display:flex;align-items:center;gap:6px;font-weight:700;font-size:13px}
         <b>Physics</b><span>Point-mass 3-DOF: real lift/drag polar (CD0 + k·CL²), stall at CLmax, ISA air density by altitude, ground effect, flaps &amp; slip drag, boundary-layer wind, gusts, thermals and ridge lift/sink. Earth gravity on every world (even Planet Ember) so numbers transfer.</span>
       </div>
     </details>
+    <div class="lad" style="margin-top:10px"><b>📒 Logbook</b> · <span id="logN"></span>
+      <div class="opts" style="margin:6px 0 0"><button class="btn sm g" id="bExpJ">📤 EXPORT JSON</button><button class="btn sm" id="bExpC">📊 EXPORT CSV</button><button class="btn sm y" id="bImp">📥 IMPORT</button><input type="file" id="fImp" accept=".json,application/json" class="hide"></div>
+      <small>Export the JSON and upload it to Claude for trend analysis, tips and new-level ideas. Import merges a history file (e.g. moving to a new phone).</small></div>
     <div class="foot"><span id="stampMenu"></span><span>Best scores stay on this device.</span><a href="index.html" id="homeLink" style="color:#049cd8;font-weight:700">← Flight Trainers</a></div>
   </div>
 </div>
@@ -331,7 +334,7 @@ label.ck{display:flex;align-items:center;gap:6px;font-weight:700;font-size:13px}
 <script>
 (function(){
 'use strict';
-const BUILD_ID='DUCK-20261128-1501Z', BUILT_UTC='2026-11-28T15:01:36Z';
+const BUILD_ID='DUCK-20261128-1506Z', BUILT_UTC='2026-11-28T15:06:00Z';
 const KT=1.943844, FT=3.28084, FPM=196.8504, D2R=Math.PI/180, R2D=180/Math.PI, G=9.80665, RHO0=1.225;
 const clamp=(v,a,b)=>v<a?a:v>b?b:v, lerp=(a,b,t)=>a+(b-a)*t;
 const smooth=(a,b,x)=>{const t=clamp((x-a)/(b-a),0,1);return t*t*(3-2*t);};
@@ -581,9 +584,9 @@ const ruleOf=st=>st.rule||[3,4];
 
 /* ---------------- persistence ---------------- */
 const SKEY='duckglide.v1';
-let SAVE={best:{},crumbs:0,prog:{},set:{mode:'lesson',stage:{},prof:'mallard',ctl:/Mobi|Android|iPhone|iPad/i.test(navigator.userAgent)?'tilt':'keys',sens:1,invP:false,invR:false,zen:false,snd:true,world:'meadow',tapes:true,adi:true,mapProf:false,cfi:true,voice:true,atrim:true}};
-try{const s=JSON.parse(localStorage.getItem(SKEY));if(s){SAVE.best=s.best||{};SAVE.crumbs=s.crumbs||0;SAVE.prog=s.prog||{};Object.assign(SAVE.set,s.set||{});}}catch(e){}
-function persist(){try{localStorage.setItem(SKEY,JSON.stringify(SAVE));}catch(e){}}
+let SAVE={best:{},crumbs:0,prog:{},log:[],set:{mode:'lesson',stage:{},prof:'mallard',ctl:/Mobi|Android|iPhone|iPad/i.test(navigator.userAgent)?'tilt':'keys',sens:1,invP:false,invR:false,zen:false,snd:true,world:'meadow',tapes:true,adi:true,mapProf:false,cfi:true,voice:true,atrim:true}};
+try{const s=JSON.parse(localStorage.getItem(SKEY));if(s){SAVE.best=s.best||{};SAVE.crumbs=s.crumbs||0;SAVE.prog=s.prog||{};SAVE.log=s.log||[];SAVE.err=s.err||SAVE.err;Object.assign(SAVE.set,s.set||{});}}catch(e){}
+function persist(){for(let k=0;k<4;k++){try{localStorage.setItem(SKEY,JSON.stringify(SAVE));return;}catch(e){if(SAVE.log&&SAVE.log.length>50)SAVE.log.splice(0,100);else return;}}}
 
 /* ---------------- world runtime ---------------- */
 let W=null, Hfn=null, treeGrid=null, profile=PROFILES[SAVE.set.prof]||PROFILES.mallard;
@@ -604,7 +607,7 @@ function lockReason(w,i){const L=LS[w];if(i>0&&!pr(w,L[i-1].id).done)return 'Fin
   return 'Unlock: earn the Mallard Meadow checkride 🏅.';}
 function curIdx(w){const L=LS[w];if(!L)return -1;const sv=(SAVE.set.stage||{})[w];if(sv!==undefined&&sv<L.length)return sv;const i=L.findIndex(st=>!pr(w,st.id).done);return i<0?L.length-1:i;}
 function ruleTxt(st){const [n,m]=ruleOf(st);return n===m?`${n} in a row`:`${n} of last ${m}`;}
-function lessonLine(pass){if(!LES)return '';const r=recordAttempt(LES.w,LES.st,pass);const L=LS[LES.w],ni=LES.i+1;
+function lessonLine(pass){if(!LES)return '';LAST.les={w:LES.w,stage:LES.st.id,pass:!!pass};const r=recordAttempt(LES.w,LES.st,pass);const L=LS[LES.w],ni=LES.i+1;
   let x=`<b>🎓 ${LES.st.name}: ${pass?'pass ✓':'not yet'}</b> — ${dots(LES.w,LES.st)} (need ${ruleTxt(LES.st)})`;
   if(r.newly){x+=` — <b>🏅 Mastered!</b>`;if(ni<L.length&&unlocked(LES.w,ni)){x+=` Next: ${L[ni].name}.`;$('rLesson').classList.remove('hide');}
     else if(LES.st.ck)x+=` ${WORLDS.find(w=>w.id===LES.w).name} complete.`;else if(LES.w==='valley'&&ni>=L.length)x+=' Air Work complete — Mallard Meadow checkride unlocked.';else if(LES.w==='valley'&&LES.st.id==='trim')x+=' Mallard Meadow lessons are open.';}
@@ -862,7 +865,7 @@ function resetFlight(pos,dir,ias,trimA){
   ph.pos.copy(pos);const alt=W.elevFt/FT+pos.y,rho=RHO0*Math.pow(1-2.25577e-5*alt,4.2559),tas=ias*Math.sqrt(RHO0/rho);
   ph.vel.copy(dir).multiplyScalar(tas);ph.vel.y=ias>profile.vbg*1.1?0:-tas/profile.LD;{const sf=surfaceAt(ph.pos.x,ph.pos.z,ph.pos.y);windAt(ph.pos,ph.pos.y-sf.y,0,tmp2);ph.vel.x+=tmp2.x;ph.vel.z+=tmp2.z;}
   ph.trim=trimA;ph.alpha=trimA;ph.bank=0;ph.slip=0;ph.beta=0;ph.eng=0;ph.flap=0;ph.flapAnim=0;ph.stalled=false;ph.drop=0;ph.energy=1;ph.t=0;
-  ph.inTun=false;pathIdx=0;trace=[];rec=[];recAcc=0;td=null;inp.bankK=0;cloudHit=new Set();picHit=new Set();$('rLesson').classList.add('hide');
+  ph.inTun=false;LAST={};pathIdx=0;trace=[];rec=[];recAcc=0;td=null;inp.bankK=0;cloudHit=new Set();picHit=new Set();$('rLesson').classList.add('hide');
   traceLine.geometry.setDrawRange(0,0);ripples.forEach(r=>scene.remove(r));ripples=[];
   duck.userData.inner.scale.setScalar(profile.b);duck.visible=true;cfiDuck.userData.inner.scale.setScalar(profile.b);cfiSnap=true;pathDev=0;pathOff=1e9;pathRem=1e9;resetCoach();state='fly';showHUD(true);
 }
@@ -1050,7 +1053,7 @@ function checkContacts(){
   s.pos.y=sf.y;s.vel.y=0;state='settle';settleT=0;if(sf.type==='pond'||sf.type==='sea')splash(s.pos,true);else beep(1800,.08,'sine',.08);quack();
 }
 function crash(title,why){if(drill&&!ZEN()){lastCrash={title};return drillEnd(false,title+' '+why);}lastCrash={title,x:ph.pos.x,y:ph.pos.y,z:ph.pos.z,rem:PATH&&PATH.dense[pathIdx]?PATH.dense[pathIdx].rem:-1,sf:surfaceAt(ph.pos.x,ph.pos.z)};if(ZEN()){toast('Oops! 🌸 Zen respawn',1500);setTimeout(()=>{if(state==='crashing')retry();},500);state='crashing';return;}
-  state='crashed';splash(ph.pos,true);sfx('crash');showHUD(false);
+  state='crashed';splash(ph.pos,true);sfx('crash');showHUD(false);setTimeout(()=>recordFlight('crash',{title}),0);
   $('rTitle').textContent=title;$('rScore').textContent='0';$('rStars').textContent='☆☆☆';$('rCrumbs').textContent=`🍞 ${stats.crumbs}/${stats.total}`;
   $('rLesson').classList.add('hide');const ll=LES?lessonLine(false):'';const fl=FIX?fixLine(false):'';if(!FIX&&!ZEN())logErrors(errTags(null));$('rTable').innerHTML='';$('rCoach').innerHTML=(ll?`<li>${ll}</li>`:'')+(fl?`<li>${fl}</li>`:'')+`<li>${why}</li>`+trendLines().map(x=>`<li>${x}</li>`).join('')+coachFlight().map(x=>`<li>${x}</li>`).join('');$('rNext').classList.toggle('hide',W.free!=='engine');$('rNext').textContent='NEW FAILURE ▶';$('rReplay').classList.toggle('hide',rec.length<10);show('result');}
 function scoreTD(t){const lo=LEG.window[0],hi=LEG.window[1];
@@ -1101,6 +1104,7 @@ function finishLanding(){
   if(!more&&W.legs.length>1&&!W.free){const tot=legScores.reduce((a,b)=>a+(b?b.score:0),0);$('rCoach').innerHTML+=`<li><b>Archipelago total: ${tot} / ${W.legs.length*1000}</b></li>`;}
   if(!SAVE.set.zen){SAVE.crumbs+=stats.crumbs;const key=W.id+'.'+profile.id;const tot=W.legs.length>1&&!W.free?(more?null:legScores.reduce((a,b)=>a+(b?b.score:0),0)/W.legs.length):sc.total;
     if(tot!==null){const st=tot>=850?3:tot>=650?2:tot>=400?1:0;const b=SAVE.best[key]||{score:0,stars:0};if(tot>b.score)SAVE.best[key]={score:Math.round(tot),stars:st,prof:profile.id};}persist();}
+  recordFlight('landing',{t,sc});
   sfx(stars>=2?'win':'ok');show('result');
 }
 
@@ -1377,7 +1381,7 @@ function trends(){const h=((SAVE.err||{}).h||[]).slice(-6);if(h.length<3)return 
   return Object.entries(n).filter(([k,v])=>v/h.length>=.5).sort((a,b)=>b[1]-a[1]).map(([k,v])=>({k,v,n:h.length,fix:TAGFIX[k]}));}
 function trendLines(){const tr=trends();const btn=$('rFix');btn.classList.add('hide');if(!tr.length||FIX)return [];const top=tr[0];btn.textContent='🔧 FIX IT: '+FIXES[top.fix].name;btn.onclick=()=>startFix(top.fix);btn.classList.remove('hide');
   return [`<b>Pattern spotted</b> over your last ${top.n} flights: ${tr.slice(0,3).map(x=>`${TAGTXT[x.k]} (${x.v}/${x.n})`).join(', ')}. Repetition makes it a habit, not luck — the <b>FIX IT</b> drill isolates it: the autopilot flies everything else; you fly ${FIXES[top.fix].you}.`];}
-function fixLine(pass){const st={id:FIX.id,rule:[3,3]},r=recordAttempt('fix',st,pass);return `<b>🔧 Fix-it · ${FIXES[FIX.id].name}: ${pass?'pass ✓':'not yet'}</b> — ${dots('fix',st)} (need 3 in a row)${r.newly?' — <b>🏅 Fixed!</b> Take it back to a full flight and see if it stays fixed.':''}`;}
+function fixLine(pass){LAST.fix={id:FIX.id,pass:!!pass};const st={id:FIX.id,rule:[3,3]},r=recordAttempt('fix',st,pass);return `<b>🔧 Fix-it · ${FIXES[FIX.id].name}: ${pass?'pass ✓':'not yet'}</b> — ${dots('fix',st)} (need 3 in a row)${r.newly?' — <b>🏅 Fixed!</b> Take it back to a full flight and see if it stays fixed.':''}`;}
 function startFix(id){const F=FIXES[id];clearScn();LES=null;drill=null;FIX=null;hideAll();$('rFix').classList.add('hide');
   if(F.air){selW=WORLDS.find(w=>w.id==='valley');loadWorld(selW);const i=LS.valley.findIndex(st=>st.id===F.air);LES={w:'valley',i,st:LS.valley[i]};startDrill(F.air);return;}
   const w=WORLDS.find(x=>x.id===F.world);selW=w;FIX={id,F};if(F.world==='xwind'){const L0=w.legs[0];FIX.leg={target:L0.target,hdg:L0.hdg,rwy:0,pts:straightPts(L0.target,L0.hdg,1500),fillet:false,window:[0,200],marginFt:0,glide:ldApp(profile)*.97,task:F.desc};}
@@ -1415,6 +1419,43 @@ function renderFixes(){const tr=trends(),rec=new Set(tr.map(x=>x.fix));$('fixLis
   [...$('fixList').children].forEach(d=>d.onclick=()=>startFix(d.dataset.id));
   $('fixTrend').innerHTML=tr.length?`Recent pattern: ${tr.map(x=>`${TAGTXT[x.k]} (${x.v}/${x.n})`).join(', ')} — ⭐ marks the drill for it.`:'No repeating error yet (needs 3+ logged flights). Any drill is open anyway.';}
 
+/* ---------------- logbook & export ---------------- */
+let LAST={};
+const rnd=(v,k)=>v==null||!isFinite(v)?null:+(+v).toFixed(k===undefined?1:k);
+function demandData(){const P=profile,L=LEG;if(!L||!W||!L.hdg&&L.hdg!==0)return null;const n=P.flaps.length-1,vapp=tgtSpeed(P,n),hw=W.wind.kt/KT*Math.cos(W.wind.from*D2R-L.hdg);
+  const o={floatFt:Math.round(floatM(P,hw)*FT),headwindKt:rnd(hw*KT),crosswindKt:rnd(W.wind.kt*Math.sin(W.wind.from*D2R-L.hdg))};
+  if(stats&&stats.h0&&stats.L0){const cl=2*P.m*G/(RHO0*P.S*vapp*vapp),fl=P.flaps[n];o.needLD=rnd(stats.L0/stats.h0,2);o.maxLD=rnd(P.ldCfg(0),2);o.minLD=rnd(cl/(P.CD0+fl.dCD+P.k*cl*cl+P.slipCD*1.44),2);}return o;}
+function recordFlight(kind,o){try{const P=profile,L=LEG,t=o&&o.t,sc=o&&o.sc,st=stats||{};
+  const r={id:Date.now().toString(36)+Math.random().toString(36).slice(2,6),utc:new Date().toISOString(),build:BUILD_ID,kind,world:W?W.id:null,duck:P.id,
+    mode:FIX?'fix':drill?'drill':SCN?'scenario':LES?'lesson':ZEN()?'zen':'free',leg:legIdx,target:L&&L.target?legName(L):null,
+    wind:W?{from:W.wind.from,kt:W.wind.kt,gustKt:Math.round(W.wind.kt*(W.wind.gust||0))}:null,flightS:rnd(ph.t),
+    lesson:LAST.les||null,fix:LAST.fix||null,scenario:SCN?{note:SCN.note||'',eng:SCN.eng||null}:null};
+  if(kind==='landing'&&t){r.touchdown={onTarget:t.onTarget,surface:t.type,distFt:rnd(t.f,0),window:L.window,centerlineFt:rnd(t.r,0),sinkFpm:rnd(t.vs,0),ias:rnd(t.ias),vs0:rnd(t.vs0),
+      driftKt:rnd(t.drift),noseOffDeg:rnd(t.align),bankDeg:rnd(t.bank),flaps:t.flapN,gsKt:rnd(t.gs)};
+    r.score={total:sc.total,accuracy:Math.round(sc.acc),centerline:Math.round(sc.cross),sink:Math.round(sc.sink),speed:Math.round(sc.spd),alignment:Math.round(sc.aln),drift:Math.round(sc.dr),bank:Math.round(sc.bk),inWindow:sc.e===0,windowMissFt:Math.round(sc.e)};
+    r.tags=errTags(t);}
+  if(kind==='crash'){r.crash=o.title||'';r.tags=errTags(null);}
+  if(kind==='drill')r.drill=o.drill;
+  r.flight={vgPct:st.tGlide>5?Math.round(st.tVg/st.tGlide*100):null,maxHighFt:rnd(st.maxHi,0),maxLowFt:rnd(st.maxLo,0),stallWarnings:st.stallW,maxBankDeg:rnd(st.maxBank,0),
+    bread:st.crumbs,breadTotal:st.total,vgCaptureS:rnd(st.vgCap),retrimmed:st.trimmed,tunnelBonks:st.bonks,cross20Ft:rnd(st.f20,0),ias20:rnd(st.ias20),fixMaxSpeedDevKt:FIX?rnd(fixS.maxDev):undefined};
+  if(chk){const c=chkResult();r.checklist={cause:chk.cause,ok:c.ok,restarted:c.restarted,inOrder:c.inOrder,aviateFirst:c.aviateFirst,items:c.n+'/'+c.N,secure:c.sec+'/'+c.secN};}
+  if(kind!=='drill')r.demand=demandData();
+  SAVE.log.push(r);if(SAVE.log.length>800)SAVE.log.splice(0,SAVE.log.length-800);persist();}catch(e){console.warn('log fail',e);}}
+function stampName(){const d=new Date(),p=n=>String(n).padStart(2,'0');return `${d.getUTCFullYear()}${p(d.getUTCMonth()+1)}${p(d.getUTCDate())}-${p(d.getUTCHours())}${p(d.getUTCMinutes())}Z`;}
+function download(name,text,type){const blob=new Blob([text],{type}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},1500);}
+function exportJSON(){const o={format:'duck-glide-history',version:1,build:BUILD_ID,builtUTC:BUILT_UTC,exportedUTC:new Date().toISOString(),device:navigator.userAgent,
+    settings:SAVE.set,bestScores:SAVE.best,lessonProgress:SAVE.prog,recentErrorTags:SAVE.err||null,flights:SAVE.log};
+  download(`duck-glide-history-${stampName()}.json`,JSON.stringify(o,null,1),'application/json');toast(`📤 Exported ${SAVE.log.length} flights`,1800);}
+function exportCSV(){const cols=['utc','build','kind','world','duck','mode','target','wind_from','wind_kt','gust_kt','score','in_window','dist_ft','window_lo','window_hi','centerline_ft','sink_fpm','ias','vs0','drift_kt','nose_off_deg','bank_deg','flaps','surface','on_target','tags','crash','drill','drill_pass','lesson','lesson_pass','fix','fix_pass','vg_pct','max_high_ft','max_low_ft','stall_warnings','vg_capture_s','retrimmed','cross20_ft','ias20','float_ft','need_ld','min_ld','max_ld','headwind_kt','crosswind_kt','checklist_ok','cause','flight_s'];
+  const q=v=>v==null?'':/[",\n]/.test(String(v))?'"'+String(v).replace(/"/g,'""')+'"':String(v);
+  const rows=SAVE.log.map(r=>{const t=r.touchdown||{},s=r.score||{},f=r.flight||{},d=r.demand||{};return [r.utc,r.build,r.kind,r.world,r.duck,r.mode,r.target,r.wind&&r.wind.from,r.wind&&r.wind.kt,r.wind&&r.wind.gustKt,s.total,s.inWindow,t.distFt,t.window&&t.window[0],t.window&&t.window[1],t.centerlineFt,t.sinkFpm,t.ias,t.vs0,t.driftKt,t.noseOffDeg,t.bankDeg,t.flaps,t.surface,t.onTarget,(r.tags||[]).join(' '),r.crash,r.drill&&r.drill.id,r.drill&&r.drill.pass,r.lesson&&(r.lesson.w+'.'+r.lesson.stage),r.lesson&&r.lesson.pass,r.fix&&r.fix.id,r.fix&&r.fix.pass,f.vgPct,f.maxHighFt,f.maxLowFt,f.stallWarnings,f.vgCaptureS,f.retrimmed,f.cross20Ft,f.ias20,d.floatFt,d.needLD,d.minLD,d.maxLD,d.headwindKt,d.crosswindKt,r.checklist&&r.checklist.ok,r.checklist&&r.checklist.cause,r.flightS].map(q).join(',');});
+  download(`duck-glide-history-${stampName()}.csv`,`# Duck Glide history · build ${BUILD_ID} · exported ${new Date().toISOString()}\n`+cols.join(',')+'\n'+rows.join('\n'),'text/csv');toast(`📊 Exported ${SAVE.log.length} rows`,1800);}
+function importJSON(file){const fr=new FileReader();fr.onload=()=>{try{const o=JSON.parse(fr.result);if(o.format!=='duck-glide-history')throw 0;const have=new Set(SAVE.log.map(r=>r.id));let n=0;
+    (o.flights||[]).forEach(r=>{if(r&&r.id&&!have.has(r.id)){SAVE.log.push(r);n++;}});SAVE.log.sort((a,b)=>a.utc<b.utc?-1:1);
+    for(const [k,v] of Object.entries(o.lessonProgress||{})){const m=SAVE.prog[k];if(!m||(v.done&&!m.done)||(v.h||[]).length>(m.h||[]).length)SAVE.prog[k]=v;}
+    for(const [k,v] of Object.entries(o.bestScores||{})){if(!SAVE.best[k]||v.score>SAVE.best[k].score)SAVE.best[k]=v;}
+    persist();renderMenu();toast(`📥 Imported ${n} new flights`,2000);}catch(e){toast('That file is not a Duck Glide history export',2200);}};fr.readAsText(file);}
+
 /* ---------------- Air Work drills ---------------- */
 function startDrill(id){const v=W.valley,z=-5400;drill=null;startFree({launch:[v.cxz(z),v.floorZ(z)+1300,z,v.vh(z)*R2D]});
   drill={id,phase:0,band:0,t:0,flareT:0,turned:0,lastH:null,pIas:null,lim:id==='approach'?160:120,note:''};const P=profile;
@@ -1445,7 +1486,7 @@ function runDrill(dt){const d=drill,s=ph,P=profile,ias=s.IAS*KT,n=P.flaps.length
 }
 function drillEnd(pass,msg){const d=drill;state='result';showHUD(false);if(cfiDuck)cfiDuck.visible=false;$('rLesson').classList.add('hide');
   $('rTitle').textContent=(pass?'✅ ':'❌ ')+DRILLS[d.id]+(pass?' — pass':' — not yet');$('rScore').textContent='';$('rStars').textContent='';$('rCrumbs').textContent=`${d.t.toFixed(0)} s`;$('rTable').innerHTML='';
-  const c=[msg];const ll=lessonLine(pass);if(ll)c.unshift(ll);$('rCoach').innerHTML=c.map(x=>`<li>${x}</li>`).join('');$('rNext').classList.add('hide');$('rReplay').classList.toggle('hide',rec.length<10);sfx(pass?'win':'ok');show('result');}
+  const c=[msg];const ll=lessonLine(pass);recordFlight('drill',{drill:{id:d.id,pass:!!pass,msg:String(msg).replace(/<[^>]+>/g,''),secs:+d.t.toFixed(1)}});if(ll)c.unshift(ll);$('rCoach').innerHTML=c.map(x=>`<li>${x}</li>`).join('');$('rNext').classList.add('hide');$('rReplay').classList.toggle('hide',rec.length<10);sfx(pass?'win':'ok');show('result');}
 
 /* ---------------- CFI duck (tutorial wingman) ---------------- */
 const coach={last:{},lastAny:-99,alt:{},slowT:0,fastT:0,holdT:0,hideT:0};
@@ -1525,6 +1566,7 @@ function renderMenu(){
   [...$('ctlSeg').children].forEach(b=>{b.classList.toggle('on',b.dataset.v===SAVE.set.ctl);b.onclick=()=>{SAVE.set.ctl=b.dataset.v;persist();renderMenu();};});
   $('sens').value=SAVE.set.sens;$('invP').checked=SAVE.set.invP;$('invR').checked=SAVE.set.invR;$('zen').checked=SAVE.set.zen;$('cfi').checked=SAVE.set.cfi;$('voice').checked=SAVE.set.voice;$('atrim').checked=SAVE.set.atrim;$('tapes').checked=SAVE.set.tapes;$('adi').checked=SAVE.set.adi;$('snd').checked=SAVE.set.snd;
   renderLadder();
+  {const L=SAVE.log,lands=L.filter(r=>r.kind==='landing'),avg=lands.slice(-10).reduce((a,r)=>a+(r.score?r.score.total:0),0)/Math.max(1,Math.min(10,lands.length));$('logN').textContent=`${L.length} flights logged${lands.length?` · last-10 landing avg ${Math.round(avg)}`:''}`;}
   $('stampMenu').textContent=`Build ${BUILD_ID} · shipped ${BUILT_UTC} · 🍞 lifetime ${SAVE.crumbs}`;
 }
 function renderLadder(){const el=$('ladder'),w=selW.id,L=LS[w];if(SAVE.set.mode!=='lesson'){el.innerHTML='';return;}
@@ -1578,7 +1620,7 @@ function instForm(){const P=PROFILES[$('iP').value]||profile,S=CHKS[P.id];$('iC'
 function openInst(){$('iW').innerHTML=WORLDS.map(w=>`<option value="${w.id}">${esc(w.name)}</option>`).join('');$('iW').value=selW.id;$('iP').innerHTML=Object.values(PROFILES).map(p=>`<option value="${p.id}">${esc(p.name)}</option>`).join('');$('iP').value=profile.id;
   SCNseed=0;instForm();show('inst');}
 ['iW','iP','iWm','iWf','iWk','iWg','iA','iC','iSame','iN'].forEach(id=>{$(id).addEventListener('input',instForm);$(id).addEventListener('change',instForm);});
-$('bInst').onclick=openInst;$('bFixes').onclick=()=>{renderFixes();show('fixes');};$('fxBack').onclick=()=>{show('menu');renderMenu();};$('iBack').onclick=()=>{show('menu');renderMenu();};
+$('bInst').onclick=openInst;$('bExpJ').onclick=exportJSON;$('bExpC').onclick=exportCSV;$('bImp').onclick=()=>$('fImp').click();$('fImp').onchange=e=>{if(e.target.files[0])importJSON(e.target.files[0]);e.target.value='';};$('bFixes').onclick=()=>{renderFixes();show('fixes');};$('fxBack').onclick=()=>{show('menu');renderMenu();};$('iBack').onclick=()=>{show('menu');renderMenu();};
 $('iShare').onclick=async()=>{const u=instForm();try{if(navigator.share){await navigator.share({title:'Duck Glide scenario',text:$('iN').value||'Fly this scenario',url:u});return;}}catch(e){}
   try{await navigator.clipboard.writeText(u);toast('Link copied 📋',1500);}catch(e){$('iLink').select();toast('Select & copy the link',1500);}};
 $('iFly').onclick=()=>{applyScn(scnFromForm());brief();};
